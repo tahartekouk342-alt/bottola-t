@@ -1,8 +1,9 @@
 import { Trophy, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const navItems = [
   { label: 'الرئيسية', href: '/' },
@@ -14,6 +15,7 @@ const navItems = [
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-effect">
@@ -47,9 +49,13 @@ export function Header() {
             ))}
           </nav>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <Button className="gradient-primary text-primary-foreground glow-primary">
+          {/* Theme Toggle & CTA */}
+          <div className="hidden md:flex items-center gap-2">
+            <ThemeToggle />
+            <Button 
+              className="gradient-primary text-primary-foreground glow-primary"
+              onClick={() => navigate('/tournaments')}
+            >
               إنشاء بطولة
             </Button>
           </div>
@@ -81,8 +87,15 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            <div className="mt-4 px-4">
-              <Button className="w-full gradient-primary text-primary-foreground">
+            <div className="mt-4 px-4 flex items-center gap-2">
+              <ThemeToggle />
+              <Button 
+                className="flex-1 gradient-primary text-primary-foreground"
+                onClick={() => {
+                  navigate('/tournaments');
+                  setIsMenuOpen(false);
+                }}
+              >
                 إنشاء بطولة
               </Button>
             </div>
