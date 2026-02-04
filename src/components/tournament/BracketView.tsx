@@ -90,41 +90,49 @@ function BracketMatch({ match, onClick }: BracketMatchProps) {
   return (
     <div
       className={cn(
-        'w-60 rounded-lg border overflow-hidden cursor-pointer transition-all hover:scale-105 hover:shadow-lg',
-        isLive && 'border-destructive animate-pulse',
-        isCompleted && 'border-primary/50',
-        !isLive && !isCompleted && 'border-border'
+        'w-64 rounded-xl border overflow-hidden cursor-pointer transition-all duration-300',
+        'hover:scale-[1.02] hover:shadow-lg hover:border-primary/50',
+        isLive && 'border-destructive shadow-[0_0_20px_hsl(var(--destructive)/0.3)]',
+        isCompleted && 'border-primary/40',
+        !isLive && !isCompleted && 'border-border bg-card'
       )}
       onClick={onClick}
     >
       {/* Status Badge */}
       {isLive && (
-        <div className="bg-destructive text-destructive-foreground text-xs font-bold text-center py-1">
-          🔴 مباشر
+        <div className="bg-destructive text-destructive-foreground text-xs font-bold text-center py-1.5 flex items-center justify-center gap-1.5">
+          <span className="w-2 h-2 bg-white rounded-full animate-ping" />
+          مباشر
         </div>
       )}
 
       {/* Home Team */}
       <div
         className={cn(
-          'flex items-center justify-between p-3 border-b border-border/50',
+          'flex items-center justify-between p-4 border-b border-border/30',
           isCompleted && match.winner_id === match.home_team_id && 'bg-primary/10'
         )}
       >
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-xs font-bold">
+            {match.home_team?.name?.charAt(0) || '?'}
+          </div>
+          <span
+            className={cn(
+              'font-semibold truncate max-w-[120px]',
+              isCompleted &&
+                match.winner_id === match.home_team_id &&
+                'text-primary'
+            )}
+          >
+            {match.home_team?.name || 'TBD'}
+          </span>
+        </div>
         <span
           className={cn(
-            'font-medium truncate',
-            isCompleted &&
-              match.winner_id === match.home_team_id &&
-              'text-primary font-bold'
-          )}
-        >
-          {match.home_team?.name || 'TBD'}
-        </span>
-        <span
-          className={cn(
-            'font-display font-bold text-lg min-w-[2rem] text-center',
-            isCompleted && match.winner_id === match.home_team_id && 'text-primary'
+            'font-display font-bold text-xl min-w-[2rem] text-center tabular-nums',
+            isCompleted && match.winner_id === match.home_team_id && 'text-primary',
+            isLive && 'text-destructive'
           )}
         >
           {isCompleted || isLive ? match.home_score : '-'}
@@ -134,24 +142,30 @@ function BracketMatch({ match, onClick }: BracketMatchProps) {
       {/* Away Team */}
       <div
         className={cn(
-          'flex items-center justify-between p-3',
+          'flex items-center justify-between p-4',
           isCompleted && match.winner_id === match.away_team_id && 'bg-primary/10'
         )}
       >
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-xs font-bold">
+            {match.away_team?.name?.charAt(0) || '?'}
+          </div>
+          <span
+            className={cn(
+              'font-semibold truncate max-w-[120px]',
+              isCompleted &&
+                match.winner_id === match.away_team_id &&
+                'text-primary'
+            )}
+          >
+            {match.away_team?.name || 'TBD'}
+          </span>
+        </div>
         <span
           className={cn(
-            'font-medium truncate',
-            isCompleted &&
-              match.winner_id === match.away_team_id &&
-              'text-primary font-bold'
-          )}
-        >
-          {match.away_team?.name || 'TBD'}
-        </span>
-        <span
-          className={cn(
-            'font-display font-bold text-lg min-w-[2rem] text-center',
-            isCompleted && match.winner_id === match.away_team_id && 'text-primary'
+            'font-display font-bold text-xl min-w-[2rem] text-center tabular-nums',
+            isCompleted && match.winner_id === match.away_team_id && 'text-primary',
+            isLive && 'text-destructive'
           )}
         >
           {isCompleted || isLive ? match.away_score : '-'}

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface StatCardProps {
   icon: LucideIcon;
@@ -15,25 +15,37 @@ interface StatCardProps {
 export function StatCard({ icon: Icon, label, value, trend, className }: StatCardProps) {
   return (
     <div className={cn(
-      "p-5 rounded-xl bg-card border border-border",
-      "hover:border-primary/50 hover:shadow-glow transition-all duration-300",
+      "relative overflow-hidden p-5 rounded-2xl bg-card border border-border",
+      "hover:border-primary/40 hover:shadow-glow transition-all duration-300 group",
       className
     )}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-primary" />
+      {/* Background Decoration */}
+      <div className="absolute -top-8 -right-8 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors duration-300" />
+      
+      <div className="relative">
+        <div className="flex items-center justify-between mb-4">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
+            <Icon className="w-6 h-6 text-primary" />
+          </div>
+          {trend && (
+            <div className={cn(
+              "flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold",
+              trend.isPositive 
+                ? "bg-success/10 text-success" 
+                : "bg-destructive/10 text-destructive"
+            )}>
+              {trend.isPositive ? (
+                <TrendingUp className="w-3.5 h-3.5" />
+              ) : (
+                <TrendingDown className="w-3.5 h-3.5" />
+              )}
+              {trend.isPositive ? '+' : ''}{trend.value}%
+            </div>
+          )}
         </div>
-        {trend && (
-          <span className={cn(
-            "text-sm font-medium",
-            trend.isPositive ? "text-primary" : "text-destructive"
-          )}>
-            {trend.isPositive ? '+' : ''}{trend.value}%
-          </span>
-        )}
+        <p className="text-sm text-muted-foreground mb-1 font-medium">{label}</p>
+        <p className="font-display text-4xl font-bold text-foreground tracking-tight">{value}</p>
       </div>
-      <p className="text-sm text-muted-foreground mb-1">{label}</p>
-      <p className="font-display text-3xl font-bold text-foreground">{value}</p>
     </div>
   );
 }

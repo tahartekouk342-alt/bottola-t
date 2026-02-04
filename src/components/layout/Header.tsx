@@ -22,8 +22,8 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center glow-primary">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center glow-primary transition-transform duration-300 group-hover:scale-105">
               <Trophy className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="font-display text-2xl font-bold text-foreground">
@@ -38,10 +38,10 @@ export function Header() {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
                   location.pathname === item.href
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
                 {item.label}
@@ -50,10 +50,10 @@ export function Header() {
           </nav>
 
           {/* Theme Toggle & CTA */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
             <Button 
-              className="gradient-primary text-primary-foreground glow-primary"
+              className="gradient-primary text-primary-foreground glow-primary font-semibold rounded-xl"
               onClick={() => navigate('/tournaments')}
             >
               إنشاء بطولة
@@ -63,7 +63,7 @@ export function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-secondary"
+            className="md:hidden p-2 rounded-xl hover:bg-muted/50 transition-colors"
           >
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -71,26 +71,28 @@ export function Header() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <nav className="md:hidden py-4 border-t border-border animate-fade-in-up">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setIsMenuOpen(false)}
-                className={cn(
-                  "block px-4 py-3 rounded-lg text-base font-medium transition-colors",
-                  location.pathname === item.href
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <div className="mt-4 px-4 flex items-center gap-2">
+          <nav className="md:hidden py-4 border-t border-border/50 animate-fade-in-up">
+            <div className="space-y-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={cn(
+                    "block px-4 py-3 rounded-xl text-base font-medium transition-all duration-200",
+                    location.pathname === item.href
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+            <div className="mt-4 pt-4 border-t border-border/50 px-4 flex items-center gap-3">
               <ThemeToggle />
               <Button 
-                className="flex-1 gradient-primary text-primary-foreground"
+                className="flex-1 gradient-primary text-primary-foreground font-semibold rounded-xl"
                 onClick={() => {
                   navigate('/tournaments');
                   setIsMenuOpen(false);

@@ -13,16 +13,16 @@ interface TournamentCardProps {
   onClick?: () => void;
 }
 
-const statusLabels = {
-  upcoming: 'قريباً',
-  live: 'جارية',
-  completed: 'منتهية',
+const statusConfig = {
+  upcoming: { label: 'قريباً', variant: 'secondary' as const },
+  live: { label: 'جارية', variant: 'destructive' as const },
+  completed: { label: 'منتهية', variant: 'outline' as const },
 };
 
-const typeLabels = {
-  knockout: 'خروج المغلوب',
-  league: 'دوري',
-  groups: 'مجموعات',
+const typeConfig = {
+  knockout: { label: 'خروج المغلوب', icon: '⚔️' },
+  league: { label: 'دوري', icon: '🏆' },
+  groups: { label: 'مجموعات', icon: '📊' },
 };
 
 export function TournamentCard({
@@ -37,45 +37,62 @@ export function TournamentCard({
     <Card
       onClick={onClick}
       className={cn(
-        "match-card cursor-pointer group",
-        "gradient-card"
+        "overflow-hidden cursor-pointer group transition-all duration-300",
+        "hover:shadow-lg hover:-translate-y-1 hover:border-primary/50",
+        status === 'live' && "border-destructive/40"
       )}
     >
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between mb-4">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Trophy className="w-6 h-6 text-primary" />
-          </div>
-          <Badge
-            variant={status === 'live' ? 'destructive' : status === 'upcoming' ? 'default' : 'secondary'}
-            className={cn(
-              status === 'live' && "animate-pulse-ring"
-            )}
-          >
-            {statusLabels[status]}
-          </Badge>
+      {/* Header with gradient */}
+      <div className={cn(
+        "relative h-20 p-4 flex items-end",
+        "bg-gradient-to-br from-primary/15 via-primary/5 to-transparent",
+        status === 'live' && "from-destructive/15 via-destructive/5"
+      )}>
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-2 right-2 text-5xl">{typeConfig[type].icon}</div>
         </div>
+        
+        <div className="relative flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-xl bg-background/90 backdrop-blur flex items-center justify-center shadow-md">
+              <Trophy className="w-5 h-5 text-primary" />
+            </div>
+            <Badge 
+              variant={statusConfig[status].variant}
+              className="font-semibold"
+            >
+              {status === 'live' && (
+                <span className="w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse" />
+              )}
+              {statusConfig[status].label}
+            </Badge>
+          </div>
+          <ChevronLeft className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:-translate-x-1 transition-all duration-300" />
+        </div>
+      </div>
 
-        <h3 className="font-display text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
+      <CardContent className="p-5 pt-4">
+        <h3 className="font-display text-xl font-bold text-foreground mb-3 line-clamp-1 group-hover:text-primary transition-colors duration-300">
           {name}
         </h3>
 
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex flex-wrap gap-4 mb-4">
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Users className="w-4 h-4" />
-            <span>{teams} فريق</span>
+            <span className="font-medium">{teams} فريق</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Calendar className="w-4 h-4" />
-            <span>{startDate}</span>
+            <span className="font-medium">{startDate}</span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-3 border-t border-border">
-          <Badge variant="outline" className="text-xs">
-            {typeLabels[type]}
-          </Badge>
-          <ChevronLeft className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:-translate-x-1 transition-all" />
+        <div className="pt-3 border-t border-border/50">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 text-xs font-medium text-muted-foreground">
+            <span>{typeConfig[type].icon}</span>
+            {typeConfig[type].label}
+          </span>
         </div>
       </CardContent>
     </Card>

@@ -33,25 +33,25 @@ interface StandingsTableProps {
 export function StandingsTable({ standings, highlightPositions }: StandingsTableProps) {
   const getPositionStyle = (position: number) => {
     if (highlightPositions?.promotion?.includes(position)) {
-      return 'border-r-2 border-r-primary';
+      return 'border-r-4 border-r-primary bg-primary/5';
     }
     if (highlightPositions?.relegation?.includes(position)) {
-      return 'border-r-2 border-r-destructive';
+      return 'border-r-4 border-r-destructive bg-destructive/5';
     }
     return '';
   };
 
   const getFormBadge = (result: 'W' | 'D' | 'L') => {
     const styles = {
-      W: 'bg-primary text-primary-foreground',
-      D: 'bg-muted text-muted-foreground',
-      L: 'bg-destructive text-destructive-foreground',
+      W: 'bg-success/10 text-success border-success/20',
+      D: 'bg-muted text-muted-foreground border-muted',
+      L: 'bg-destructive/10 text-destructive border-destructive/20',
     };
     const labels = { W: 'ف', D: 'ت', L: 'خ' };
     
     return (
       <span className={cn(
-        "w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold",
+        "w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold border",
         styles[result]
       )}>
         {labels[result]}
@@ -60,59 +60,75 @@ export function StandingsTable({ standings, highlightPositions }: StandingsTable
   };
 
   return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-group-header hover:bg-group-header">
-            <TableHead className="w-12 text-center">#</TableHead>
-            <TableHead>الفريق</TableHead>
-            <TableHead className="text-center w-10">لعب</TableHead>
-            <TableHead className="text-center w-10 hidden sm:table-cell">ف</TableHead>
-            <TableHead className="text-center w-10 hidden sm:table-cell">ت</TableHead>
-            <TableHead className="text-center w-10 hidden sm:table-cell">خ</TableHead>
-            <TableHead className="text-center w-14 hidden md:table-cell">+/-</TableHead>
-            <TableHead className="text-center w-12 font-bold">نقاط</TableHead>
-            <TableHead className="text-center hidden lg:table-cell">آخر 5</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {standings.map((team, index) => (
-            <TableRow
-              key={team.name}
-              className={cn(
-                getPositionStyle(team.position),
-                index % 2 === 1 && "bg-standings-row-alt"
-              )}
-            >
-              <TableCell className="text-center font-bold text-muted-foreground">
-                {team.position}
-              </TableCell>
-              <TableCell className="font-medium">{team.name}</TableCell>
-              <TableCell className="text-center text-muted-foreground">{team.played}</TableCell>
-              <TableCell className="text-center text-muted-foreground hidden sm:table-cell">{team.won}</TableCell>
-              <TableCell className="text-center text-muted-foreground hidden sm:table-cell">{team.drawn}</TableCell>
-              <TableCell className="text-center text-muted-foreground hidden sm:table-cell">{team.lost}</TableCell>
-              <TableCell className={cn(
-                "text-center hidden md:table-cell",
-                team.goalDifference > 0 && "text-primary",
-                team.goalDifference < 0 && "text-destructive"
+    <Table>
+      <TableHeader>
+        <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
+          <TableHead className="w-14 text-center font-bold">#</TableHead>
+          <TableHead className="font-bold">الفريق</TableHead>
+          <TableHead className="text-center w-12 font-bold">لعب</TableHead>
+          <TableHead className="text-center w-12 hidden sm:table-cell font-bold">ف</TableHead>
+          <TableHead className="text-center w-12 hidden sm:table-cell font-bold">ت</TableHead>
+          <TableHead className="text-center w-12 hidden sm:table-cell font-bold">خ</TableHead>
+          <TableHead className="text-center w-16 hidden md:table-cell font-bold">+/-</TableHead>
+          <TableHead className="text-center w-14 font-bold text-primary">نقاط</TableHead>
+          <TableHead className="text-center hidden lg:table-cell font-bold">آخر 5</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {standings.map((team, index) => (
+          <TableRow
+            key={team.name}
+            className={cn(
+              "transition-colors hover:bg-muted/30",
+              getPositionStyle(team.position),
+              index % 2 === 1 && "bg-muted/10"
+            )}
+          >
+            <TableCell className="text-center">
+              <span className={cn(
+                "inline-flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm",
+                team.position <= 2 && "bg-primary/10 text-primary",
+                team.position >= 7 && "bg-destructive/10 text-destructive",
+                team.position > 2 && team.position < 7 && "bg-muted text-muted-foreground"
               )}>
-                {team.goalDifference > 0 ? `+${team.goalDifference}` : team.goalDifference}
-              </TableCell>
-              <TableCell className="text-center font-display text-lg font-bold text-primary">
-                {team.points}
-              </TableCell>
-              <TableCell className="hidden lg:table-cell">
-                <div className="flex items-center justify-center gap-1">
-                  {team.form?.map((result, i) => (
-                    <span key={i}>{getFormBadge(result)}</span>
-                  ))}
+                {team.position}
+              </span>
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-secondary to-muted flex items-center justify-center text-sm font-bold shadow-sm">
+                  {team.name.charAt(0)}
                 </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+                <span className="font-semibold text-foreground">{team.name}</span>
+              </div>
+            </TableCell>
+            <TableCell className="text-center text-muted-foreground font-medium">{team.played}</TableCell>
+            <TableCell className="text-center text-muted-foreground font-medium hidden sm:table-cell">{team.won}</TableCell>
+            <TableCell className="text-center text-muted-foreground font-medium hidden sm:table-cell">{team.drawn}</TableCell>
+            <TableCell className="text-center text-muted-foreground font-medium hidden sm:table-cell">{team.lost}</TableCell>
+            <TableCell className={cn(
+              "text-center font-semibold hidden md:table-cell",
+              team.goalDifference > 0 && "text-success",
+              team.goalDifference < 0 && "text-destructive",
+              team.goalDifference === 0 && "text-muted-foreground"
+            )}>
+              {team.goalDifference > 0 ? `+${team.goalDifference}` : team.goalDifference}
+            </TableCell>
+            <TableCell className="text-center">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 font-display text-xl font-bold text-primary">
+                {team.points}
+              </span>
+            </TableCell>
+            <TableCell className="hidden lg:table-cell">
+              <div className="flex items-center justify-center gap-1.5">
+                {team.form?.map((result, i) => (
+                  <span key={i}>{getFormBadge(result)}</span>
+                ))}
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
