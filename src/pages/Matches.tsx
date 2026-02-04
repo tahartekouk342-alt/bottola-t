@@ -1,6 +1,7 @@
 import { Header } from '@/components/layout/Header';
 import { MatchCard } from '@/components/match/MatchCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, PlayCircle, CheckCircle, Clock } from 'lucide-react';
 
 const liveMatches = [
   {
@@ -83,44 +84,70 @@ const MatchesPage = () => {
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           {/* Page Header */}
-          <div className="mb-8">
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
-              المباريات
-            </h1>
-            <p className="text-muted-foreground">تابع جميع المباريات الحية والقادمة</p>
+          <div className="mb-10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
+                  المباريات
+                </h1>
+                <p className="text-muted-foreground">تابع جميع المباريات الحية والقادمة</p>
+              </div>
+            </div>
           </div>
 
           {/* Tabs */}
           <Tabs defaultValue="live" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-3 mb-8">
-              <TabsTrigger value="live" className="relative">
+            <TabsList className="grid w-full max-w-lg grid-cols-3 mb-8 p-1 bg-muted/50 rounded-xl">
+              <TabsTrigger 
+                value="live" 
+                className="relative rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <PlayCircle className="w-4 h-4 ml-2" />
                 مباشر
                 {liveMatches.length > 0 && (
-                  <span className="absolute -top-1 -left-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center animate-pulse-ring">
+                  <span className="absolute -top-1.5 -left-1.5 min-w-5 h-5 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center font-semibold px-1.5 animate-pulse">
                     {liveMatches.length}
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="upcoming">قادمة</TabsTrigger>
-              <TabsTrigger value="completed">منتهية</TabsTrigger>
+              <TabsTrigger 
+                value="upcoming"
+                className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <Clock className="w-4 h-4 ml-2" />
+                قادمة
+              </TabsTrigger>
+              <TabsTrigger 
+                value="completed"
+                className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                <CheckCircle className="w-4 h-4 ml-2" />
+                منتهية
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="live">
               {liveMatches.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {liveMatches.map((match, index) => (
                     <MatchCard key={index} {...match} />
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16">
+                <div className="text-center py-20">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
+                    <PlayCircle className="w-8 h-8 text-muted-foreground" />
+                  </div>
                   <p className="text-muted-foreground text-lg">لا توجد مباريات مباشرة حالياً</p>
                 </div>
               )}
             </TabsContent>
 
             <TabsContent value="upcoming">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {upcomingMatches.map((match, index) => (
                   <MatchCard key={index} {...match} />
                 ))}
@@ -128,7 +155,7 @@ const MatchesPage = () => {
             </TabsContent>
 
             <TabsContent value="completed">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {completedMatches.map((match, index) => (
                   <MatchCard key={index} {...match} />
                 ))}

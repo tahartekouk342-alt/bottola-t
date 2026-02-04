@@ -4,6 +4,7 @@ import { MatchCard } from '@/components/match/MatchCard';
 import { StatCard } from '@/components/ui/stat-card';
 import { Button } from '@/components/ui/button';
 import { Trophy, Users, Calendar, Target, Plus, ArrowLeft, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import heroBg from '@/assets/hero-bg.jpg';
 
 // Sample data
@@ -69,6 +70,8 @@ const stats = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -76,34 +79,43 @@ const Index = () => {
       {/* Hero Section */}
       <section className="relative pt-16 overflow-hidden">
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-20"
+          className="absolute inset-0 bg-cover bg-center opacity-15"
           style={{ backgroundImage: `url(${heroBg})` }}
         />
         <div className="absolute inset-0 gradient-hero" />
         
-        <div className="relative container mx-auto px-4 py-20 md:py-32">
+        <div className="relative container mx-auto px-4 py-24 md:py-36">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 animate-fade-in-up">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-in-up">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm text-primary font-medium">منصة إدارة البطولات الأذكى</span>
+              <span className="text-sm text-primary font-semibold">منصة إدارة البطولات الأذكى</span>
             </div>
             
-            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in-up">
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in-up leading-tight">
               نظّم بطولاتك
               <br />
               <span className="text-gradient">باحترافية</span>
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in-up">
+            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto animate-fade-in-up leading-relaxed">
               أنشئ وأدر بطولاتك الرياضية بسهولة تامة. من جدولة المباريات إلى تتبع النتائج والترتيب، كل ما تحتاجه في مكان واحد.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up">
-              <Button size="lg" className="gradient-primary text-primary-foreground glow-primary text-lg px-8">
+              <Button 
+                size="lg" 
+                className="gradient-primary text-primary-foreground glow-primary text-lg px-8 rounded-xl font-semibold"
+                onClick={() => navigate('/tournaments')}
+              >
                 <Plus className="w-5 h-5 ml-2" />
                 إنشاء بطولة جديدة
               </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="text-lg px-8 rounded-xl font-semibold"
+                onClick={() => navigate('/tournaments')}
+              >
                 استكشف البطولات
                 <ArrowLeft className="w-5 h-5 mr-2" />
               </Button>
@@ -113,7 +125,7 @@ const Index = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 border-y border-border bg-card/50">
+      <section className="py-12 border-y border-border/50 bg-card/30">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {stats.map((stat) => (
@@ -124,7 +136,7 @@ const Index = () => {
       </section>
 
       {/* Live Matches Section */}
-      <section className="py-16">
+      <section className="section-spacing">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -133,13 +145,17 @@ const Index = () => {
               </h2>
               <p className="text-muted-foreground">تابع آخر نتائج المباريات</p>
             </div>
-            <Button variant="ghost" className="hidden sm:flex">
+            <Button 
+              variant="ghost" 
+              className="hidden sm:flex rounded-xl"
+              onClick={() => navigate('/matches')}
+            >
               عرض الكل
               <ArrowLeft className="w-4 h-4 mr-2" />
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {matches.map((match, index) => (
               <MatchCard key={index} {...match} />
             ))}
@@ -148,7 +164,7 @@ const Index = () => {
       </section>
 
       {/* Tournaments Section */}
-      <section className="py-16 bg-card/30">
+      <section className="section-spacing bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -157,7 +173,11 @@ const Index = () => {
               </h2>
               <p className="text-muted-foreground">استكشف البطولات النشطة والقادمة</p>
             </div>
-            <Button variant="ghost" className="hidden sm:flex">
+            <Button 
+              variant="ghost" 
+              className="hidden sm:flex rounded-xl"
+              onClick={() => navigate('/tournaments')}
+            >
               عرض الكل
               <ArrowLeft className="w-4 h-4 mr-2" />
             </Button>
@@ -172,23 +192,28 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20">
+      <section className="section-spacing">
         <div className="container mx-auto px-4">
-          <div className="relative rounded-2xl overflow-hidden">
-            <div className="absolute inset-0 gradient-primary opacity-90" />
+          <div className="relative rounded-3xl overflow-hidden">
+            <div className="absolute inset-0 gradient-primary opacity-95" />
             <div 
-              className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-30"
+              className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-20"
               style={{ backgroundImage: `url(${heroBg})` }}
             />
             
-            <div className="relative p-8 md:p-12 lg:p-16 text-center">
-              <h2 className="font-display text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+            <div className="relative p-10 md:p-16 lg:p-20 text-center">
+              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-6">
                 جاهز لإنشاء بطولتك؟
               </h2>
-              <p className="text-primary-foreground/80 text-lg mb-8 max-w-2xl mx-auto">
+              <p className="text-primary-foreground/90 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
                 ابدأ الآن مجاناً واستمتع بتجربة إدارة بطولات سلسة واحترافية
               </p>
-              <Button size="lg" variant="secondary" className="text-lg px-8">
+              <Button 
+                size="lg" 
+                variant="secondary" 
+                className="text-lg px-10 rounded-xl font-semibold shadow-lg"
+                onClick={() => navigate('/tournaments')}
+              >
                 <Plus className="w-5 h-5 ml-2" />
                 ابدأ الآن مجاناً
               </Button>
@@ -198,12 +223,12 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t border-border">
+      <footer className="py-10 border-t border-border/50">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-                <Trophy className="w-4 h-4 text-primary-foreground" />
+              <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-sm">
+                <Trophy className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="font-display text-xl font-bold">Bottola</span>
             </div>

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Trophy } from 'lucide-react';
 import { useTournaments } from '@/hooks/useTournaments';
 
 const TournamentsPage = () => {
@@ -43,7 +43,7 @@ const TournamentsPage = () => {
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           {/* Page Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
             <div>
               <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
                 البطولات
@@ -51,7 +51,7 @@ const TournamentsPage = () => {
               <p className="text-muted-foreground">إدارة واستعراض جميع البطولات</p>
             </div>
             <Button 
-              className="gradient-primary text-primary-foreground glow-primary"
+              className="gradient-primary text-primary-foreground glow-primary font-semibold rounded-xl"
               onClick={() => setCreateDialogOpen(true)}
             >
               <Plus className="w-5 h-5 ml-2" />
@@ -60,18 +60,18 @@ const TournamentsPage = () => {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row gap-4 mb-8 p-4 rounded-2xl bg-card/50 border border-border/50">
             <div className="relative flex-1">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 placeholder="البحث عن بطولة..."
-                className="pr-10"
+                className="pr-10 rounded-xl border-border/50 bg-background"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-48 rounded-xl border-border/50 bg-background">
                 <Filter className="w-4 h-4 ml-2" />
                 <SelectValue placeholder="الحالة" />
               </SelectTrigger>
@@ -84,7 +84,7 @@ const TournamentsPage = () => {
               </SelectContent>
             </Select>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-48 rounded-xl border-border/50 bg-background">
                 <SelectValue placeholder="النوع" />
               </SelectTrigger>
               <SelectContent>
@@ -100,23 +100,28 @@ const TournamentsPage = () => {
           {loading && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Skeleton key={i} className="h-48 rounded-xl" />
+                <Skeleton key={i} className="h-56 rounded-2xl" />
               ))}
             </div>
           )}
 
           {/* Empty State */}
           {!loading && filteredTournaments.length === 0 && (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">🏆</div>
-              <h3 className="text-xl font-bold mb-2">لا توجد بطولات</h3>
-              <p className="text-muted-foreground mb-4">
+            <div className="text-center py-20">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Trophy className="w-10 h-10 text-primary" />
+              </div>
+              <h3 className="text-2xl font-display font-bold mb-3">لا توجد بطولات</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 {tournaments.length === 0
-                  ? 'ابدأ بإنشاء بطولتك الأولى'
-                  : 'لا توجد نتائج تطابق البحث'}
+                  ? 'ابدأ بإنشاء بطولتك الأولى واستمتع بتجربة إدارة احترافية'
+                  : 'لا توجد نتائج تطابق البحث، جرب تغيير معايير البحث'}
               </p>
               {tournaments.length === 0 && (
-                <Button onClick={() => setCreateDialogOpen(true)}>
+                <Button 
+                  onClick={() => setCreateDialogOpen(true)}
+                  className="gradient-primary text-primary-foreground rounded-xl font-semibold"
+                >
                   <Plus className="w-4 h-4 ml-2" />
                   إنشاء بطولة
                 </Button>
