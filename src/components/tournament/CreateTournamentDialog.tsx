@@ -299,7 +299,8 @@ export function CreateTournamentDialog({
 
         {/* Step 3: Draw Result */}
         {step === 3 && drawResult && (
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Draw Result */}
             <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="w-5 h-5 text-primary" />
@@ -369,6 +370,48 @@ export function CreateTournamentDialog({
                 </div>
               )}
             </div>
+
+            {/* Matches Preview */}
+            {type === 'knockout' && drawResult.draw && (
+              <div className="p-4 rounded-lg border bg-card">
+                <div className="flex items-center gap-2 mb-4">
+                  <Trophy className="w-5 h-5 text-primary" />
+                  <span className="font-bold">مباريات الجولة الأولى</span>
+                </div>
+                <div className="grid gap-3">
+                  {(drawResult.draw as string[]).reduce(
+                    (acc: JSX.Element[], team: string, index: number) => {
+                      if (index % 2 === 0) {
+                        const opponent = drawResult.draw[index + 1];
+                        acc.push(
+                          <div
+                            key={index}
+                            className="flex items-center rounded-lg border bg-background p-3"
+                          >
+                            <div className="flex-1 text-right font-medium">
+                              {team}
+                            </div>
+                            <div className="px-4 flex items-center gap-2">
+                              <span className="font-display font-bold text-lg text-muted-foreground">-</span>
+                              <span className="text-muted-foreground">:</span>
+                              <span className="font-display font-bold text-lg text-muted-foreground">-</span>
+                            </div>
+                            <div className="flex-1 text-left font-medium">
+                              {opponent}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return acc;
+                    },
+                    []
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-3 text-center">
+                  سيتم إنشاء {Math.floor((drawResult.draw as string[]).length / 2)} مباراة
+                </p>
+              </div>
+            )}
           </div>
         )}
 
