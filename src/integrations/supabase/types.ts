@@ -104,6 +104,39 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string
+          id: string
+          is_organizer: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          is_organizer?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_organizer?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       standings: {
         Row: {
           created_at: string
@@ -223,6 +256,7 @@ export type Database = {
           name: string
           num_groups: number | null
           num_teams: number
+          owner_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["tournament_status"]
           teams_per_group: number | null
@@ -237,6 +271,7 @@ export type Database = {
           name: string
           num_groups?: number | null
           num_teams?: number
+          owner_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["tournament_status"]
           teams_per_group?: number | null
@@ -251,6 +286,7 @@ export type Database = {
           name?: string
           num_groups?: number | null
           num_teams?: number
+          owner_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["tournament_status"]
           teams_per_group?: number | null
@@ -259,14 +295,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "organizer" | "viewer"
       match_status: "scheduled" | "live" | "completed"
       tournament_status: "draft" | "upcoming" | "live" | "completed"
       tournament_type: "knockout" | "league" | "groups"
@@ -397,6 +482,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["organizer", "viewer"],
       match_status: ["scheduled", "live", "completed"],
       tournament_status: ["draft", "upcoming", "live", "completed"],
       tournament_type: ["knockout", "league", "groups"],
