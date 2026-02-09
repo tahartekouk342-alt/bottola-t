@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useTournamentDetails, type MatchWithTeams } from '@/hooks/useTournamentDetails';
 import { useTournaments } from '@/hooks/useTournaments';
+import { ORGANIZER_BASE } from '@/lib/constants';
 
 const statusMap = {
   draft: { label: 'مسودة', variant: 'secondary' as const },
@@ -85,7 +86,7 @@ export default function TournamentDetails() {
     if (confirm('هل أنت متأكد من حذف هذه البطولة؟')) {
       const success = await deleteTournament(id);
       if (success) {
-        navigate('/tournaments');
+        navigate(`${ORGANIZER_BASE}/dashboard`);
       }
     }
   };
@@ -116,7 +117,7 @@ export default function TournamentDetails() {
           <main className="flex-1 p-8">
             <div className="text-center">
               <h1 className="text-2xl font-bold mb-4">البطولة غير موجودة</h1>
-              <Button onClick={() => navigate('/tournaments')}>
+              <Button onClick={() => navigate(`${ORGANIZER_BASE}/dashboard`)}>
                 <ArrowRight className="w-4 h-4 ml-2" />
                 العودة للبطولات
               </Button>
@@ -145,7 +146,7 @@ export default function TournamentDetails() {
             {/* Back Button */}
             <Button
               variant="ghost"
-              onClick={() => navigate('/tournaments')}
+              onClick={() => navigate(`${ORGANIZER_BASE}/dashboard`)}
               className="mb-4"
             >
               <ArrowRight className="w-4 h-4 ml-2" />

@@ -4,37 +4,51 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Tournaments from "./pages/Tournaments";
-import TournamentDetails from "./pages/TournamentDetails";
-import Matches from "./pages/Matches";
-import Standings from "./pages/Standings";
+import { ORGANIZER_BASE } from "@/lib/constants";
+
+// Viewer Pages
+import ViewerWelcome from "./pages/ViewerWelcome";
+import ViewerAuth from "./pages/ViewerAuth";
 import Following from "./pages/Following";
+import Notifications from "./pages/Notifications";
 import OrganizerTournaments from "./pages/viewer/OrganizerTournaments";
 import ViewerTournamentDetails from "./pages/viewer/ViewerTournamentDetails";
+
+// Organizer Pages
+import OrganizerWelcome from "./pages/OrganizerWelcome";
+import OrganizerAuth from "./pages/OrganizerAuth";
+import OrganizerDashboard from "./pages/OrganizerDashboard";
+import OrganizerSettings from "./pages/OrganizerSettings";
+import TournamentDetails from "./pages/TournamentDetails";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <ThemeProvider defaultTheme="dark" storageKey="bottola-theme">
+  <ThemeProvider defaultTheme="light" storageKey="bottola-theme">
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/tournaments" element={<Tournaments />} />
-            <Route path="/tournament/:id" element={<TournamentDetails />} />
-            <Route path="/matches" element={<Matches />} />
-            <Route path="/standings" element={<Standings />} />
+            {/* Viewer Routes */}
+            <Route path="/" element={<ViewerWelcome />} />
+            <Route path="/auth" element={<ViewerAuth />} />
             <Route path="/following" element={<Following />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/viewer/organizer/:organizerId" element={<OrganizerTournaments />} />
             <Route path="/viewer/tournament/:tournamentId" element={<ViewerTournamentDetails />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
+            {/* Organizer Routes (complex URL) */}
+            <Route path={ORGANIZER_BASE} element={<OrganizerWelcome />} />
+            <Route path={`${ORGANIZER_BASE}/auth`} element={<OrganizerAuth />} />
+            <Route path={`${ORGANIZER_BASE}/dashboard`} element={<OrganizerDashboard />} />
+            <Route path={`${ORGANIZER_BASE}/settings`} element={<OrganizerSettings />} />
+            <Route path={`${ORGANIZER_BASE}/tournament/:id`} element={<TournamentDetails />} />
+
+            {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
