@@ -22,6 +22,7 @@ import { Loader2, Sparkles, Trophy } from 'lucide-react';
 import { useTournaments } from '@/hooks/useTournaments';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
+import { ORGANIZER_BASE } from '@/lib/constants';
 
 type TournamentType = Database['public']['Enums']['tournament_type'];
 
@@ -155,7 +156,7 @@ export function CreateTournamentDialog({
 
       onOpenChange(false);
       resetForm();
-      navigate(`/tournament/${tournament.id}`);
+      navigate(`${ORGANIZER_BASE}/tournament/${tournament.id}`);
     } finally {
       setLoading(false);
     }

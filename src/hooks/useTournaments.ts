@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
+import { useAuth } from '@/hooks/useAuth';
 
 type Tournament = Database['public']['Tables']['tournaments']['Row'];
 type Team = Database['public']['Tables']['teams']['Row'];
@@ -20,6 +21,7 @@ export function useTournaments() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchTournaments = async () => {
     try {
@@ -59,6 +61,7 @@ export function useTournaments() {
           start_date: tournament.startDate || null,
           num_teams: tournament.numTeams,
           num_groups: tournament.numGroups || 4,
+          owner_id: user?.id || null,
         })
         .select()
         .single();

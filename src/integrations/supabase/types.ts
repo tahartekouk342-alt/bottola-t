@@ -104,6 +104,50 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          related_organizer_id: string | null
+          related_tournament_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          related_organizer_id?: string | null
+          related_tournament_id?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          related_organizer_id?: string | null
+          related_tournament_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_related_tournament_id_fkey"
+            columns: ["related_tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -112,6 +156,7 @@ export type Database = {
           display_name: string
           id: string
           is_organizer: boolean | null
+          pin_hash: string | null
           updated_at: string
           user_id: string
         }
@@ -122,6 +167,7 @@ export type Database = {
           display_name: string
           id?: string
           is_organizer?: boolean | null
+          pin_hash?: string | null
           updated_at?: string
           user_id: string
         }
@@ -132,6 +178,7 @@ export type Database = {
           display_name?: string
           id?: string
           is_organizer?: boolean | null
+          pin_hash?: string | null
           updated_at?: string
           user_id?: string
         }

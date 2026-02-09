@@ -1,23 +1,22 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Trophy, UserPlus, UserMinus, Loader2 } from 'lucide-react';
-import { Header } from '@/components/layout/Header';
+import { ViewerHeader } from '@/components/viewer/ViewerHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useFollowing } from '@/hooks/useFollowing';
 
 export default function Following() {
-  const { user, loading: authLoading, isViewer } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { organizers, following, loadingOrganizers, loadingFollowing, follow, unfollow } = useFollowing(user?.id);
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/auth');
+      navigate('/auth?role=viewer');
     }
   }, [user, authLoading, navigate]);
 
@@ -30,10 +29,10 @@ export default function Following() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div className="min-h-screen bg-background" dir="rtl">
+      <ViewerHeader />
       
-      <main className="container mx-auto px-4 pt-24 pb-12">
+      <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-display font-bold mb-2">المتابعات</h1>
           <p className="text-muted-foreground">اكتشف وتابع منظمي البطولات</p>
@@ -51,7 +50,6 @@ export default function Following() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Discover Tab */}
           <TabsContent value="discover">
             {loadingOrganizers ? (
               <div className="flex items-center justify-center py-12">
@@ -80,7 +78,6 @@ export default function Following() {
             )}
           </TabsContent>
 
-          {/* Following Tab */}
           <TabsContent value="following">
             {loadingFollowing ? (
               <div className="flex items-center justify-center py-12">
@@ -118,19 +115,11 @@ export default function Following() {
                 <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                   <UserPlus className="w-12 h-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">لا توجد متابعات</h3>
-                  <p className="text-muted-foreground mb-4">
-                    ابدأ بمتابعة المنظمين لمشاهدة بطولاتهم
-                  </p>
-              <Button variant="outline" onClick={() => {
-                const discoverTab = document.querySelector('[data-value="discover"]') as HTMLElement | null;
-                discoverTab?.click();
-              }}>
-                اكتشف المنظمين
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </TabsContent>
+                  <p className="text-muted-foreground mb-4">ابدأ بمتابعة المنظمين لمشاهدة بطولاتهم</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
         </Tabs>
       </main>
     </div>
@@ -188,39 +177,16 @@ function OrganizerCard({ organizer, onFollow, onUnfollow, onViewTournaments }: O
         </div>
         
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewTournaments();
-            }}
-          >
+          <Button variant="outline" className="flex-1" onClick={(e) => { e.stopPropagation(); onViewTournaments(); }}>
             عرض البطولات
           </Button>
           
           {organizer.is_following ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onUnfollow();
-              }}
-              className="text-destructive hover:text-destructive"
-            >
+            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onUnfollow(); }} className="text-destructive hover:text-destructive">
               <UserMinus className="w-4 h-4" />
             </Button>
           ) : (
-            <Button
-              variant="default"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onFollow();
-              }}
-              className="gradient-primary"
-            >
+            <Button variant="default" size="icon" onClick={(e) => { e.stopPropagation(); onFollow(); }} className="gradient-primary">
               <UserPlus className="w-4 h-4" />
             </Button>
           )}

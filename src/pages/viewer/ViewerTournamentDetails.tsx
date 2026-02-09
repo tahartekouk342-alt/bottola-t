@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, Trophy, Calendar, Users, Loader2, GitBranch, TableIcon, List } from 'lucide-react';
-import { Header } from '@/components/layout/Header';
+import { ViewerHeader } from '@/components/viewer/ViewerHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,27 +18,14 @@ export default function ViewerTournamentDetails() {
   const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('bracket');
 
-  const {
-    tournament,
-    teams,
-    matches,
-    standings,
-    loading,
-    getRoundName
-  } = useTournamentDetails(tournamentId || '');
+  const { tournament, teams, matches, standings, loading, getRoundName } = useTournamentDetails(tournamentId || '');
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
+    if (!authLoading && !user) navigate('/auth?role=viewer');
   }, [user, authLoading, navigate]);
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
   if (!tournament) {
@@ -49,9 +36,7 @@ export default function ViewerTournamentDetails() {
             <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-xl font-bold mb-2">البطولة غير موجودة</h2>
             <p className="text-muted-foreground mb-4">لم يتم العثور على البطولة المطلوبة</p>
-            <Button onClick={() => navigate('/following')}>
-              العودة للمتابعات
-            </Button>
+            <Button onClick={() => navigate('/following')}>العودة للمتابعات</Button>
           </CardContent>
         </Card>
       </div>
@@ -59,43 +44,32 @@ export default function ViewerTournamentDetails() {
   }
 
   const getStatusBadge = (status: string) => {
-    const config = {
-      draft: { label: 'مسودة', variant: 'secondary' as const },
-      upcoming: { label: 'قادمة', variant: 'outline' as const },
-      live: { label: 'جارية', variant: 'destructive' as const },
-      completed: { label: 'منتهية', variant: 'default' as const }
+    const config: Record<string, { label: string; variant: 'secondary' | 'outline' | 'destructive' | 'default' }> = {
+      draft: { label: 'مسودة', variant: 'secondary' },
+      upcoming: { label: 'قادمة', variant: 'outline' },
+      live: { label: 'جارية', variant: 'destructive' },
+      completed: { label: 'منتهية', variant: 'default' }
     };
-    return config[status as keyof typeof config] || config.draft;
+    return config[status] || config.draft;
   };
 
   const getTypeBadge = (type: string) => {
-    const config = {
-      knockout: 'إقصائية',
-      league: 'دوري',
-      groups: 'مجموعات'
-    };
-    return config[type as keyof typeof config] || type;
+    const config: Record<string, string> = { knockout: 'إقصائية', league: 'دوري', groups: 'مجموعات' };
+    return config[type] || type;
   };
 
   const statusConfig = getStatusBadge(tournament.status);
   const showStandings = tournament.type === 'league' || tournament.type === 'groups';
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          className="mb-6"
-          onClick={() => navigate(-1)}
-        >
+    <div className="min-h-screen bg-background" dir="rtl">
+      <ViewerHeader />
+      <main className="container mx-auto px-4 py-8">
+        <Button variant="ghost" className="mb-6" onClick={() => navigate(-1)}>
           <ArrowRight className="w-4 h-4 ml-2" />
           العودة
         </Button>
 
-        {/* Tournament Header */}
         <Card className="mb-8 overflow-hidden">
           <div className="h-2 gradient-primary" />
           <CardContent className="p-6">
@@ -114,7 +88,6 @@ export default function ViewerTournamentDetails() {
                   </div>
                 </div>
               </div>
-              
               <div className="flex items-center gap-6 text-sm">
                 <div className="flex items-center gap-2">
                   <Users className="w-5 h-5 text-primary" />
@@ -135,96 +108,42 @@ export default function ViewerTournamentDetails() {
           </CardContent>
         </Card>
 
-        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="w-full justify-start overflow-x-auto">
-            <TabsTrigger value="bracket" className="flex items-center gap-2">
-              <GitBranch className="w-4 h-4" />
-              شجرة البطولة
-            </TabsTrigger>
-            <TabsTrigger value="matches" className="flex items-center gap-2">
-              <List className="w-4 h-4" />
-              المباريات
-            </TabsTrigger>
-            <TabsTrigger value="teams" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              الفرق
-            </TabsTrigger>
-            {showStandings && (
-              <TabsTrigger value="standings" className="flex items-center gap-2">
-                <TableIcon className="w-4 h-4" />
-                الترتيب
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="bracket" className="flex items-center gap-2"><GitBranch className="w-4 h-4" />شجرة البطولة</TabsTrigger>
+            <TabsTrigger value="matches" className="flex items-center gap-2"><List className="w-4 h-4" />المباريات</TabsTrigger>
+            <TabsTrigger value="teams" className="flex items-center gap-2"><Users className="w-4 h-4" />الفرق</TabsTrigger>
+            {showStandings && <TabsTrigger value="standings" className="flex items-center gap-2"><TableIcon className="w-4 h-4" />الترتيب</TabsTrigger>}
           </TabsList>
 
-          {/* Bracket Tab */}
           <TabsContent value="bracket">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <GitBranch className="w-5 h-5" />
-                  شجرة البطولة
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <BracketView
-                  matches={matches || []}
-                  getRoundName={getRoundName}
-                />
-              </CardContent>
+              <CardHeader><CardTitle className="flex items-center gap-2"><GitBranch className="w-5 h-5" />شجرة البطولة</CardTitle></CardHeader>
+              <CardContent><BracketView matches={matches || []} getRoundName={getRoundName} /></CardContent>
             </Card>
           </TabsContent>
 
-          {/* Matches Tab */}
           <TabsContent value="matches">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <List className="w-5 h-5" />
-                  المباريات
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <MatchesList
-                  matches={matches || []}
-                  getRoundName={getRoundName}
-                />
-              </CardContent>
+              <CardHeader><CardTitle className="flex items-center gap-2"><List className="w-5 h-5" />المباريات</CardTitle></CardHeader>
+              <CardContent><MatchesList matches={matches || []} getRoundName={getRoundName} /></CardContent>
             </Card>
           </TabsContent>
 
-          {/* Teams Tab */}
           <TabsContent value="teams">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  الفرق المشاركة
-                </CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Users className="w-5 h-5" />الفرق المشاركة</CardTitle></CardHeader>
               <CardContent>
                 {teams && teams.length > 0 ? (
                   <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                     {teams.map((team) => (
-                      <div
-                        key={team.id}
-                        className="flex items-center gap-3 p-4 rounded-xl border bg-card hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-                          {team.name.charAt(0)}
-                        </div>
+                      <div key={team.id} className="flex items-center gap-3 p-4 rounded-xl border bg-card hover:bg-muted/50 transition-colors">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">{team.name.charAt(0)}</div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">{team.name}</p>
-                          {team.group_name && (
-                            <p className="text-xs text-muted-foreground">
-                              المجموعة {team.group_name}
-                            </p>
-                          )}
+                          {team.group_name && <p className="text-xs text-muted-foreground">المجموعة {team.group_name}</p>}
                         </div>
-                        {team.is_eliminated && (
-                          <Badge variant="destructive" className="text-xs">خرج</Badge>
-                        )}
+                        {team.is_eliminated && <Badge variant="destructive" className="text-xs">خرج</Badge>}
                       </div>
                     ))}
                   </div>
@@ -238,17 +157,11 @@ export default function ViewerTournamentDetails() {
             </Card>
           </TabsContent>
 
-          {/* Standings Tab */}
           {showStandings && (
             <TabsContent value="standings">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TableIcon className="w-5 h-5" />
-                    جدول الترتيب
-                  </CardTitle>
-                </CardHeader>
-              <CardContent>
+                <CardHeader><CardTitle className="flex items-center gap-2"><TableIcon className="w-5 h-5" />جدول الترتيب</CardTitle></CardHeader>
+                <CardContent>
                   {standings && standings.length > 0 ? (
                     <StandingsTable standings={standings.map((s, idx) => {
                       const team = teams?.find(t => t.id === s.team_id);
