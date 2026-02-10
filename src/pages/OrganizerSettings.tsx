@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, User, Lock, Camera, Save, Loader2 } from 'lucide-react';
+import { ArrowRight, User, Lock, Camera, Save, Loader2, ShieldOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,22 +55,13 @@ export default function OrganizerSettings() {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-
     setUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}/avatar.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
       if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
       setAvatarUrl(publicUrl);
       toast({ title: 'تم رفع الصورة بنجاح' });
     } catch (error: any) {
@@ -87,15 +77,10 @@ export default function OrganizerSettings() {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({
-          display_name: displayName,
-          bio,
-          avatar_url: avatarUrl
-        })
+        .update({ display_name: displayName, bio, avatar_url: avatarUrl })
         .eq('user_id', user.id);
-
       if (error) throw error;
-      toast({ title: 'تم حفظ الإعدادات بنجاح' });
+      toast({ title: 'تم حفظ الإعدادات بنجاح ✅' });
     } catch (error: any) {
       toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
     } finally {
@@ -114,14 +99,8 @@ export default function OrganizerSettings() {
       return;
     }
 
-    // Verify current PIN if exists
     if (hasExistingPin) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('pin_hash')
-        .eq('user_id', user.id)
-        .single();
-
+      const { data } = await supabase.from('profiles').select('pin_hash').eq('user_id', user.id).single();
       if (data?.pin_hash !== btoa(currentPin)) {
         toast({ title: 'رمز PIN الحالي غير صحيح', variant: 'destructive' });
         return;
@@ -130,17 +109,39 @@ export default function OrganizerSettings() {
 
     setSavingPin(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ pin_hash: btoa(newPin) })
-        .eq('user_id', user.id);
-
+      const { error } = await supabase.from('profiles').update({ pin_hash: btoa(newPin) }).eq('user_id', user.id);
       if (error) throw error;
-      toast({ title: 'تم تعيين رمز PIN بنجاح' });
+      toast({ title: 'تم تعيين رمز PIN بنجاح ✅' });
       setCurrentPin('');
       setNewPin('');
       setConfirmPin('');
       setHasExistingPin(true);
+    } catch (error: any) {
+      toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
+    } finally {
+      setSavingPin(false);
+    }
+  };
+
+  const handleRemovePin = async () => {
+    if (!user) return;
+
+    // Verify current PIN first
+    const { data } = await supabase.from('profiles').select('pin_hash').eq('user_id', user.id).single();
+    if (data?.pin_hash !== btoa(currentPin)) {
+      toast({ title: 'رمز PIN الحالي غير صحيح', variant: 'destructive' });
+      return;
+    }
+
+    setSavingPin(true);
+    try {
+      const { error } = await supabase.from('profiles').update({ pin_hash: null }).eq('user_id', user.id);
+      if (error) throw error;
+      toast({ title: 'تم إلغاء رمز PIN ✅' });
+      setCurrentPin('');
+      setNewPin('');
+      setConfirmPin('');
+      setHasExistingPin(false);
     } catch (error: any) {
       toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
     } finally {
@@ -169,14 +170,10 @@ export default function OrganizerSettings() {
         {/* Profile Section */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="w-5 h-5" />
-              الملف الشخصي
-            </CardTitle>
+            <CardTitle className="flex items-center gap-2"><User className="w-5 h-5" />الملف الشخصي</CardTitle>
             <CardDescription>تحديث بيانات حسابك وصورتك الشخصية</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Avatar */}
             <div className="flex items-center gap-6">
               <div className="relative">
                 <Avatar className="w-20 h-20 ring-4 ring-primary/20">
@@ -216,13 +213,10 @@ export default function OrganizerSettings() {
         {/* PIN Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="w-5 h-5" />
-              رمز PIN للأمان
-            </CardTitle>
+            <CardTitle className="flex items-center gap-2"><Lock className="w-5 h-5" />رمز PIN للأمان</CardTitle>
             <CardDescription>
               {hasExistingPin
-                ? 'يمكنك تغيير رمز PIN الخاص بك'
+                ? 'يمكنك تغيير أو إلغاء رمز PIN الخاص بك'
                 : 'قم بتعيين رمز PIN لحماية لوحة التحكم عند فتح التطبيق'}
             </CardDescription>
           </CardHeader>
@@ -265,10 +259,19 @@ export default function OrganizerSettings() {
               />
             </div>
 
-            <Button onClick={handleSavePin} disabled={savingPin} className="gradient-primary text-primary-foreground">
-              {savingPin ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Lock className="w-4 h-4 ml-2" />}
-              {hasExistingPin ? 'تغيير رمز PIN' : 'تعيين رمز PIN'}
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleSavePin} disabled={savingPin} className="gradient-primary text-primary-foreground">
+                {savingPin ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Lock className="w-4 h-4 ml-2" />}
+                {hasExistingPin ? 'تغيير رمز PIN' : 'تعيين رمز PIN'}
+              </Button>
+
+              {hasExistingPin && (
+                <Button onClick={handleRemovePin} disabled={savingPin || !currentPin} variant="destructive">
+                  <ShieldOff className="w-4 h-4 ml-2" />
+                  إلغاء PIN
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

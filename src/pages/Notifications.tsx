@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Check, CheckCheck, Trophy, Loader2 } from 'lucide-react';
+import { Bell, CheckCheck, Trophy, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ViewerHeader } from '@/components/viewer/ViewerHeader';

@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Trophy, UserPlus, UserMinus, Loader2 } from 'lucide-react';
+import { Users, Trophy, UserPlus, UserMinus, Loader2, Search } from 'lucide-react';
 import { ViewerHeader } from '@/components/viewer/ViewerHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,6 +14,7 @@ export default function Following() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { organizers, following, loadingOrganizers, loadingFollowing, follow, unfollow } = useFollowing(user?.id);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -27,6 +29,11 @@ export default function Following() {
       </div>
     );
   }
+
+  const filteredOrganizers = organizers?.filter(org =>
+    org.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (org.bio && org.bio.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -51,13 +58,24 @@ export default function Following() {
           </TabsList>
 
           <TabsContent value="discover">
+            {/* Search */}
+            <div className="relative mb-6 max-w-md">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                placeholder="ابحث عن منظم..."
+                className="pr-10 rounded-xl"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
             {loadingOrganizers ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
-            ) : organizers && organizers.length > 0 ? (
+            ) : filteredOrganizers && filteredOrganizers.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {organizers.map((organizer) => (
+                {filteredOrganizers.map((organizer) => (
                   <OrganizerCard
                     key={organizer.id}
                     organizer={organizer}
@@ -71,8 +89,12 @@ export default function Following() {
               <Card className="border-dashed">
                 <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                   <Users className="w-12 h-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">لا يوجد منظمين</h3>
-                  <p className="text-muted-foreground">لم يتم العثور على منظمين حتى الآن</p>
+                  <h3 className="text-lg font-semibold mb-2">
+                    {searchQuery ? 'لم يتم العثور على نتائج' : 'لا يوجد منظمين'}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {searchQuery ? 'جرب كلمة بحث مختلفة' : 'لم يتم العثور على منظمين حتى الآن'}
+                  </p>
                 </CardContent>
               </Card>
             )}

@@ -14,25 +14,13 @@ interface Organizer {
   is_following?: boolean;
 }
 
-interface FollowingProfile {
-  following_id: string;
-  profiles: {
-    id: string;
-    user_id: string;
-    display_name: string;
-    bio: string | null;
-    avatar_url: string | null;
-    is_organizer: boolean;
-  };
-}
-
 export function useFollowing(userId?: string) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch all organizers
+  // Fetch all organizers with stats in fewer queries
   const { data: organizers, isLoading: loadingOrganizers } = useQuery({
-    queryKey: ['organizers'],
+    queryKey: ['organizers', userId],
     queryFn: async () => {
       const { data: profiles, error } = await supabase
         .from('profiles')
@@ -40,10 +28,23 @@ export function useFollowing(userId?: string) {
         .eq('is_organizer', true);
 
       if (error) throw error;
+      if (!profiles || profiles.length === 0) return [];
 
-      // Get tournament counts for each organizer
+      // Get all tournament counts in one query
+      const userIds = profiles.map(p => p.user_id);
+      
+      // Get follow data for current user
+      let followingIds: string[] = [];
+      if (userId) {
+        const { data: follows } = await supabase
+          .from('user_follows')
+          .select('following_id')
+          .eq('follower_id', userId);
+        followingIds = (follows || []).map(f => f.following_id);
+      }
+
       const organizersWithStats = await Promise.all(
-        (profiles || []).map(async (profile) => {
+        profiles.map(async (profile) => {
           const { count: tournamentCount } = await supabase
             .from('tournaments')
             .select('*', { count: 'exact', head: true })
@@ -54,23 +55,11 @@ export function useFollowing(userId?: string) {
             .select('*', { count: 'exact', head: true })
             .eq('following_id', profile.user_id);
 
-          // Check if current user is following
-          let isFollowing = false;
-          if (userId) {
-            const { data: followData } = await supabase
-              .from('user_follows')
-              .select('id')
-              .eq('follower_id', userId)
-              .eq('following_id', profile.user_id)
-              .single();
-            isFollowing = !!followData;
-          }
-
           return {
             ...profile,
             tournament_count: tournamentCount || 0,
             follower_count: followerCount || 0,
-            is_following: isFollowing
+            is_following: followingIds.includes(profile.user_id)
           } as Organizer;
         })
       );
@@ -88,22 +77,22 @@ export function useFollowing(userId?: string) {
 
       const { data, error } = await supabase
         .from('user_follows')
-        .select(`
-          following_id,
-          profiles!user_follows_following_id_fkey (
-            id,
-            user_id,
-            display_name,
-            bio,
-            avatar_url,
-            is_organizer
-          )
-        `)
+        .select('following_id')
         .eq('follower_id', userId);
 
       if (error) throw error;
-
-      return (data as unknown as FollowingProfile[])?.map((f) => f.profiles) || [];
+      
+      if (!data || data.length === 0) return [];
+      
+      const followingIds = data.map(f => f.following_id);
+      
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('user_id', followingIds);
+      
+      if (profilesError) throw profilesError;
+      return profiles || [];
     },
     enabled: !!userId
   });
@@ -120,13 +109,18 @@ export function useFollowing(userId?: string) {
           following_id: organizerId
         });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') {
+          throw new Error('أنت تتابع هذا المنظم بالفعل');
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizers'] });
       queryClient.invalidateQueries({ queryKey: ['following'] });
       toast({
-        title: 'تم المتابعة',
+        title: 'تم المتابعة ✅',
         description: 'تمت إضافة المنظم إلى قائمة متابعاتك'
       });
     },
