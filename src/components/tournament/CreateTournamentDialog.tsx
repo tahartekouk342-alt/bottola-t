@@ -36,7 +36,7 @@ export function CreateTournamentDialog({
   onOpenChange,
 }: CreateTournamentDialogProps) {
   const navigate = useNavigate();
-  const { createTournament, addTeams, performAIDraw, generateKnockoutMatches } =
+  const { createTournament, addTeams, performAIDraw, generateKnockoutMatches, generateLeagueMatches, generateGroupMatches } =
     useTournaments();
   const { toast } = useToast();
 
@@ -144,9 +144,13 @@ export function CreateTournamentDialog({
       const teams = await addTeams(tournament.id, orderedTeams as string[]);
       if (!teams) return;
 
-      // Generate matches for knockout
+      // Generate matches based on type
       if (type === 'knockout') {
         await generateKnockoutMatches(tournament.id, teams);
+      } else if (type === 'league') {
+        await generateLeagueMatches(tournament.id, teams);
+      } else if (type === 'groups' && drawResult.groups) {
+        await generateGroupMatches(tournament.id, teams, drawResult.groups);
       }
 
       toast({

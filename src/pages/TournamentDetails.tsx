@@ -42,7 +42,7 @@ export default function TournamentDetails() {
   const {
     tournament, teams, matches, standings, loading, getRoundName, fetchTournamentDetails,
   } = useTournamentDetails(id);
-  const { updateMatchResult, deleteTournament, addTeams, generateKnockoutMatches } = useTournaments();
+  const { updateMatchResult, deleteTournament, addTeams, generateKnockoutMatches, generateLeagueMatches } = useTournaments();
 
   const [selectedMatch, setSelectedMatch] = useState<MatchWithTeams | null>(null);
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
@@ -112,11 +112,14 @@ export default function TournamentDetails() {
     setAddingTeams(true);
     try {
       const newTeams = await addTeams(id, teamsList);
-      if (newTeams && tournament?.type === 'knockout') {
-        // Fetch fresh teams after adding
+      if (newTeams) {
         const { data: allTeams } = await supabase.from('teams').select('*').eq('tournament_id', id).order('seed');
         if (allTeams) {
-          await generateKnockoutMatches(id, allTeams);
+          if (tournament?.type === 'knockout') {
+            await generateKnockoutMatches(id, allTeams);
+          } else if (tournament?.type === 'league') {
+            await generateLeagueMatches(id, allTeams);
+          }
         }
       }
       toast({ title: 'تم إضافة الفرق وإنشاء المباريات ✅' });
@@ -334,37 +337,60 @@ export default function TournamentDetails() {
 
             <TabsContent value="standings">
               {standings.length > 0 ? (
-                <div className="rounded-xl border bg-card overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-right">#</TableHead>
-                        <TableHead className="text-right">الفريق</TableHead>
-                        <TableHead className="text-center">لعب</TableHead>
-                        <TableHead className="text-center">فوز</TableHead>
-                        <TableHead className="text-center">تعادل</TableHead>
-                        <TableHead className="text-center">خسارة</TableHead>
-                        <TableHead className="text-center">الفارق</TableHead>
-                        <TableHead className="text-center">النقاط</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {standings.map((standing, index) => (
-                        <TableRow key={standing.id}>
-                          <TableCell className="font-bold">{index + 1}</TableCell>
-                          <TableCell className="font-medium">
-                            {teams.find((t) => t.id === standing.team_id)?.name}
-                          </TableCell>
-                          <TableCell className="text-center">{standing.played}</TableCell>
-                          <TableCell className="text-center">{standing.won}</TableCell>
-                          <TableCell className="text-center">{standing.drawn}</TableCell>
-                          <TableCell className="text-center">{standing.lost}</TableCell>
-                          <TableCell className="text-center">{standing.goal_difference}</TableCell>
-                          <TableCell className="text-center font-bold text-primary">{standing.points}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                <div className="space-y-6">
+                  {(() => {
+                    // Group standings by group_name
+                    const grouped = standings.reduce((acc, s) => {
+                      const key = s.group_name || 'عام';
+                      if (!acc[key]) acc[key] = [];
+                      acc[key].push(s);
+                      return acc;
+                    }, {} as Record<string, typeof standings>);
+
+                    return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([groupName, groupStandings]) => (
+                      <div key={groupName} className="rounded-xl border bg-card overflow-hidden">
+                        {Object.keys(grouped).length > 1 && (
+                          <div className="px-4 py-2 bg-primary/10 font-bold text-primary">المجموعة {groupName}</div>
+                        )}
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="text-right">#</TableHead>
+                              <TableHead className="text-right">الفريق</TableHead>
+                              <TableHead className="text-center">لعب</TableHead>
+                              <TableHead className="text-center">فوز</TableHead>
+                              <TableHead className="text-center">تعادل</TableHead>
+                              <TableHead className="text-center">خسارة</TableHead>
+                              <TableHead className="text-center">له</TableHead>
+                              <TableHead className="text-center">عليه</TableHead>
+                              <TableHead className="text-center">الفارق</TableHead>
+                              <TableHead className="text-center">النقاط</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {groupStandings
+                              .sort((a, b) => (b.points || 0) - (a.points || 0) || (b.goal_difference || 0) - (a.goal_difference || 0))
+                              .map((standing, index) => (
+                              <TableRow key={standing.id}>
+                                <TableCell className="font-bold">{index + 1}</TableCell>
+                                <TableCell className="font-medium">
+                                  {teams.find((t) => t.id === standing.team_id)?.name}
+                                </TableCell>
+                                <TableCell className="text-center">{standing.played || 0}</TableCell>
+                                <TableCell className="text-center">{standing.won || 0}</TableCell>
+                                <TableCell className="text-center">{standing.drawn || 0}</TableCell>
+                                <TableCell className="text-center">{standing.lost || 0}</TableCell>
+                                <TableCell className="text-center">{standing.goals_for || 0}</TableCell>
+                                <TableCell className="text-center">{standing.goals_against || 0}</TableCell>
+                                <TableCell className="text-center">{standing.goal_difference || 0}</TableCell>
+                                <TableCell className="text-center font-bold text-primary">{standing.points || 0}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ));
+                  })()}
                 </div>
               ) : (
                 <div className="text-center py-12 text-muted-foreground">لا توجد بيانات ترتيب بعد</div>
