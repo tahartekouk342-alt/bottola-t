@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Trophy, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Trophy, Mail, Lock, User, Eye, EyeOff, Shield, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useAuth, UserRole } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 const loginSchema = z.object({
   email: z.string().email('البريد الإلكتروني غير صالح'),
@@ -36,14 +37,12 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>('viewer');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp, user, role } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        // Check user role and redirect accordingly
         supabase
           .from('user_roles')
           .select('role')
@@ -76,7 +75,6 @@ export default function Auth() {
     setIsLoading(false);
 
     if (!result.error && result.user) {
-      // Fetch role and redirect
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
@@ -97,55 +95,55 @@ export default function Auth() {
     setIsLoading(false);
 
     if (!result.error) {
-      // Show success message - user needs to verify email
       signupForm.reset();
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
+    <div className="page-container flex items-center justify-center p-4">
+      {/* Background imagery */}
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1504450758481-7338eba7524a?q=80&w=2069&auto=format&fit=crop')] bg-cover bg-center opacity-10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-primary/5" />
       
-      <Card className="w-full max-w-md relative z-10 border-border/50 bg-card/80 backdrop-blur-xl">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center glow-primary">
-            <Trophy className="w-8 h-8 text-primary-foreground" />
+      <Card className="w-full max-w-md relative z-10 sports-card border-white/5 bg-card/40 backdrop-blur-2xl shadow-2xl">
+        <CardHeader className="text-center space-y-6 pt-10 pb-6">
+          <div className="mx-auto w-20 h-20 rounded-[1.5rem] gradient-primary flex items-center justify-center glow-primary shadow-2xl rotate-3 transition-transform hover:rotate-0 duration-500">
+            <Trophy className="w-10 h-10 text-primary-foreground" />
           </div>
-          <div>
-            <CardTitle className="text-2xl font-display">مرحباً بك في Bottola</CardTitle>
-            <CardDescription>منصة إدارة البطولات الرياضية</CardDescription>
+          <div className="space-y-2">
+            <CardTitle className="text-4xl font-black font-display tracking-tighter uppercase">Bottola</CardTitle>
+            <CardDescription className="text-xs font-black text-primary uppercase tracking-[0.3em]">بوابة المحترفين</CardDescription>
           </div>
         </CardHeader>
         
-        <CardContent>
+        <CardContent className="px-8 pb-10">
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">تسجيل الدخول</TabsTrigger>
-              <TabsTrigger value="signup">إنشاء حساب</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-10 p-1 bg-white/5 rounded-2xl border border-white/5">
+              <TabsTrigger value="login" className="rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">دخول</TabsTrigger>
+              <TabsTrigger value="signup" className="rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">تسجيل</TabsTrigger>
             </TabsList>
             
-            {/* Login Tab */}
             <TabsContent value="login">
               <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-6">
                   <FormField
                     control={loginForm.control}
                     name="email"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>البريد الإلكتروني</FormLabel>
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">البريد الإلكتروني</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Mail className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
                             <Input 
                               {...field} 
                               type="email" 
                               placeholder="example@email.com"
-                              className="pr-10"
+                              className="pr-12 h-14 bg-white/5 border-white/5 rounded-2xl focus:ring-primary/20 focus:border-primary/30 transition-all font-bold"
                             />
                           </div>
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-[10px] font-bold text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -154,63 +152,92 @@ export default function Auth() {
                     control={loginForm.control}
                     name="password"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>كلمة المرور</FormLabel>
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">كلمة المرور</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
                             <Input 
                               {...field} 
                               type={showPassword ? 'text' : 'password'}
                               placeholder="••••••••"
-                              className="pr-10 pl-10"
+                              className="pr-12 pl-12 h-14 bg-white/5 border-white/5 rounded-2xl focus:ring-primary/20 focus:border-primary/30 transition-all font-bold"
                             />
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                             >
                               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                           </div>
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-[10px] font-bold text-red-400" />
                       </FormItem>
                     )}
                   />
                   
                   <Button 
                     type="submit" 
-                    className="w-full gradient-primary text-primary-foreground font-semibold"
+                    className="w-full h-14 gradient-primary text-primary-foreground font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     disabled={isLoading}
                   >
-                    {isLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
+                    {isLoading ? 'جاري التحقق...' : 'تسجيل الدخول'}
                   </Button>
                 </form>
               </Form>
             </TabsContent>
             
-            {/* Signup Tab */}
             <TabsContent value="signup">
+              <div className="mb-8 p-4 rounded-2xl bg-white/5 border border-white/5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-primary mb-4 block text-center">اختر نوع الحساب</Label>
+                <RadioGroup 
+                  defaultValue="viewer" 
+                  className="grid grid-cols-2 gap-4"
+                  onValueChange={(v) => setSelectedRole(v as UserRole)}
+                >
+                  <div className="relative">
+                    <RadioGroupItem value="viewer" id="viewer" className="peer sr-only" />
+                    <Label
+                      htmlFor="viewer"
+                      className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-transparent bg-background/50 cursor-pointer transition-all peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+                    >
+                      <Users className="w-6 h-6 mb-2 text-primary" />
+                      <span className="text-xs font-black">مشاهد</span>
+                    </Label>
+                  </div>
+                  <div className="relative">
+                    <RadioGroupItem value="organizer" id="organizer" className="peer sr-only" />
+                    <Label
+                      htmlFor="organizer"
+                      className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-transparent bg-background/50 cursor-pointer transition-all peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+                    >
+                      <Shield className="w-6 h-6 mb-2 text-primary" />
+                      <span className="text-xs font-black">منظم</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
               <Form {...signupForm}>
-                <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+                <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-6">
                   <FormField
                     control={signupForm.control}
                     name="displayName"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>الاسم الكامل</FormLabel>
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">الاسم الكامل</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <User className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
                             <Input 
                               {...field} 
                               placeholder="أحمد محمد"
-                              className="pr-10"
+                              className="pr-12 h-14 bg-white/5 border-white/5 rounded-2xl focus:ring-primary/20 focus:border-primary/30 transition-all font-bold"
                             />
                           </div>
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-[10px] font-bold text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -219,20 +246,20 @@ export default function Auth() {
                     control={signupForm.control}
                     name="email"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>البريد الإلكتروني</FormLabel>
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">البريد الإلكتروني</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Mail className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
                             <Input 
                               {...field} 
                               type="email" 
                               placeholder="example@email.com"
-                              className="pr-10"
+                              className="pr-12 h-14 bg-white/5 border-white/5 rounded-2xl focus:ring-primary/20 focus:border-primary/30 transition-all font-bold"
                             />
                           </div>
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-[10px] font-bold text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -241,100 +268,30 @@ export default function Auth() {
                     control={signupForm.control}
                     name="password"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>كلمة المرور</FormLabel>
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">كلمة المرور</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
                             <Input 
                               {...field} 
                               type={showPassword ? 'text' : 'password'}
                               placeholder="••••••••"
-                              className="pr-10 pl-10"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={signupForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>تأكيد كلمة المرور</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input 
-                              {...field} 
-                              type={showPassword ? 'text' : 'password'}
-                              placeholder="••••••••"
-                              className="pr-10"
+                              className="pr-12 pl-12 h-14 bg-white/5 border-white/5 rounded-2xl focus:ring-primary/20 focus:border-primary/30 transition-all font-bold"
                             />
                           </div>
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-[10px] font-bold text-red-400" />
                       </FormItem>
                     )}
                   />
-                  
-                  {/* Role Selection */}
-                  <div className="space-y-3">
-                    <Label>نوع الحساب</Label>
-                    <RadioGroup
-                      value={selectedRole}
-                      onValueChange={(value) => setSelectedRole(value as UserRole)}
-                      className="grid grid-cols-2 gap-4"
-                    >
-                      <div>
-                        <RadioGroupItem
-                          value="viewer"
-                          id="viewer"
-                          className="peer sr-only"
-                        />
-                        <Label
-                          htmlFor="viewer"
-                          className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all"
-                        >
-                          <Eye className="mb-2 h-6 w-6" />
-                          <span className="font-medium">مشاهد</span>
-                          <span className="text-xs text-muted-foreground mt-1">متابعة البطولات</span>
-                        </Label>
-                      </div>
-                      <div>
-                        <RadioGroupItem
-                          value="organizer"
-                          id="organizer"
-                          className="peer sr-only"
-                        />
-                        <Label
-                          htmlFor="organizer"
-                          className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all"
-                        >
-                          <Trophy className="mb-2 h-6 w-6" />
-                          <span className="font-medium">منظم</span>
-                          <span className="text-xs text-muted-foreground mt-1">إنشاء وإدارة البطولات</span>
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
                   
                   <Button 
                     type="submit" 
-                    className="w-full gradient-primary text-primary-foreground font-semibold"
+                    className="w-full h-14 gradient-primary text-primary-foreground font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     disabled={isLoading}
                   >
-                    {isLoading ? 'جاري إنشاء الحساب...' : 'إنشاء حساب'}
+                    {isLoading ? 'جاري إنشاء الحساب...' : 'إنشاء حساب جديد'}
                   </Button>
                 </form>
               </Form>
