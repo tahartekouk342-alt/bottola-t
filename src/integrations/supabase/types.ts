@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      join_requests: {
+        Row: {
+          created_at: string
+          id: string
+          player_names: string[] | null
+          player_photos: string[] | null
+          requested_by: string | null
+          status: string
+          team_logo_url: string | null
+          team_name: string
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          player_names?: string[] | null
+          player_photos?: string[] | null
+          requested_by?: string | null
+          status?: string
+          team_logo_url?: string | null
+          team_name: string
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          player_names?: string[] | null
+          player_photos?: string[] | null
+          requested_by?: string | null
+          status?: string
+          team_logo_url?: string | null
+          team_name?: string
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "join_requests_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           away_score: number | null
@@ -25,6 +72,7 @@ export type Database = {
           id: string
           match_date: string | null
           match_order: number
+          match_time: string | null
           next_match_id: string | null
           round: number
           status: Database["public"]["Enums"]["match_status"]
@@ -42,6 +90,7 @@ export type Database = {
           id?: string
           match_date?: string | null
           match_order?: number
+          match_time?: string | null
           next_match_id?: string | null
           round?: number
           status?: Database["public"]["Enums"]["match_status"]
@@ -59,6 +108,7 @@ export type Database = {
           id?: string
           match_date?: string | null
           match_order?: number
+          match_time?: string | null
           next_match_id?: string | null
           round?: number
           status?: Database["public"]["Enums"]["match_status"]
@@ -296,10 +346,13 @@ export type Database = {
       }
       tournaments: {
         Row: {
+          accept_join_requests: boolean | null
           created_at: string
           current_round: number | null
           end_date: string | null
           id: string
+          logo_url: string | null
+          max_teams: number | null
           name: string
           num_groups: number | null
           num_teams: number
@@ -309,12 +362,18 @@ export type Database = {
           teams_per_group: number | null
           type: Database["public"]["Enums"]["tournament_type"]
           updated_at: string
+          venue_address: string | null
+          venue_name: string | null
+          venue_photos: string[] | null
         }
         Insert: {
+          accept_join_requests?: boolean | null
           created_at?: string
           current_round?: number | null
           end_date?: string | null
           id?: string
+          logo_url?: string | null
+          max_teams?: number | null
           name: string
           num_groups?: number | null
           num_teams?: number
@@ -324,12 +383,18 @@ export type Database = {
           teams_per_group?: number | null
           type?: Database["public"]["Enums"]["tournament_type"]
           updated_at?: string
+          venue_address?: string | null
+          venue_name?: string | null
+          venue_photos?: string[] | null
         }
         Update: {
+          accept_join_requests?: boolean | null
           created_at?: string
           current_round?: number | null
           end_date?: string | null
           id?: string
+          logo_url?: string | null
+          max_teams?: number | null
           name?: string
           num_groups?: number | null
           num_teams?: number
@@ -339,6 +404,9 @@ export type Database = {
           teams_per_group?: number | null
           type?: Database["public"]["Enums"]["tournament_type"]
           updated_at?: string
+          venue_address?: string | null
+          venue_name?: string | null
+          venue_photos?: string[] | null
         }
         Relationships: []
       }
