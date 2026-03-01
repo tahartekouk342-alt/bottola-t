@@ -39,19 +39,19 @@ export default function Following() {
     <div className="min-h-screen bg-background" dir="rtl">
       <ViewerHeader />
       
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-display font-bold mb-2">المتابعات</h1>
-          <p className="text-muted-foreground">اكتشف وتابع منظمي البطولات</p>
+      <main className="container mx-auto px-4 py-12">
+        <div className="mb-12">
+          <h1 className="font-display text-4xl md:text-5xl font-bold mb-3">المتابعات</h1>
+          <p className="text-muted-foreground text-lg">اكتشف وتابع منظمي البطولات</p>
         </div>
 
-        <Tabs defaultValue="discover" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="discover" className="flex items-center gap-2">
+        <Tabs defaultValue="discover" className="space-y-8">
+          <TabsList className="grid w-full max-w-md grid-cols-2 rounded-2xl bg-secondary/50 p-1">
+            <TabsTrigger value="discover" className="flex items-center gap-2 rounded-xl">
               <Users className="w-4 h-4" />
               اكتشاف المنظمين
             </TabsTrigger>
-            <TabsTrigger value="following" className="flex items-center gap-2">
+            <TabsTrigger value="following" className="flex items-center gap-2 rounded-xl">
               <UserPlus className="w-4 h-4" />
               متابعاتي ({following?.length || 0})
             </TabsTrigger>
@@ -59,11 +59,11 @@ export default function Following() {
 
           <TabsContent value="discover">
             {/* Search */}
-            <div className="relative mb-6 max-w-md">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <div className="relative mb-8 max-w-md">
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 placeholder="ابحث عن منظم..."
-                className="pr-10 rounded-xl"
+                className="pr-12 rounded-2xl bg-secondary/40 border-white/10 input-enhanced"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -74,7 +74,7 @@ export default function Following() {
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : filteredOrganizers && filteredOrganizers.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                 {filteredOrganizers.map((organizer) => (
                   <OrganizerCard
                     key={organizer.id}
@@ -86,10 +86,10 @@ export default function Following() {
                 ))}
               </div>
             ) : (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <Users className="w-12 h-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
+              <Card className="border-dashed rounded-3xl border-white/10">
+                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                  <Users className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
+                  <h3 className="text-2xl font-display font-bold mb-2">
                     {searchQuery ? 'لم يتم العثور على نتائج' : 'لا يوجد منظمين'}
                   </h3>
                   <p className="text-muted-foreground">
@@ -106,23 +106,23 @@ export default function Following() {
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : following && following.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                 {following.map((profile) => (
                   <Card 
                     key={profile.id} 
-                    className="card-interactive cursor-pointer"
+                    className="card-interactive cursor-pointer rounded-3xl"
                     onClick={() => navigate(`/viewer/organizer/${profile.user_id}`)}
                   >
                     <CardContent className="p-6">
                       <div className="flex items-center gap-4">
-                        <Avatar className="w-14 h-14">
+                        <Avatar className="w-16 h-16 ring-2 ring-primary/20">
                           <AvatarImage src={profile.avatar_url || undefined} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
+                          <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
                             {profile.display_name.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold truncate">{profile.display_name}</h3>
+                          <h3 className="font-semibold text-lg truncate">{profile.display_name}</h3>
                           <p className="text-sm text-muted-foreground truncate">
                             {profile.bio || 'منظم بطولات'}
                           </p>
@@ -133,11 +133,11 @@ export default function Following() {
                 ))}
               </div>
             ) : (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <UserPlus className="w-12 h-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">لا توجد متابعات</h3>
-                  <p className="text-muted-foreground mb-4">ابدأ بمتابعة المنظمين لمشاهدة بطولاتهم</p>
+              <Card className="border-dashed rounded-3xl border-white/10">
+                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                  <UserPlus className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
+                  <h3 className="text-2xl font-display font-bold mb-2">لا توجد متابعات</h3>
+                  <p className="text-muted-foreground mb-6">ابدأ بمتابعة المنظمين لمشاهدة بطولاتهم</p>
                 </CardContent>
               </Card>
             )}
@@ -166,12 +166,12 @@ interface OrganizerCardProps {
 
 function OrganizerCard({ organizer, onFollow, onUnfollow, onViewTournaments }: OrganizerCardProps) {
   return (
-    <Card className="card-interactive overflow-hidden">
-      <CardHeader className="pb-3">
+    <Card className="card-interactive overflow-hidden rounded-3xl">
+      <CardHeader className="pb-4">
         <div className="flex items-start gap-4">
-          <Avatar className="w-14 h-14 ring-2 ring-primary/20">
+          <Avatar className="w-16 h-16 ring-2 ring-primary/20">
             <AvatarImage src={organizer.avatar_url || undefined} />
-            <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
+            <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
               {organizer.display_name.charAt(0)}
             </AvatarFallback>
           </Avatar>
@@ -184,32 +184,45 @@ function OrganizerCard({ organizer, onFollow, onUnfollow, onViewTournaments }: O
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1.5">
+      <CardContent className="space-y-5">
+        <div className="flex items-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-primary" />
-            <span className="font-medium">{organizer.tournament_count || 0}</span>
+            <span className="font-bold">{organizer.tournament_count || 0}</span>
             <span className="text-muted-foreground">بطولة</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" />
-            <span className="font-medium">{organizer.follower_count || 0}</span>
+            <span className="font-bold">{organizer.follower_count || 0}</span>
             <span className="text-muted-foreground">متابع</span>
           </div>
         </div>
         
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={(e) => { e.stopPropagation(); onViewTournaments(); }}>
+        <div className="flex gap-3 pt-2">
+          <Button 
+            variant="outline" 
+            className="flex-1 rounded-2xl border-white/10 hover:bg-secondary/50" 
+            onClick={(e) => { e.stopPropagation(); onViewTournaments(); }}
+          >
             عرض البطولات
           </Button>
           
           {organizer.is_following ? (
-            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onUnfollow(); }} className="text-destructive hover:text-destructive">
-              <UserMinus className="w-4 h-4" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={(e) => { e.stopPropagation(); onUnfollow(); }} 
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-2xl"
+            >
+              <UserMinus className="w-5 h-5" />
             </Button>
           ) : (
-            <Button variant="default" size="icon" onClick={(e) => { e.stopPropagation(); onFollow(); }} className="gradient-primary">
-              <UserPlus className="w-4 h-4" />
+            <Button 
+              size="icon" 
+              onClick={(e) => { e.stopPropagation(); onFollow(); }} 
+              className="btn-primary rounded-2xl"
+            >
+              <UserPlus className="w-5 h-5" />
             </Button>
           )}
         </div>

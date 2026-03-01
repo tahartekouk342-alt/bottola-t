@@ -32,90 +32,90 @@ export function TournamentCard({ name, teams, startDate, status, type, logoUrl, 
     <Card
       onClick={onClick}
       className={cn(
-        "sports-card group relative overflow-hidden transition-all duration-500",
-        status === 'live' && "border-primary/30 ring-1 ring-primary/20"
+        "card-interactive group relative overflow-hidden transition-all duration-500 rounded-3xl",
+        status === 'live' && "border-primary/40 ring-1 ring-primary/20"
       )}
     >
       {/* Visual Header / Image Area */}
-      <div className="relative h-48 overflow-hidden">
+      <div className="relative h-52 overflow-hidden bg-gradient-to-br from-secondary/50 to-secondary/30">
         {/* Background Image / Placeholder */}
-        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent z-10" />
-        <div className="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent z-10" />
+        <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors duration-500" />
         
         {/* Sport Icon Background Overlay */}
-        <div className="absolute top-4 right-4 opacity-10 group-hover:scale-110 transition-transform duration-700 z-0">
-           <Trophy className="w-32 h-32 rotate-12" />
+        <div className="absolute top-4 right-4 opacity-8 group-hover:scale-110 transition-transform duration-700 z-0">
+           <Trophy className="w-40 h-40 rotate-12" />
         </div>
 
         {/* Status Badge */}
         <div className="absolute top-4 left-4 z-20">
-          <Badge className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border-none backdrop-blur-md", statusConfig[status].color)}>
-            {status === 'live' && <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5 animate-pulse" />}
+          <Badge className={cn("px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border-none backdrop-blur-md", statusConfig[status].color)}>
+            {status === 'live' && <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse" />}
             {statusConfig[status].label}
           </Badge>
         </div>
 
         {/* Tournament Logo Overlay */}
         <div className="absolute bottom-0 left-6 translate-y-1/2 z-20">
-          <div className="w-20 h-20 rounded-2xl bg-card border-4 border-background shadow-2xl flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-500">
+          <div className="w-24 h-24 rounded-2xl bg-card border-4 border-background shadow-2xl flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-500">
             {logoUrl ? (
               <img src={logoUrl} alt={name} className="w-full h-full object-cover" />
             ) : (
-              <Trophy className="w-10 h-10 text-primary" />
+              <Trophy className="w-12 h-12 text-primary" />
             )}
           </div>
         </div>
       </div>
 
-      <CardContent className="p-6 pt-12 relative z-10">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex flex-col gap-1">
-             <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+      <CardContent className="p-6 pt-16 relative z-10">
+        <div className="flex items-start justify-between mb-5">
+          <div className="flex flex-col gap-2 flex-1">
+             <span className="text-xs font-bold text-primary uppercase tracking-wider">
                 بطولة رسمية
              </span>
-             <h3 className="font-display text-2xl font-black text-foreground line-clamp-1 group-hover:text-primary transition-colors duration-300">
+             <h3 className="font-display text-2xl font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-300">
                {name}
              </h3>
           </div>
-          <div className="w-10 h-10 rounded-full bg-secondary/50 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+          <div className="w-11 h-11 rounded-full bg-secondary/50 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 flex-shrink-0 mr-2">
              <ChevronLeft className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary/30 border border-white/5">
-            <Users className="w-4 h-4 text-primary" />
-            <div className="flex flex-col">
-               <span className="text-[10px] text-muted-foreground font-bold">الفرق</span>
-               <span className="text-sm font-bold">{teams} فريق</span>
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-secondary/40 border border-white/5 hover:border-primary/30 transition-colors duration-300">
+            <Users className="w-4 h-4 text-primary flex-shrink-0" />
+            <div className="flex flex-col min-w-0">
+               <span className="text-xs text-muted-foreground font-bold">الفرق</span>
+               <span className="text-sm font-bold truncate">{teams} فريق</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary/30 border border-white/5">
-            <Calendar className="w-4 h-4 text-primary" />
-            <div className="flex flex-col">
-               <span className="text-[10px] text-muted-foreground font-bold">البداية</span>
-               <span className="text-sm font-bold">{startDate}</span>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-secondary/40 border border-white/5 hover:border-primary/30 transition-colors duration-300">
+            <Calendar className="w-4 h-4 text-primary flex-shrink-0" />
+            <div className="flex flex-col min-w-0">
+               <span className="text-xs text-muted-foreground font-bold">البداية</span>
+               <span className="text-sm font-bold truncate">{startDate}</span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-white/5">
-           <div className="flex items-center gap-2 text-muted-foreground">
+        <div className="flex items-center justify-between pt-5 border-t border-white/5">
+           <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors duration-300">
               {venueName ? (
                 <>
-                  <MapPin className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-xs font-bold truncate max-w-[150px]">{venueName}</span>
+                  <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-xs font-bold truncate max-w-[140px]">{venueName}</span>
                 </>
               ) : (
                 <>
-                  <Target className="w-3.5 h-3.5 text-primary" />
+                  <Target className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-xs font-bold">ملاعب معتمدة</span>
                 </>
               )}
            </div>
-           <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/5 text-primary text-[10px] font-black uppercase tracking-wider">
+           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider hover:bg-primary/20 transition-colors duration-300">
               {typeConfig[type].icon}
-              {typeConfig[type].label}
+              <span className="hidden sm:inline">{typeConfig[type].label}</span>
            </div>
         </div>
       </CardContent>

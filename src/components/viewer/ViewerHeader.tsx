@@ -1,20 +1,45 @@
-import { Trophy } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { ViewerSidebar } from '@/components/viewer/ViewerSidebar';
+import { Trophy, Bell, LogOut } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 export function ViewerHeader() {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
+
   return (
-    <header className="sticky top-0 z-50 glass-effect">
+    <header className="sticky top-0 z-50 glass-effect border-b border-white/10">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/following" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center glow-primary transition-transform duration-300 group-hover:scale-105">
-              <Trophy className="w-6 h-6 text-primary-foreground" />
+            <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center glow-primary transition-transform duration-300 group-hover:scale-105">
+              <Trophy className="w-7 h-7 text-primary-foreground" />
             </div>
             <span className="font-display text-2xl font-bold text-foreground">Bottola</span>
           </Link>
 
-          <ViewerSidebar />
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-xl hover:bg-secondary/50"
+              onClick={() => navigate('/notifications')}
+            >
+              <Bell className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-xl hover:bg-destructive/20 text-destructive"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </div>
     </header>
