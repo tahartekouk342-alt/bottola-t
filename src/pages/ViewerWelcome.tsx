@@ -53,7 +53,7 @@ export default function ViewerWelcome() {
           .single()
           .then(({ data }) => {
             if (data?.role === 'viewer') {
-              navigate('/following');
+              navigate('/home');
             }
           });
       }

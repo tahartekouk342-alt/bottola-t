@@ -52,7 +52,7 @@ export default function Auth() {
             if (data?.role === 'organizer') {
               navigate('/tournaments');
             } else {
-              navigate('/following');
+              navigate('/home');
             }
           });
       }
@@ -84,7 +84,7 @@ export default function Auth() {
       if (roleData?.role === 'organizer') {
         navigate('/tournaments');
       } else {
-        navigate('/following');
+        navigate('/home');
       }
     }
   };

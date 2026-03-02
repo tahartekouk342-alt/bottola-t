@@ -9,10 +9,12 @@ import { ORGANIZER_BASE } from "@/lib/constants";
 // Viewer Pages
 import ViewerWelcome from "./pages/ViewerWelcome";
 import ViewerAuth from "./pages/ViewerAuth";
+import ViewerHome from "./pages/ViewerHome";
 import Following from "./pages/Following";
 import Notifications from "./pages/Notifications";
 import OrganizerTournaments from "./pages/viewer/OrganizerTournaments";
 import ViewerTournamentDetails from "./pages/viewer/ViewerTournamentDetails";
+import { ViewerLayout } from "./components/viewer/ViewerLayout";
 
 // Organizer Pages
 import OrganizerWelcome from "./pages/OrganizerWelcome";
@@ -33,22 +35,24 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Viewer Routes */}
+            {/* Public */}
             <Route path="/" element={<ViewerWelcome />} />
             <Route path="/auth" element={<ViewerAuth />} />
-            <Route path="/following" element={<Following />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/viewer/organizer/:organizerId" element={<OrganizerTournaments />} />
-            <Route path="/viewer/tournament/:tournamentId" element={<ViewerTournamentDetails />} />
 
-            {/* Organizer Routes (complex URL) */}
+            {/* Viewer with sidebar layout */}
+            <Route path="/home" element={<ViewerLayout><ViewerHome /></ViewerLayout>} />
+            <Route path="/following" element={<ViewerLayout><Following /></ViewerLayout>} />
+            <Route path="/notifications" element={<ViewerLayout><Notifications /></ViewerLayout>} />
+            <Route path="/viewer/organizer/:organizerId" element={<ViewerLayout><OrganizerTournaments /></ViewerLayout>} />
+            <Route path="/viewer/tournament/:tournamentId" element={<ViewerLayout><ViewerTournamentDetails /></ViewerLayout>} />
+
+            {/* Organizer Routes */}
             <Route path={ORGANIZER_BASE} element={<OrganizerWelcome />} />
             <Route path={`${ORGANIZER_BASE}/auth`} element={<OrganizerAuth />} />
             <Route path={`${ORGANIZER_BASE}/dashboard`} element={<OrganizerDashboard />} />
             <Route path={`${ORGANIZER_BASE}/settings`} element={<OrganizerSettings />} />
             <Route path={`${ORGANIZER_BASE}/tournament/:id`} element={<TournamentDetails />} />
 
-            {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
