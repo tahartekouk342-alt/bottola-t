@@ -48,7 +48,7 @@ export default function ViewerAuth() {
           .single()
           .then(({ data }) => {
             if (data?.role === 'viewer') {
-              navigate('/following');
+              navigate('/home');
             }
           });
       }
@@ -78,7 +78,7 @@ export default function ViewerAuth() {
         .single();
 
       if (roleData?.role === 'viewer') {
-        navigate('/following');
+        navigate('/home');
       }
     }
   };

@@ -3,6 +3,7 @@ import { TournamentCard } from '@/components/tournament/TournamentCard';
 import { MatchCard } from '@/components/match/MatchCard';
 import { StatCard } from '@/components/ui/stat-card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Trophy, Users, Calendar, Target, Plus, ArrowLeft, Sparkles, Play, Shield, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
