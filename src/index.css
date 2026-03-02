@@ -6,77 +6,78 @@
 
 @layer base {
   :root {
-    /* Primary Colors - Deep Navy Sports Theme (Updated to match design) */
-    --background: 217 32% 10%;
-    --foreground: 210 40% 98%;
+    /* Light Mode - Primary Colors */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 15%;
 
-    --card: 217 32% 14%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 15%;
 
-    --popover: 217 32% 12%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 15%;
 
-    --primary: 210 100% 50%; /* Bright blue for primary actions */
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Green Sports Color */
+    --primary: 142 71% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 32% 18%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 20%;
 
-    --muted: 217 32% 16%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 50%;
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 217 32% 10%;
+    --accent: 142 71% 45%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --success: 142 76% 46%;
-    --success-foreground: 217 32% 10%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
-    --warning-foreground: 217 32% 10%;
+    --warning-foreground: 0 0% 15%;
 
     --info: 199 89% 48%;
-    --info-foreground: 217 32% 10%;
+    --info-foreground: 0 0% 15%;
 
-    --border: 217 32% 20%;
-    --input: 217 32% 18%;
-    --ring: 210 100% 50%;
+    --border: 0 0% 90%;
+    --input: 0 0% 95%;
+    --ring: 142 71% 45%;
 
-    --radius: 1.75rem; /* Extra rounded for modern look */
+    --radius: 1.75rem;
 
     /* Tournament Specific Colors */
-    --bracket-line: 217 32% 25%;
-    --group-header: 217 32% 16%;
-    --match-card: 217 32% 15%;
-    --standings-row-alt: 217 32% 12%;
+    --bracket-line: 0 0% 85%;
+    --group-header: 0 0% 95%;
+    --match-card: 0 0% 100%;
+    --standings-row-alt: 0 0% 98%;
     --live-pulse: 0 84% 60%;
 
-    /* Shadows - Enhanced for depth */
-    --shadow-sm: 0 1px 2px 0 hsl(217 32% 5% / 0.5);
-    --shadow-md: 0 4px 6px -1px hsl(217 32% 5% / 0.5), 0 2px 4px -2px hsl(217 32% 5% / 0.5);
-    --shadow-lg: 0 10px 15px -3px hsl(217 32% 5% / 0.6), 0 4px 6px -4px hsl(217 32% 5% / 0.6);
-    --shadow-xl: 0 20px 25px -5px hsl(217 32% 5% / 0.5), 0 8px 10px -6px hsl(217 32% 5% / 0.5);
-    --shadow-glow: 0 0 20px hsl(210 100% 50% / 0.3);
-    --shadow-card: 0 8px 30px hsl(217 32% 5% / 0.6);
+    /* Shadows - Light mode */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -2px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.15), 0 4px 6px -4px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.15), 0 8px 10px -6px hsl(0 0% 0% / 0.1);
+    --shadow-glow: 0 0 20px hsl(142 71% 45% / 0.2);
+    --shadow-card: 0 4px 12px hsl(0 0% 0% / 0.08);
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(210 100% 50%), hsl(217 32% 25%));
+    --gradient-primary: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 71% 40%));
     --gradient-accent: linear-gradient(135deg, hsl(38 92% 50%), hsl(38 92% 40%));
-    --gradient-hero: linear-gradient(180deg, hsl(217 32% 12%), hsl(217 32% 8%));
-    --gradient-card: linear-gradient(180deg, hsl(217 32% 18%), hsl(217 32% 14%));
-    --gradient-glass: linear-gradient(135deg, hsl(217 32% 20% / 0.7), hsl(217 32% 14% / 0.5));
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 99%));
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.8), hsl(0 0% 95% / 0.6));
 
     /* Sidebar */
-    --sidebar-background: 217 32% 10%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 100% 50%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217 32% 18%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 32% 20%;
-    --sidebar-ring: 210 100% 50%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 15%;
+    --sidebar-primary: 142 71% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 95%;
+    --sidebar-accent-foreground: 0 0% 20%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 142 71% 45%;
   }
 }
 
@@ -92,9 +93,6 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
-    background-image: radial-gradient(circle at top right, hsl(217 32% 16%), transparent 40%),
-                      radial-gradient(circle at bottom left, hsl(217 32% 14%), transparent 40%);
-    background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -121,7 +119,7 @@
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, hsl(210 100% 50%), hsl(142 76% 46%));
+    background: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 71% 40%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -131,18 +129,18 @@
     box-shadow: var(--shadow-glow);
   }
 
-  /* Card Styles - Updated for new design */
+  /* Card Styles - Light Mode */
   .sports-card {
-    @apply bg-card/90 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden shadow-card transition-all duration-300;
+    @apply bg-card border border-border rounded-3xl overflow-hidden shadow-card transition-all duration-300;
   }
 
   .sports-card:hover {
-    @apply border-primary/40 -translate-y-2 shadow-xl;
+    @apply border-primary/40 -translate-y-2 shadow-lg;
   }
 
   /* Feature Card with Image Background */
   .feature-card {
-    @apply relative overflow-hidden rounded-3xl border border-white/10 bg-card/80 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:border-primary/50;
+    @apply relative overflow-hidden rounded-3xl border border-border bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-2 hover:border-primary/50;
   }
 
   .feature-card-image {
@@ -181,7 +179,7 @@
     background: var(--gradient-glass);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid hsl(217 32% 25% / 0.5);
+    border: 1px solid hsl(0 0% 0% / 0.05);
   }
 
   .card-hover {
@@ -204,11 +202,11 @@
 
   /* Improved Input Focus States */
   .input-enhanced {
-    @apply transition-all duration-200 bg-secondary/50 border-white/10 rounded-2xl;
+    @apply transition-all duration-200 bg-secondary border-border rounded-2xl;
   }
   
   .input-enhanced:focus {
-    @apply ring-2 ring-primary/30 border-primary bg-secondary/80;
+    @apply ring-2 ring-primary/30 border-primary bg-background;
   }
 
   /* Page Container */
@@ -223,15 +221,15 @@
 
   /* Card Variants */
   .card-elevated {
-    @apply bg-card/90 border border-white/10 rounded-3xl shadow-card backdrop-blur-sm;
+    @apply bg-card border border-border rounded-3xl shadow-card;
   }
 
   .card-interactive {
-    @apply bg-card/90 border border-white/10 rounded-3xl shadow-card transition-all duration-300 cursor-pointer backdrop-blur-sm;
+    @apply bg-card border border-border rounded-3xl shadow-card transition-all duration-300 cursor-pointer;
   }
 
   .card-interactive:hover {
-    @apply shadow-xl border-primary/40 -translate-y-2;
+    @apply shadow-lg border-primary/40 -translate-y-2;
   }
 
   /* Grid Layouts */
@@ -249,20 +247,20 @@
   }
 
   .btn-secondary {
-    @apply bg-secondary/80 text-foreground border border-white/10 font-semibold rounded-2xl px-6 py-3 transition-all duration-200 hover:bg-secondary active:scale-95;
+    @apply bg-secondary text-foreground border border-border font-semibold rounded-2xl px-6 py-3 transition-all duration-200 hover:bg-secondary/80 active:scale-95;
   }
 
   /* Tournament Bracket Styles */
   .bracket-container {
-    @apply bg-card/90 border border-white/10 rounded-3xl p-6 backdrop-blur-sm;
+    @apply bg-card border border-border rounded-3xl p-6;
   }
 
   .bracket-group {
-    @apply bg-muted/50 rounded-2xl p-4 mb-4;
+    @apply bg-secondary rounded-2xl p-4 mb-4;
   }
 
   .bracket-match {
-    @apply bg-match-card border border-white/10 rounded-2xl p-3 mb-3 transition-all duration-200;
+    @apply bg-card border border-border rounded-2xl p-3 mb-3 transition-all duration-200;
   }
 
   .bracket-match:hover {
@@ -275,7 +273,7 @@
   }
 
   .standings-table thead {
-    @apply bg-muted/50 border-b border-white/10;
+    @apply bg-secondary border-b border-border;
   }
 
   .standings-table th {
@@ -283,15 +281,71 @@
   }
 
   .standings-table td {
-    @apply px-4 py-3 border-b border-white/10;
+    @apply px-4 py-3 border-b border-border;
   }
 
   .standings-table tbody tr {
-    @apply transition-all duration-200 hover:bg-secondary/30;
+    @apply transition-all duration-200 hover:bg-secondary;
   }
 
   .standings-table tbody tr:nth-child(even) {
     @apply bg-standings-row-alt;
+  }
+
+  /* Tournament Header */
+  .tournament-header {
+    @apply relative overflow-hidden rounded-2xl;
+    background-size: cover;
+    background-position: center;
+    min-height: 280px;
+  }
+
+  .tournament-header::before {
+    @apply absolute inset-0 bg-black/25;
+    content: '';
+  }
+
+  .tournament-header-content {
+    @apply relative z-10 flex flex-col justify-end h-full p-6 text-white;
+  }
+
+  /* Tab Navigation */
+  .tab-navigation {
+    @apply flex gap-0 border-b border-border bg-background;
+  }
+
+  .tab-item {
+    @apply px-6 py-3 font-medium text-muted-foreground cursor-pointer transition-all relative flex items-center gap-2;
+  }
+
+  .tab-item.active {
+    @apply text-primary font-semibold;
+  }
+
+  .tab-item.active::after {
+    @apply absolute bottom-0 left-0 right-0 h-1 bg-primary;
+    content: '';
+  }
+
+  .tab-item:hover {
+    @apply text-foreground;
+  }
+
+  /* Match Card */
+  .match-card {
+    @apply bg-card rounded-2xl p-4 border border-border shadow-card hover:shadow-lg transition-all;
+  }
+
+  .match-card-image {
+    @apply w-full h-40 rounded-xl object-cover mb-4;
+  }
+
+  .match-score {
+    @apply text-3xl font-bold text-foreground;
+  }
+
+  .team-name {
+    @apply text-lg font-semibold text-foreground;
   }
 }
 
@@ -331,6 +385,6 @@ button, [role="button"] {
 
 /* Selection color */
 ::selection {
-  background: hsl(var(--primary) / 0.3);
+  background: hsl(var(--primary) / 0.2);
   color: hsl(var(--foreground));
 }
