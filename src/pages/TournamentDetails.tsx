@@ -168,9 +168,26 @@ export default function TournamentDetails() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      {/* Tournament Header */}
-      <div className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="p-4 lg:p-6 max-w-7xl mx-auto">
+      {/* Tournament Header with Stadium Image */}
+      <div className="relative border-b overflow-hidden">
+        {/* Stadium Background Image */}
+        {tournament.stadium_image_url && (
+          <div className="absolute inset-0 h-64 md:h-80">
+            <img
+              src={tournament.stadium_image_url}
+              alt={tournament.venue_name || 'ملعب'}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-background"></div>
+          </div>
+        )}
+
+        <div className="relative z-10 p-4 lg:p-6 max-w-7xl mx-auto">
+          <Button variant="ghost" size="sm" onClick={() => navigate(`${ORGANIZER_BASE}/dashboard`)} className="mb-3 bg-black/20 hover:bg-black/40 text-white">
+            <ArrowRight className="w-4 h-4 ml-1" />العودة
+          </Button>
+
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 pt-12">
           <Button variant="ghost" size="sm" onClick={() => navigate(`${ORGANIZER_BASE}/dashboard`)} className="mb-3">
             <ArrowRight className="w-4 h-4 ml-1" />العودة
           </Button>
@@ -179,18 +196,18 @@ export default function TournamentDetails() {
             <div className="flex items-start gap-4">
               {/* Tournament Logo */}
               {tournament.logo_url ? (
-                <img src={tournament.logo_url} alt={tournament.name} className="w-16 h-16 rounded-xl object-cover border shadow" />
+                <img src={tournament.logo_url} alt={tournament.name} className="w-16 h-16 rounded-xl object-cover border-2 border-white shadow-lg" />
               ) : (
-                <div className="w-16 h-16 rounded-xl gradient-primary flex items-center justify-center shadow">
+                <div className="w-16 h-16 rounded-xl gradient-primary flex items-center justify-center shadow-lg border-2 border-white">
                   <Trophy className="w-8 h-8 text-primary-foreground" />
                 </div>
               )}
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h1 className="font-display text-2xl md:text-3xl font-bold">{tournament.name}</h1>
-                  <Badge variant={statusMap[tournament.status].variant}>{statusMap[tournament.status].label}</Badge>
+                  <h1 className="font-display text-2xl md:text-3xl font-bold text-white drop-shadow-lg">{tournament.name}</h1>
+                  <Badge variant={statusMap[tournament.status].variant} className="drop-shadow-lg">{statusMap[tournament.status].label}</Badge>
                 </div>
-                <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                <div className="flex flex-wrap gap-3 text-sm text-white/90 drop-shadow">
                   <span className="flex items-center gap-1"><Trophy className="w-3.5 h-3.5" />{typeMap[tournament.type]}</span>
                   <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{teams.length} فريق</span>
                   {tournament.start_date && (
@@ -215,6 +232,40 @@ export default function TournamentDetails() {
             </div>
           </div>
         </div>
+
+        {/* Stadium Details Card */}
+        {(tournament.stadium_capacity || tournament.stadium_amenities) && (
+          <div className="relative z-10 -mt-8 mb-6 mx-4 lg:mx-6">
+            <div className="bg-card rounded-2xl border border-border p-4 shadow-lg">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {tournament.venue_name && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">اسم الملعب</p>
+                    <p className="font-semibold text-foreground">{tournament.venue_name}</p>
+                  </div>
+                )}
+                {tournament.venue_address && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">الموقع</p>
+                    <p className="font-semibold text-foreground">{tournament.venue_address}</p>
+                  </div>
+                )}
+                {tournament.stadium_capacity && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">السعة</p>
+                    <p className="font-semibold text-foreground">{tournament.stadium_capacity?.toLocaleString('ar-SA')} مقعد</p>
+                  </div>
+                )}
+                {tournament.stadium_amenities && (
+                  <div className="col-span-2 md:col-span-3">
+                    <p className="text-xs text-muted-foreground mb-1">المرافق والخدمات</p>
+                    <p className="font-semibold text-foreground">{tournament.stadium_amenities}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Sticky Tabs Bar */}
         {(teams.length > 0 || matches.length > 0 || tournament.accept_join_requests) && (
