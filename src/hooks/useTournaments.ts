@@ -42,6 +42,9 @@ export function useTournaments() {
     venueAddress?: string;
     acceptJoinRequests?: boolean;
     maxTeams?: number;
+    stadiumImageUrl?: string | null;
+    stadiumCapacity?: number | null;
+    stadiumAmenities?: string;
   }) => {
     try {
       const { data, error } = await supabase
@@ -59,6 +62,9 @@ export function useTournaments() {
           venue_address: tournament.venueAddress || null,
           accept_join_requests: tournament.acceptJoinRequests || false,
           max_teams: tournament.maxTeams || null,
+          stadium_image_url: tournament.stadiumImageUrl || null,
+          stadium_capacity: tournament.stadiumCapacity || null,
+          stadium_amenities: tournament.stadiumAmenities || null,
         })
         .select()
         .single();

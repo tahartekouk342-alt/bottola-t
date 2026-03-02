@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Sparkles, Trophy, Upload, Camera, X, Plus } from 'lucide-react';
+import { Loader2, Sparkles, Trophy, Upload, Camera, X, Plus, Image, MapPin, Wifi } from 'lucide-react';
 import { useTournaments } from '@/hooks/useTournaments';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
@@ -45,6 +45,12 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [venueAddress, setVenueAddress] = useState('');
   const [acceptJoinRequests, setAcceptJoinRequests] = useState(false);
   const [maxTeams, setMaxTeams] = useState(16);
+  
+  // Stadium details
+  const [stadiumImageFile, setStadiumImageFile] = useState<File | null>(null);
+  const [stadiumImagePreview, setStadiumImagePreview] = useState<string | null>(null);
+  const [stadiumCapacity, setStadiumCapacity] = useState('');
+  const [stadiumAmenities, setStadiumAmenities] = useState('');
 
   // Step 2: Teams (individual entry)
   const [teamsList, setTeamsList] = useState<string[]>([]);
@@ -66,6 +72,10 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
     setVenueAddress('');
     setAcceptJoinRequests(false);
     setMaxTeams(16);
+    setStadiumImageFile(null);
+    setStadiumImagePreview(null);
+    setStadiumCapacity('');
+    setStadiumAmenities('');
     setTeamsList([]);
     setNewTeamName('');
     setDrawResult(null);
@@ -77,6 +87,15 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
     setLogoFile(file);
     const reader = new FileReader();
     reader.onload = () => setLogoPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleStadiumImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setStadiumImageFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setStadiumImagePreview(reader.result as string);
     reader.readAsDataURL(file);
   };
 
@@ -138,6 +157,18 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         }
       }
 
+      // Upload stadium image if exists
+      let stadiumImageUrl: string | null = null;
+      if (stadiumImageFile) {
+        const fileExt = stadiumImageFile.name.split('.').pop();
+        const filePath = `stadiums/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('tournament-assets').upload(filePath, stadiumImageFile);
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage.from('tournament-assets').getPublicUrl(filePath);
+          stadiumImageUrl = publicUrl;
+        }
+      }
+
       const tournament = await createTournament({
         name,
         type,
@@ -149,6 +180,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         venueAddress,
         acceptJoinRequests,
         maxTeams,
+        stadiumImageUrl,
+        stadiumCapacity: stadiumCapacity ? parseInt(stadiumCapacity) : null,
+        stadiumAmenities,
       });
 
       if (!tournament) return;
@@ -186,7 +220,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
             إنشاء بطولة جديدة
           </DialogTitle>
           <DialogDescription>
-            {step === 1 && 'أدخل معلومات البطولة الأساسية'}
+            {step === 1 && 'أدخل معلومات البطولة والملعب'}
             {step === 2 && 'أضف الفرق المشاركة'}
             {step === 3 && 'نتيجة القرعة الذكية'}
           </DialogDescription>
@@ -277,14 +311,49 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>اسم الملعب / المكان</Label>
-                <Input placeholder="ملعب المدينة" value={venueName} onChange={(e) => setVenueName(e.target.value)} />
+            {/* Stadium Section */}
+            <div className="border-t pt-4 mt-4">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                تفاصيل الملعب
+              </h3>
+
+              {/* Stadium Image */}
+              <div className="mb-4">
+                <Label className="mb-2 block">صورة الملعب</Label>
+                <label className="w-full h-32 rounded-2xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden">
+                  {stadiumImagePreview ? (
+                    <img src={stadiumImagePreview} alt="ملعب" className="w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <Image className="w-8 h-8 text-muted-foreground mb-2" />
+                      <span className="text-xs text-muted-foreground">اضغط لرفع صورة الملعب</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" onChange={handleStadiumImageSelect} className="sr-only" />
+                </label>
               </div>
-              <div className="space-y-2">
-                <Label>العنوان</Label>
-                <Input placeholder="المدينة، الحي" value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)} />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>اسم الملعب / المكان</Label>
+                  <Input placeholder="ملعب المدينة" value={venueName} onChange={(e) => setVenueName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>العنوان</Label>
+                  <Input placeholder="المدينة، الحي" value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <div className="space-y-2">
+                  <Label>السعة (عدد المقاعد)</Label>
+                  <Input type="number" placeholder="50000" value={stadiumCapacity} onChange={(e) => setStadiumCapacity(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>المرافق والخدمات</Label>
+                  <Input placeholder="مثال: موقف سيارات، مطاعم، ..." value={stadiumAmenities} onChange={(e) => setStadiumAmenities(e.target.value)} />
+                </div>
               </div>
             </div>
 
