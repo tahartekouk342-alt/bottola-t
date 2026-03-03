@@ -154,8 +154,9 @@ export function AddPlayersWithPhotos({
         }
 
         return {
+          id: player.id,
           name: player.name,
-          number: player.number ? parseInt(player.number) : null,
+          number: player.number || null,
           photo_url: photoUrl || null,
           team_id: teamId,
         };

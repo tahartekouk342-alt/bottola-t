@@ -138,6 +138,7 @@ export function AddTeamsWithPhotos({ onTeamsAdded, maxTeams, loading = false }: 
         }
 
         return {
+          id: team.id,
           name: team.name,
           logo_url: logoUrl || null,
         };
