@@ -310,7 +310,7 @@ export default function TournamentDetails() {
 
         {currentTab === 'matches' && (
           <div className="rounded-xl border bg-card p-4">
-            <MatchesList matches={matches} onMatchClick={handleMatchClick} getRoundName={getRoundName} />
+            <MatchesList matches={matches} onMatchClick={handleMatchClick} getRoundName={getRoundName} venueName={tournament.venue_name || undefined} stadiumImageUrl={tournament.venue_photos?.[0] || undefined} />
           </div>
         )}
 
