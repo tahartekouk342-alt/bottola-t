@@ -137,7 +137,7 @@ export default function ViewerTournamentDetails() {
       {/* Tab Content */}
       <div className="p-4">
         {activeTab === 'matches' && (
-          <MatchesList matches={matches} getRoundName={getRoundName} />
+          <MatchesList matches={matches} getRoundName={getRoundName} venueName={tournament.venue_name || undefined} stadiumImageUrl={tournament.venue_photos?.[0] || undefined} />
         )}
 
         {activeTab === 'teams' && (

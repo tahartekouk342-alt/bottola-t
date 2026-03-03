@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { ViewerAppSidebar } from '@/components/viewer/ViewerAppSidebar';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, Trophy } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface ViewerLayoutProps {
@@ -31,9 +31,7 @@ export function ViewerLayout({ children }: ViewerLayoutProps) {
           <header className="sticky top-0 z-50 h-14 flex items-center gap-3 px-4 border-b border-border glass-effect">
             <SidebarTrigger className="shrink-0" />
             <Link to="/home" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center">
-                <Trophy className="w-4 h-4 text-primary-foreground" />
-              </div>
+              <img src="/icon-512.png" alt="Bottola" className="w-8 h-8 rounded-xl" />
               <span className="font-display text-lg font-bold">Bottola</span>
             </Link>
           </header>
