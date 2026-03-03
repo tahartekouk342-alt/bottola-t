@@ -123,8 +123,13 @@ export function useTournaments() {
 
   const generateKnockoutMatches = async (tournamentId: string, teams: Team[]) => {
     try {
+      if (!teams || teams.length < 2) {
+        throw new Error('يجب أن يكون هناك فريقين على الأقل');
+      }
+
       const matches = [];
-      const numMatches = teams.length / 2;
+      const numMatches = Math.floor(teams.length / 2);
+      
       for (let i = 0; i < numMatches; i++) {
         matches.push({
           tournament_id: tournamentId,
@@ -135,12 +140,15 @@ export function useTournaments() {
           status: 'scheduled' as const,
         });
       }
+
       const { data, error } = await supabase.from('matches').insert(matches).select();
       if (error) throw error;
+      
       await supabase.from('tournaments').update({ status: 'upcoming' as TournamentStatus }).eq('id', tournamentId);
+      toast({ title: 'تم بنجاح', description: 'تم إنشاء مباريات الإقصاء المباشر' });
       return data;
     } catch (error) {
-      console.error('Error generating matches:', error);
+      console.error('Error generating knockout matches:', error);
       toast({ title: 'خطأ', description: 'فشل في إنشاء المباريات', variant: 'destructive' });
       return null;
     }
@@ -149,13 +157,16 @@ export function useTournaments() {
   const generateGroupMatches = async (tournamentId: string, teams: Team[], groups: Record<string, string[]>) => {
     try {
       const allStandings: any[] = [];
+      const allMatches: any[] = [];
+      let matchOrder = 1;
 
-      // For each group, assign group_name to teams
+      // For each group, assign group_name to teams and create round-robin matches
       for (const [groupName, groupTeamNames] of Object.entries(groups)) {
         const groupTeams = groupTeamNames
           .map(name => teams.find(t => t.name === name))
           .filter(Boolean) as Team[];
 
+        // Update teams with group name
         for (const team of groupTeams) {
           await supabase.from('teams').update({ group_name: groupName }).eq('id', team.id);
         }
@@ -167,19 +178,47 @@ export function useTournaments() {
             team_id: team.id,
             group_name: groupName,
             position: index + 1,
+            played: 0,
+            won: 0,
+            drawn: 0,
+            lost: 0,
+            goals_for: 0,
+            goals_against: 0,
+            goal_difference: 0,
+            points: 0,
           });
         });
+
+        // Generate round-robin matches for the group
+        for (let i = 0; i < groupTeams.length; i++) {
+          for (let j = i + 1; j < groupTeams.length; j++) {
+            allMatches.push({
+              tournament_id: tournamentId,
+              home_team_id: groupTeams[i].id,
+              away_team_id: groupTeams[j].id,
+              round: 1,
+              match_order: matchOrder++,
+              status: 'scheduled' as const,
+              group_name: groupName,
+            });
+          }
+        }
       }
 
-      // No round-robin matches in mixed mode - groups are just for seeding
-      // Matches will be knockout after groups phase
+      // Insert standings
       if (allStandings.length > 0) {
         const { error: standingsError } = await supabase.from('standings').insert(allStandings);
         if (standingsError) throw standingsError;
       }
 
+      // Insert matches
+      if (allMatches.length > 0) {
+        const { error: matchesError } = await supabase.from('matches').insert(allMatches);
+        if (matchesError) throw matchesError;
+      }
+
       await supabase.from('tournaments').update({ status: 'upcoming' as TournamentStatus }).eq('id', tournamentId);
-      toast({ title: 'تم إنشاء المجموعات ✅', description: 'يمكنك الآن بدء مرحلة الإقصاء' });
+      toast({ title: 'تم إنشاء المجموعات ✅', description: `تم إنشاء ${allMatches.length} مباراة في مرحلة المجموعات` });
       return true;
     } catch (error) {
       console.error('Error generating group matches:', error);
@@ -190,17 +229,20 @@ export function useTournaments() {
 
   const startKnockoutFromGroups = async (tournamentId: string) => {
     try {
-      // Get standings grouped by group_name, sorted by position
+      // Get standings grouped by group_name, sorted by points and goal difference
       const { data: standings } = await supabase
         .from('standings')
         .select('*, team:team_id(*)')
         .eq('tournament_id', tournamentId)
         .order('group_name')
-        .order('points', { ascending: false });
+        .order('points', { ascending: false })
+        .order('goal_difference', { ascending: false });
 
-      if (!standings || standings.length === 0) return null;
+      if (!standings || standings.length === 0) {
+        throw new Error('لا توجد جداول ترتيب');
+      }
 
-      // Get top 2 from each group (or top 1 if small groups)
+      // Group standings by group_name
       const grouped = standings.reduce((acc, s) => {
         const key = s.group_name || 'A';
         if (!acc[key]) acc[key] = [];
@@ -211,16 +253,18 @@ export function useTournaments() {
       const qualifiedTeamIds: string[] = [];
       const sortedGroups = Object.keys(grouped).sort();
       
+      // Get top 2 from each group
       for (const groupName of sortedGroups) {
         const groupStandings = grouped[groupName];
-        // Top 2 qualify
         const topTeams = groupStandings.slice(0, 2);
         topTeams.forEach(s => qualifiedTeamIds.push(s.team_id));
       }
 
-      if (qualifiedTeamIds.length < 2) return null;
+      if (qualifiedTeamIds.length < 2) {
+        throw new Error('عدد الفرق المتأهلة غير كافي');
+      }
 
-      // Create knockout matches
+      // Create knockout matches - pair teams from different groups
       const matches = [];
       for (let i = 0; i < qualifiedTeamIds.length; i += 2) {
         if (qualifiedTeamIds[i + 1]) {
@@ -240,154 +284,174 @@ export function useTournaments() {
         if (error) throw error;
       }
 
+      // Delete old group matches
+      await supabase.from('matches').delete().eq('tournament_id', tournamentId).not('group_name', 'is', null);
+
       await supabase.from('tournaments').update({ status: 'live' as TournamentStatus }).eq('id', tournamentId);
-      toast({ title: 'تم بدء مرحلة الإقصاء 🏆' });
+      toast({ title: 'تم بدء مرحلة الإقصاء 🏆', description: `${matches.length} مباراة في دور الـ 16` });
       return true;
     } catch (error) {
       console.error('Error starting knockout from groups:', error);
-      toast({ title: 'خطأ', variant: 'destructive' });
+      toast({ title: 'خطأ', description: 'فشل في بدء مرحلة الإقصاء', variant: 'destructive' });
       return null;
     }
   };
 
   const updateStandings = async (tournamentId: string, homeTeamId: string, awayTeamId: string, homeScore: number, awayScore: number) => {
-    const { data: homeSt } = await supabase.from('standings').select('*').eq('tournament_id', tournamentId).eq('team_id', homeTeamId).single();
-    const { data: awaySt } = await supabase.from('standings').select('*').eq('tournament_id', tournamentId).eq('team_id', awayTeamId).single();
+    try {
+      const { data: homeSt } = await supabase
+        .from('standings')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .eq('team_id', homeTeamId)
+        .single();
 
-    if (homeSt) {
-      const won = homeScore > awayScore ? 1 : 0;
-      const drawn = homeScore === awayScore ? 1 : 0;
-      const lost = homeScore < awayScore ? 1 : 0;
-      await supabase.from('standings').update({
-        played: (homeSt.played || 0) + 1,
-        won: (homeSt.won || 0) + won,
-        drawn: (homeSt.drawn || 0) + drawn,
-        lost: (homeSt.lost || 0) + lost,
-        goals_for: (homeSt.goals_for || 0) + homeScore,
-        goals_against: (homeSt.goals_against || 0) + awayScore,
-        goal_difference: (homeSt.goals_for || 0) + homeScore - ((homeSt.goals_against || 0) + awayScore),
-        points: (homeSt.points || 0) + (won ? 3 : drawn ? 1 : 0),
-      }).eq('id', homeSt.id);
-    }
+      const { data: awaySt } = await supabase
+        .from('standings')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .eq('team_id', awayTeamId)
+        .single();
 
-    if (awaySt) {
-      const won = awayScore > homeScore ? 1 : 0;
-      const drawn = homeScore === awayScore ? 1 : 0;
-      const lost = awayScore < homeScore ? 1 : 0;
-      await supabase.from('standings').update({
-        played: (awaySt.played || 0) + 1,
-        won: (awaySt.won || 0) + won,
-        drawn: (awaySt.drawn || 0) + drawn,
-        lost: (awaySt.lost || 0) + lost,
-        goals_for: (awaySt.goals_for || 0) + awayScore,
-        goals_against: (awaySt.goals_against || 0) + homeScore,
-        goal_difference: (awaySt.goals_for || 0) + awayScore - ((awaySt.goals_against || 0) + homeScore),
-        points: (awaySt.points || 0) + (won ? 3 : drawn ? 1 : 0),
-      }).eq('id', awaySt.id);
+      if (homeSt) {
+        const won = homeScore > awayScore ? 1 : 0;
+        const drawn = homeScore === awayScore ? 1 : 0;
+        const lost = homeScore < awayScore ? 1 : 0;
+        const points = (homeSt.points || 0) + (won ? 3 : drawn ? 1 : 0);
+
+        await supabase.from('standings').update({
+          played: (homeSt.played || 0) + 1,
+          won: (homeSt.won || 0) + won,
+          drawn: (homeSt.drawn || 0) + drawn,
+          lost: (homeSt.lost || 0) + lost,
+          goals_for: (homeSt.goals_for || 0) + homeScore,
+          goals_against: (homeSt.goals_against || 0) + awayScore,
+          goal_difference: ((homeSt.goals_for || 0) + homeScore) - ((homeSt.goals_against || 0) + awayScore),
+          points,
+        }).eq('id', homeSt.id);
+      }
+
+      if (awaySt) {
+        const won = awayScore > homeScore ? 1 : 0;
+        const drawn = homeScore === awayScore ? 1 : 0;
+        const lost = awayScore < homeScore ? 1 : 0;
+        const points = (awaySt.points || 0) + (won ? 3 : drawn ? 1 : 0);
+
+        await supabase.from('standings').update({
+          played: (awaySt.played || 0) + 1,
+          won: (awaySt.won || 0) + won,
+          drawn: (awaySt.drawn || 0) + drawn,
+          lost: (awaySt.lost || 0) + lost,
+          goals_for: (awaySt.goals_for || 0) + awayScore,
+          goals_against: (awaySt.goals_against || 0) + homeScore,
+          goal_difference: ((awaySt.goals_for || 0) + awayScore) - ((awaySt.goals_against || 0) + homeScore),
+          points,
+        }).eq('id', awaySt.id);
+      }
+    } catch (error) {
+      console.error('Error updating standings:', error);
     }
   };
 
   const updateMatchResult = async (matchId: string, homeScore: number, awayScore: number) => {
     try {
-      const { data: match, error: matchError } = await supabase
+      const { data: match, error: fetchError } = await supabase
         .from('matches')
-        .select('*, home_team:home_team_id(*), away_team:away_team_id(*)')
+        .select('*')
         .eq('id', matchId)
         .single();
 
-      if (matchError) throw matchError;
+      if (fetchError) throw fetchError;
 
-      const winnerId = homeScore > awayScore ? match.home_team_id : homeScore < awayScore ? match.away_team_id : null;
-      const loserId = homeScore > awayScore ? match.away_team_id : homeScore < awayScore ? match.home_team_id : null;
-
-      const { error: updateError } = await supabase.from('matches').update({
-        home_score: homeScore,
-        away_score: awayScore,
-        status: 'completed',
-        winner_id: winnerId,
-      }).eq('id', matchId);
+      const { error: updateError } = await supabase
+        .from('matches')
+        .update({
+          home_score: homeScore,
+          away_score: awayScore,
+          status: 'completed' as const,
+        })
+        .eq('id', matchId);
 
       if (updateError) throw updateError;
 
-      const { data: tournamentData } = await supabase.from('tournaments').select('type').eq('id', match.tournament_id).single();
-      const tType = tournamentData?.type;
-
-      if (tType === 'knockout' || (tType === 'groups' && !match.group_name)) {
-        // Knockout match
-        if (loserId) {
-          await supabase.from('teams').update({ is_eliminated: true }).eq('id', loserId);
-        }
-        await advanceWinner(match.tournament_id, match.round, winnerId);
+      // Update standings if it's a group match
+      if (match.group_name) {
+        await updateStandings(match.tournament_id, match.home_team_id, match.away_team_id, homeScore, awayScore);
       }
 
-      toast({ title: 'تم بنجاح', description: 'تم تحديث النتيجة' });
+      toast({ title: 'تم تحديث النتيجة', description: `${homeScore} - ${awayScore}` });
       return true;
     } catch (error) {
-      console.error('Error updating match:', error);
+      console.error('Error updating match result:', error);
       toast({ title: 'خطأ', description: 'فشل في تحديث النتيجة', variant: 'destructive' });
-      return false;
+      return null;
     }
   };
 
-  const advanceWinner = async (tournamentId: string, currentRound: number, winnerId: string | null) => {
-    if (!winnerId) return;
-
-    const { data: currentRoundMatches } = await supabase
-      .from('matches')
-      .select('*')
-      .eq('tournament_id', tournamentId)
-      .eq('round', currentRound);
-
-    if (!currentRoundMatches) return;
-    const allCompleted = currentRoundMatches.every((m) => m.status === 'completed');
-    if (!allCompleted) return;
-
-    const winners = currentRoundMatches.filter((m) => m.winner_id).map((m) => m.winner_id);
-
-    if (winners.length <= 1) {
-      await supabase.from('tournaments').update({ status: 'completed' as TournamentStatus }).eq('id', tournamentId);
-      return;
-    }
-
-    const { data: existingNextRound } = await supabase
-      .from('matches')
-      .select('*')
-      .eq('tournament_id', tournamentId)
-      .eq('round', currentRound + 1);
-
-    if (existingNextRound && existingNextRound.length > 0) return;
-
-    const nextRoundMatches = [];
-    for (let i = 0; i < winners.length; i += 2) {
-      if (winners[i + 1]) {
-        nextRoundMatches.push({
-          tournament_id: tournamentId,
-          home_team_id: winners[i],
-          away_team_id: winners[i + 1],
-          round: currentRound + 1,
-          match_order: Math.floor(i / 2) + 1,
-          status: 'scheduled' as const,
-        });
-      }
-    }
-
-    if (nextRoundMatches.length > 0) {
-      await supabase.from('matches').insert(nextRoundMatches);
-      await supabase.from('tournaments').update({ current_round: currentRound + 1 }).eq('id', tournamentId);
-    }
-  };
-
-  const deleteTournament = async (id: string) => {
+  const generateNextRound = async (tournamentId: string) => {
     try {
-      const { error } = await supabase.from('tournaments').delete().eq('id', id);
-      if (error) throw error;
-      setTournaments((prev) => prev.filter((t) => t.id !== id));
-      toast({ title: 'تم بنجاح', description: 'تم حذف البطولة' });
+      // Get all completed matches in current round
+      const { data: matches } = await supabase
+        .from('matches')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .eq('status', 'completed')
+        .order('round', { ascending: false })
+        .limit(1);
+
+      if (!matches || matches.length === 0) {
+        throw new Error('لا توجد مباريات مكتملة');
+      }
+
+      const currentRound = matches[0].round || 1;
+      const nextRound = currentRound + 1;
+
+      // Get winners from current round
+      const { data: roundMatches } = await supabase
+        .from('matches')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .eq('round', currentRound)
+        .eq('status', 'completed');
+
+      if (!roundMatches || roundMatches.length === 0) {
+        throw new Error('لم تكتمل جميع مباريات الجولة');
+      }
+
+      const winners = roundMatches.map(m => 
+        m.home_score > m.away_score ? m.home_team_id : m.away_team_id
+      );
+
+      if (winners.length < 2) {
+        throw new Error('عدد الفائزين غير كافي');
+      }
+
+      // Create next round matches
+      const nextMatches = [];
+      for (let i = 0; i < winners.length; i += 2) {
+        if (winners[i + 1]) {
+          nextMatches.push({
+            tournament_id: tournamentId,
+            home_team_id: winners[i],
+            away_team_id: winners[i + 1],
+            round: nextRound,
+            match_order: Math.floor(i / 2) + 1,
+            status: 'scheduled' as const,
+          });
+        }
+      }
+
+      if (nextMatches.length > 0) {
+        const { error } = await supabase.from('matches').insert(nextMatches);
+        if (error) throw error;
+      }
+
+      toast({ title: 'تم إنشاء الجولة التالية', description: `${nextMatches.length} مباراة جديدة` });
       return true;
     } catch (error) {
-      console.error('Error deleting tournament:', error);
-      toast({ title: 'خطأ', description: 'فشل في حذف البطولة', variant: 'destructive' });
-      return false;
+      console.error('Error generating next round:', error);
+      toast({ title: 'خطأ', description: 'فشل في إنشاء الجولة التالية', variant: 'destructive' });
+      return null;
     }
   };
 
@@ -405,7 +469,8 @@ export function useTournaments() {
     generateKnockoutMatches,
     generateGroupMatches,
     startKnockoutFromGroups,
+    updateStandings,
     updateMatchResult,
-    deleteTournament,
+    generateNextRound,
   };
 }
