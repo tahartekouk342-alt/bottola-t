@@ -12,6 +12,7 @@ interface TournamentCardProps {
   type: 'knockout' | 'league' | 'groups';
   logoUrl?: string | null;
   venueName?: string | null;
+  stadiumImageUrl?: string | null;
   onClick?: () => void;
 }
 
@@ -27,7 +28,7 @@ const typeConfig = {
   groups: { label: 'مجموعات + إقصاء', icon: <Users className="w-4 h-4" /> },
 };
 
-export function TournamentCard({ name, teams, startDate, status, type, logoUrl, venueName, onClick }: TournamentCardProps) {
+export function TournamentCard({ name, teams, startDate, status, type, logoUrl, venueName, stadiumImageUrl, onClick }: TournamentCardProps) {
   return (
     <Card
       onClick={onClick}
@@ -38,6 +39,15 @@ export function TournamentCard({ name, teams, startDate, status, type, logoUrl, 
     >
       {/* Visual Header / Image Area */}
       <div className="relative h-52 overflow-hidden bg-gradient-to-br from-secondary/50 to-secondary/30">
+        {/* Stadium Background Image */}
+        {stadiumImageUrl && (
+          <img
+            src={stadiumImageUrl}
+            alt={name}
+            className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-500"
+          />
+        )}
+        
         {/* Background Image / Placeholder */}
         <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent z-10" />
         <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors duration-500" />

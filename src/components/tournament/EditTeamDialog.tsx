@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -9,39 +9,40 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Camera, Loader2, Plus, X, Send, Trash2 } from 'lucide-react';
+import { Camera, Loader2, Plus, X, Trash2, Save, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
 
 interface Player {
   id: string;
   name: string;
   number: number;
-  position: 'goalkeeper' | 'defender' | 'midfielder' | 'forward';
-  photoUrl?: string;
+  position: string;
+  photo_url?: string;
   photoFile?: File;
 }
 
-interface JoinRequestDialogProps {
+interface EditTeamDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  tournamentId: string;
-  tournamentName: string;
+  teamId: string;
+  teamName: string;
+  teamLogoUrl?: string;
+  onSave?: () => void;
 }
 
 const POSITIONS = {
-  goalkeeper: 'حارس مرمى',
-  defender: 'دفاع',
-  midfielder: 'وسط',
-  forward: 'هجوم',
+  goalkeeper: '🧤 حارس مرمى',
+  defender: '🛡️ دفاع',
+  midfielder: '⚽ وسط',
+  forward: '⚔️ هجوم',
 };
 
-export function JoinRequestDialog({ open, onOpenChange, tournamentId, tournamentName }: JoinRequestDialogProps) {
-  const { user } = useAuth();
+export function EditTeamDialog({
+  open, onOpenChange, teamId, teamName, teamLogoUrl, onSave,
+}: EditTeamDialogProps) {
   const { toast } = useToast();
-  const [teamName, setTeamName] = useState('');
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(teamLogoUrl || null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [newPlayer, setNewPlayer] = useState<Partial<Player>>({
@@ -51,6 +52,49 @@ export function JoinRequestDialog({ open, onOpenChange, tournamentId, tournament
   const [newPlayerPhotoPreview, setNewPlayerPhotoPreview] = useState<string | null>(null);
   const [newPlayerPhotoFile, setNewPlayerPhotoFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+
+  useEffect(() => {
+    if (open) {
+      fetchTeamData();
+    }
+  }, [open, teamId]);
+
+  const fetchTeamData = async () => {
+    try {
+      setFetching(true);
+      const { data: team } = await supabase
+        .from('teams')
+        .select('*')
+        .eq('id', teamId)
+        .single();
+
+      if (team) {
+        setLogoPreview(team.logo_url || null);
+      }
+
+      // Fetch players
+      const { data: playersData } = await supabase
+        .from('players')
+        .select('*')
+        .eq('team_id', teamId)
+        .order('number');
+
+      if (playersData) {
+        setPlayers(playersData.map(p => ({
+          id: p.id,
+          name: p.name,
+          number: p.number,
+          position: p.position,
+          photo_url: p.photo_url,
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching team data:', error);
+    } finally {
+      setFetching(false);
+    }
+  };
 
   const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -85,8 +129,8 @@ export function JoinRequestDialog({ open, onOpenChange, tournamentId, tournament
       id: Date.now().toString(),
       name: newPlayer.name.trim(),
       number: newPlayer.number || 1,
-      position: newPlayer.position as any || 'midfielder',
-      photoUrl: newPlayerPhotoPreview || undefined,
+      position: newPlayer.position as string || 'midfielder',
+      photo_url: newPlayerPhotoPreview || undefined,
       photoFile: newPlayerPhotoFile || undefined,
     };
 
@@ -100,68 +144,84 @@ export function JoinRequestDialog({ open, onOpenChange, tournamentId, tournament
     setPlayers(prev => prev.filter(p => p.id !== id));
   };
 
-  const handleSubmit = async () => {
-    if (!teamName.trim()) {
-      toast({ title: 'يرجى إدخال اسم الفريق', variant: 'destructive' });
-      return;
-    }
+  const handleGeneratePlayerPhoto = async (playerId: string) => {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
 
     setLoading(true);
     try {
-      let logoUrl: string | null = null;
+      const { data, error } = await supabase.functions.invoke('generate-image', {
+        body: {
+          prompt: `Professional football player portrait, ${player.name}, wearing jersey number ${player.number}, ${POSITIONS[player.position as keyof typeof POSITIONS]}, high quality, realistic`,
+          style: 'realistic',
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.imageUrl) {
+        setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, photo_url: data.imageUrl } : p));
+        toast({ title: 'تم توليد الصورة بنجاح ✨' });
+      }
+    } catch (error) {
+      console.error('Error generating photo:', error);
+      toast({ title: 'خطأ في توليد الصورة', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      // Update team logo if changed
       if (logoFile) {
         const fileExt = logoFile.name.split('.').pop();
         const filePath = `team-logos/${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage.from('tournament-assets').upload(filePath, logoFile);
         if (!uploadError) {
           const { data: { publicUrl } } = supabase.storage.from('tournament-assets').getPublicUrl(filePath);
-          logoUrl = publicUrl;
+          await supabase.from('teams').update({ logo_url: publicUrl }).eq('id', teamId);
         }
       }
 
-      // Upload player photos
-      const playersData = await Promise.all(
-        players.map(async (player) => {
-          let photoUrl: string | null = null;
+      // Update players
+      for (const player of players) {
+        let photoUrl = player.photo_url;
 
-          if (player.photoFile) {
-            const fileExt = player.photoFile.name.split('.').pop();
-            const filePath = `player-photos/${Date.now()}-${player.id}.${fileExt}`;
-            const { error: uploadError } = await supabase.storage.from('tournament-assets').upload(filePath, player.photoFile);
-            if (!uploadError) {
-              const { data: { publicUrl } } = supabase.storage.from('tournament-assets').getPublicUrl(filePath);
-              photoUrl = publicUrl;
-            }
+        if (player.photoFile) {
+          const fileExt = player.photoFile.name.split('.').pop();
+          const filePath = `player-photos/${Date.now()}-${player.id}.${fileExt}`;
+          const { error: uploadError } = await supabase.storage.from('tournament-assets').upload(filePath, player.photoFile);
+          if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage.from('tournament-assets').getPublicUrl(filePath);
+            photoUrl = publicUrl;
           }
+        }
 
-          return {
+        if (player.id.length > 10) {
+          // New player
+          await supabase.from('players').insert({
+            team_id: teamId,
             name: player.name,
             number: player.number,
             position: player.position,
             photo_url: photoUrl,
-          };
-        })
-      );
+          });
+        } else {
+          // Existing player
+          await supabase.from('players').update({
+            name: player.name,
+            number: player.number,
+            position: player.position,
+            photo_url: photoUrl,
+          }).eq('id', player.id);
+        }
+      }
 
-      const { error } = await supabase.from('join_requests').insert({
-        tournament_id: tournamentId,
-        team_name: teamName.trim(),
-        team_logo_url: logoUrl,
-        players_data: playersData,
-        requested_by: user?.id || null,
-      });
-
-      if (error) throw error;
-
-      toast({ title: 'تم إرسال طلب الانضمام ✅', description: `طلب انضمام ${teamName} مع ${players.length} لاعب` });
+      toast({ title: 'تم حفظ التغييرات بنجاح ✅' });
       onOpenChange(false);
-      setTeamName('');
-      setLogoPreview(null);
-      setLogoFile(null);
-      setPlayers([]);
-      setNewPlayer({ number: 1, position: 'midfielder' });
-      setNewPlayerPhotoPreview(null);
-      setNewPlayerPhotoFile(null);
+      onSave?.();
     } catch (error: any) {
       toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
     } finally {
@@ -169,12 +229,24 @@ export function JoinRequestDialog({ open, onOpenChange, tournamentId, tournament
     }
   };
 
+  if (fetching) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>طلب الانضمام</DialogTitle>
-          <DialogDescription>أرسل طلب انضمام فريقك إلى {tournamentName}</DialogDescription>
+          <DialogTitle>تعديل بيانات الفريق</DialogTitle>
+          <DialogDescription>{teamName}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -192,12 +264,6 @@ export function JoinRequestDialog({ open, onOpenChange, tournamentId, tournament
               )}
               <input type="file" accept="image/*" onChange={handleLogoSelect} className="sr-only" />
             </label>
-          </div>
-
-          {/* Team Name */}
-          <div className="space-y-2">
-            <Label>اسم الفريق *</Label>
-            <Input placeholder="أدخل اسم فريقك" value={teamName} onChange={(e) => setTeamName(e.target.value)} />
           </div>
 
           {/* Players Section */}
@@ -249,7 +315,7 @@ export function JoinRequestDialog({ open, onOpenChange, tournamentId, tournament
               {/* Position */}
               <div className="space-y-1">
                 <Label className="text-xs">المركز</Label>
-                <Select value={newPlayer.position as string} onValueChange={(v) => setNewPlayer(prev => ({ ...prev, position: v as any }))}>
+                <Select value={newPlayer.position as string} onValueChange={(v) => setNewPlayer(prev => ({ ...prev, position: v }))}>
                   <SelectTrigger className="text-sm">
                     <SelectValue />
                   </SelectTrigger>
@@ -274,29 +340,44 @@ export function JoinRequestDialog({ open, onOpenChange, tournamentId, tournament
                 {players.map((player) => (
                   <div key={player.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
                     <Avatar className="w-10 h-10 shrink-0">
-                      <AvatarImage src={player.photoUrl} alt={player.name} />
+                      <AvatarImage src={player.photo_url} alt={player.name} />
                       <AvatarFallback>{player.number}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm">{player.name}</p>
-                      <p className="text-xs text-muted-foreground">#{player.number} • {POSITIONS[player.position]}</p>
+                      <p className="text-xs text-muted-foreground">#{player.number} • {POSITIONS[player.position as keyof typeof POSITIONS]}</p>
                     </div>
-                    <button
-                      onClick={() => handleRemovePlayer(player.id)}
-                      className="text-destructive hover:bg-destructive/10 p-2 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex gap-1">
+                      {!player.photo_url && (
+                        <button
+                          onClick={() => handleGeneratePlayerPhoto(player.id)}
+                          disabled={loading}
+                          className="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors disabled:opacity-50"
+                          title="توليد صورة بالذكاء الاصطناعي"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleRemovePlayer(player.id)}
+                        className="text-destructive hover:bg-destructive/10 p-2 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          <Button onClick={handleSubmit} disabled={loading || !teamName.trim()} className="w-full gradient-primary text-primary-foreground">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Send className="w-4 h-4 ml-2" />}
-            إرسال طلب الانضمام
-          </Button>
+          <div className="flex gap-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+            <Button onClick={handleSave} disabled={loading} className="flex-1 gradient-primary text-primary-foreground">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Save className="w-4 h-4 ml-2" />}
+              حفظ التغييرات
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
