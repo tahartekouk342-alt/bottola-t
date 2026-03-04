@@ -22,6 +22,7 @@ import OrganizerAuth from "./pages/OrganizerAuth";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import OrganizerSettings from "./pages/OrganizerSettings";
 import TournamentDetails from "./pages/TournamentDetails";
+import { OrganizerLayout } from "./components/organizer/OrganizerLayout";
 
 import NotFound from "./pages/NotFound";
 
@@ -49,9 +50,10 @@ const App = () => (
             {/* Organizer Routes */}
             <Route path={ORGANIZER_BASE} element={<OrganizerWelcome />} />
             <Route path={`${ORGANIZER_BASE}/auth`} element={<OrganizerAuth />} />
-            <Route path={`${ORGANIZER_BASE}/dashboard`} element={<OrganizerDashboard />} />
-            <Route path={`${ORGANIZER_BASE}/settings`} element={<OrganizerSettings />} />
-            <Route path={`${ORGANIZER_BASE}/tournament/:id`} element={<TournamentDetails />} />
+            <Route path={`${ORGANIZER_BASE}/dashboard`} element={<OrganizerLayout><OrganizerDashboard /></OrganizerLayout>} />
+            <Route path={`${ORGANIZER_BASE}/settings`} element={<OrganizerLayout><OrganizerSettings /></OrganizerLayout>} />
+            <Route path={`${ORGANIZER_BASE}/tournament/:id`} element={<OrganizerLayout><TournamentDetails /></OrganizerLayout>} />
+            <Route path={`${ORGANIZER_BASE}/notifications`} element={<OrganizerLayout><Notifications /></OrganizerLayout>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

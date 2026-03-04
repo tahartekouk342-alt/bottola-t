@@ -11,7 +11,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  ArrowRight, Trophy, Users, Calendar, GitBranch, TableIcon, Trash2, Plus, Play, Loader2, MapPin, Clock, X, UserPlus,
+  ArrowRight, Trophy, Users, Calendar, GitBranch, TableIcon, Trash2, Plus, Play, Loader2, MapPin, X, UserPlus, SkipForward,
 } from 'lucide-react';
 import { useTournamentDetails, type MatchWithTeams } from '@/hooks/useTournamentDetails';
 import { useTournaments } from '@/hooks/useTournaments';
@@ -36,8 +36,8 @@ const typeMap = {
 };
 
 const tabs = [
-  { id: 'bracket', label: 'شجرة الإقصاء', icon: GitBranch },
   { id: 'matches', label: 'المباريات', icon: Calendar },
+  { id: 'bracket', label: 'شجرة الإقصاء', icon: GitBranch },
   { id: 'teams', label: 'الفرق', icon: Users },
   { id: 'standings', label: 'الترتيب', icon: TableIcon },
   { id: 'requests', label: 'طلبات الانضمام', icon: UserPlus },
@@ -51,7 +51,7 @@ export default function TournamentDetails() {
   const {
     tournament, teams, matches, standings, loading, getRoundName, fetchTournamentDetails,
   } = useTournamentDetails(id);
-  const { updateMatchResult, deleteTournament, addTeams, generateKnockoutMatches, startKnockoutFromGroups } = useTournaments();
+  const { updateMatchResult, deleteTournament, addTeams, generateKnockoutMatches, startKnockoutFromGroups, generateNextRound } = useTournaments();
 
   const [selectedMatch, setSelectedMatch] = useState<MatchWithTeams | null>(null);
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
@@ -60,7 +60,7 @@ export default function TournamentDetails() {
   const [teamsList, setTeamsList] = useState<string[]>([]);
   const [addingTeams, setAddingTeams] = useState(false);
 
-  const currentTab = searchParams.get('tab') || 'bracket';
+  const currentTab = searchParams.get('tab') || 'matches';
   const handleTabChange = (value: string) => setSearchParams({ tab: value });
 
   const handleMatchClick = (match: MatchWithTeams) => {
@@ -88,7 +88,6 @@ export default function TournamentDetails() {
     if (!id) return;
     try {
       if (tournament?.type === 'groups') {
-        // Start knockout from groups
         await startKnockoutFromGroups(id);
       } else {
         await supabase.from('tournaments').update({ status: 'live' }).eq('id', id);
@@ -98,6 +97,12 @@ export default function TournamentDetails() {
     } catch {
       toast({ title: 'خطأ', variant: 'destructive' });
     }
+  };
+
+  const handleNextRound = async () => {
+    if (!id) return;
+    await generateNextRound(id);
+    fetchTournamentDetails();
   };
 
   const handleAddTeam = () => {
@@ -134,9 +139,16 @@ export default function TournamentDetails() {
 
   const totalRounds = Math.ceil(Math.log2(Math.max(teams.length, 2)));
 
+  // Check if current knockout round is complete
+  const knockoutMatches = matches.filter(m => !m.group_name);
+  const currentMaxRound = knockoutMatches.length > 0 ? Math.max(...knockoutMatches.map(m => m.round)) : 0;
+  const currentRoundMatches = knockoutMatches.filter(m => m.round === currentMaxRound);
+  const allCurrentRoundCompleted = currentRoundMatches.length > 0 && currentRoundMatches.every(m => m.status === 'completed');
+  const canGenerateNextRound = allCurrentRoundCompleted && currentRoundMatches.length > 1;
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-background p-8" dir="rtl">
+      <div className="p-8">
         <Skeleton className="h-12 w-64 mb-4" />
         <Skeleton className="h-6 w-48 mb-8" />
         <Skeleton className="h-96 w-full" />
@@ -146,7 +158,7 @@ export default function TournamentDetails() {
 
   if (!tournament) {
     return (
-      <div className="min-h-screen bg-background p-8 text-center" dir="rtl">
+      <div className="p-8 text-center" dir="rtl">
         <h1 className="text-2xl font-bold mb-4">البطولة غير موجودة</h1>
         <Button onClick={() => navigate(`${ORGANIZER_BASE}/dashboard`)}>
           <ArrowRight className="w-4 h-4 ml-2" />العودة للبطولات
@@ -155,12 +167,13 @@ export default function TournamentDetails() {
     );
   }
 
-  const winner = tournament.status === 'completed' && matches.length > 0
-    ? matches.find(m => m.round === totalRounds)?.winner : null;
+  const winner = tournament.status === 'completed' && knockoutMatches.length > 0
+    ? knockoutMatches.find(m => m.round === currentMaxRound && m.status === 'completed')?.winner : null;
   const canAddTeams = teams.length === 0 && matches.length === 0;
   const canStart = tournament.status !== 'live' && tournament.status !== 'completed' && (matches.length > 0 || (tournament.type === 'groups' && teams.length > 0));
 
   const visibleTabs = tabs.filter(tab => {
+    if (tab.id === 'bracket' && tournament.type === 'league') return false;
     if (tab.id === 'standings' && tournament.type === 'knockout') return false;
     if (tab.id === 'requests' && !tournament.accept_join_requests) return false;
     return true;
@@ -168,28 +181,17 @@ export default function TournamentDetails() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      {/* Tournament Header with Stadium Image */}
+      {/* Hero */}
       <div className="relative border-b overflow-hidden">
-        {/* Stadium Background */}
         <div className="relative h-56 md:h-72">
-          <img
-            src={tournament.venue_photos?.[0] || '/images/sport-stadium.jpg'}
-            alt={tournament.venue_name || 'ملعب'}
-            className="w-full h-full object-cover"
-          />
+          <img src={tournament.venue_photos?.[0] || '/images/sport-stadium.jpg'} alt={tournament.venue_name || 'ملعب'} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-background" />
 
-          {/* Back Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(`${ORGANIZER_BASE}/dashboard`)}
-            className="absolute top-4 right-4 z-20 bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm rounded-xl"
-          >
+          <Button variant="ghost" size="sm" onClick={() => navigate(`${ORGANIZER_BASE}/dashboard`)}
+            className="absolute top-4 right-4 z-20 bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm rounded-xl">
             <ArrowRight className="w-4 h-4 ml-1" />رجوع
           </Button>
 
-          {/* Tournament Info Overlay */}
           <div className="absolute bottom-4 right-4 left-4 z-10 flex items-end justify-between">
             <div className="flex items-center gap-3">
               {tournament.logo_url ? (
@@ -201,41 +203,35 @@ export default function TournamentDetails() {
               )}
               <div>
                 <h1 className="font-display text-xl md:text-2xl font-bold text-white drop-shadow-lg">{tournament.name}</h1>
-                <p className="text-sm text-white/80 drop-shadow">{teams.length} فريق · {matches.length} مباراة</p>
+                <p className="text-sm text-white/80 drop-shadow">{teams.length} فريق · {matches.length} مباراة · {typeMap[tournament.type]}</p>
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
-              {canStart && (
-                <Button onClick={handleStartTournament} className="gradient-primary text-primary-foreground" size="sm">
-                  <Play className="w-4 h-4 ml-1" />
-                  {tournament.type === 'groups' ? 'بدء الإقصاء' : 'بدء'}
+              {canGenerateNextRound && (
+                <Button onClick={handleNextRound} size="sm" variant="outline" className="bg-white/20 text-white border-white/30 hover:bg-white/30">
+                  <SkipForward className="w-4 h-4 ml-1" />الجولة التالية
                 </Button>
               )}
-              <Button variant="destructive" onClick={handleDelete} size="sm">
-                <Trash2 className="w-4 h-4 ml-1" />حذف
-              </Button>
+              {canStart && (
+                <Button onClick={handleStartTournament} className="gradient-primary text-primary-foreground" size="sm">
+                  <Play className="w-4 h-4 ml-1" />{tournament.type === 'groups' ? 'بدء الإقصاء' : 'بدء'}
+                </Button>
+              )}
+              <Button variant="destructive" onClick={handleDelete} size="sm"><Trash2 className="w-4 h-4" /></Button>
             </div>
           </div>
         </div>
 
-        {/* Sticky Tabs Bar */}
+        {/* Tabs */}
         {(teams.length > 0 || matches.length > 0 || tournament.accept_join_requests) && (
           <div className="sticky top-0 z-40 bg-card/95 backdrop-blur border-t">
             <div className="max-w-7xl mx-auto px-4 overflow-x-auto">
               <div className="flex gap-1 min-w-max">
                 {visibleTabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={cn(
-                      'flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
-                      currentTab === tab.id
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    <tab.icon className="w-4 h-4" />
-                    {tab.label}
+                  <button key={tab.id} onClick={() => handleTabChange(tab.id)}
+                    className={cn('flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                      currentTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground')}>
+                    <tab.icon className="w-4 h-4" />{tab.label}
                   </button>
                 ))}
               </div>
@@ -245,7 +241,7 @@ export default function TournamentDetails() {
       </div>
 
       <div className="p-4 lg:p-6 max-w-7xl mx-auto">
-        {/* Winner Banner */}
+        {/* Winner */}
         {winner && (
           <div className="mb-6 p-6 rounded-xl bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/30 text-center">
             <Trophy className="w-12 h-12 mx-auto mb-2 text-primary" />
@@ -287,7 +283,7 @@ export default function TournamentDetails() {
                       ))}
                     </div>
                   )}
-                  <p className="text-sm text-muted-foreground">عدد الفرق: {teamsList.length} / {tournament.num_teams}</p>
+                  <p className="text-sm text-muted-foreground">عدد الفرق: {teamsList.length}</p>
                   <div className="flex gap-2">
                     <Button onClick={handleSaveTeams} disabled={addingTeams || teamsList.length < 2} className="gradient-primary text-primary-foreground">
                       {addingTeams ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Trophy className="w-4 h-4 ml-2" />}
@@ -304,7 +300,7 @@ export default function TournamentDetails() {
         {/* Tab Content */}
         {currentTab === 'bracket' && (
           <div className="rounded-xl border bg-card p-4">
-            <BracketView matches={matches} getRoundName={(round) => getRoundName(round, totalRounds)} onMatchClick={handleMatchClick} />
+            <BracketView matches={knockoutMatches.length > 0 ? knockoutMatches : matches} getRoundName={(round) => getRoundName(round, totalRounds)} onMatchClick={handleMatchClick} />
           </div>
         )}
 
@@ -329,7 +325,12 @@ export default function TournamentDetails() {
                 {teams.map((team, index) => (
                   <TableRow key={team.id}>
                     <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell className="font-medium">{team.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {team.logo_url && <img src={team.logo_url} alt={team.name} className="w-8 h-8 rounded-lg object-cover" />}
+                        <span className="font-medium">{team.name}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>{team.group_name || '-'}</TableCell>
                     <TableCell>
                       {team.is_eliminated ? <Badge variant="destructive">خرج</Badge> : <Badge variant="default">مستمر</Badge>}
@@ -360,7 +361,7 @@ export default function TournamentDetails() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="text-right">#</TableHead>
+                          <TableHead className="text-right w-12">#</TableHead>
                           <TableHead className="text-right">الفريق</TableHead>
                           <TableHead className="text-center">لعب</TableHead>
                           <TableHead className="text-center">فوز</TableHead>
@@ -368,27 +369,44 @@ export default function TournamentDetails() {
                           <TableHead className="text-center">خسارة</TableHead>
                           <TableHead className="text-center">له</TableHead>
                           <TableHead className="text-center">عليه</TableHead>
-                          <TableHead className="text-center">الفارق</TableHead>
-                          <TableHead className="text-center">النقاط</TableHead>
+                          <TableHead className="text-center">+/-</TableHead>
+                          <TableHead className="text-center font-bold text-primary">نقاط</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {groupStandings
                           .sort((a, b) => (b.points || 0) - (a.points || 0) || (b.goal_difference || 0) - (a.goal_difference || 0))
-                          .map((standing, index) => (
-                            <TableRow key={standing.id}>
-                              <TableCell className="font-bold">{index + 1}</TableCell>
-                              <TableCell className="font-medium">{teams.find((t) => t.id === standing.team_id)?.name}</TableCell>
-                              <TableCell className="text-center">{standing.played || 0}</TableCell>
-                              <TableCell className="text-center">{standing.won || 0}</TableCell>
-                              <TableCell className="text-center">{standing.drawn || 0}</TableCell>
-                              <TableCell className="text-center">{standing.lost || 0}</TableCell>
-                              <TableCell className="text-center">{standing.goals_for || 0}</TableCell>
-                              <TableCell className="text-center">{standing.goals_against || 0}</TableCell>
-                              <TableCell className="text-center">{standing.goal_difference || 0}</TableCell>
-                              <TableCell className="text-center font-bold text-primary">{standing.points || 0}</TableCell>
-                            </TableRow>
-                          ))}
+                          .map((standing, index) => {
+                            const team = teams.find((t) => t.id === standing.team_id);
+                            return (
+                              <TableRow key={standing.id} className={cn(index < 2 && Object.keys(grouped).length > 1 && 'bg-primary/5')}>
+                                <TableCell>
+                                  <span className={cn('inline-flex items-center justify-center w-7 h-7 rounded-lg font-bold text-xs',
+                                    index < 2 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground')}>{index + 1}</span>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    {team?.logo_url && <img src={team.logo_url} className="w-7 h-7 rounded-lg object-cover" />}
+                                    <span className="font-medium">{team?.name || '?'}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-center">{standing.played || 0}</TableCell>
+                                <TableCell className="text-center">{standing.won || 0}</TableCell>
+                                <TableCell className="text-center">{standing.drawn || 0}</TableCell>
+                                <TableCell className="text-center">{standing.lost || 0}</TableCell>
+                                <TableCell className="text-center">{standing.goals_for || 0}</TableCell>
+                                <TableCell className="text-center">{standing.goals_against || 0}</TableCell>
+                                <TableCell className={cn('text-center font-semibold',
+                                  (standing.goal_difference || 0) > 0 && 'text-primary',
+                                  (standing.goal_difference || 0) < 0 && 'text-destructive')}>
+                                  {(standing.goal_difference || 0) > 0 ? `+${standing.goal_difference}` : standing.goal_difference || 0}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 font-display text-lg font-bold text-primary">{standing.points || 0}</span>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
                       </TableBody>
                     </Table>
                   </div>
