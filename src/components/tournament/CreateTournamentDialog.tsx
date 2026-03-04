@@ -10,12 +10,14 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Sparkles, Trophy, Upload, Camera, X, Plus, Image, MapPin, Wifi } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2, Sparkles, Trophy, Camera, X, Plus, Image, MapPin, Swords, Users, Layers } from 'lucide-react';
 import { useTournaments } from '@/hooks/useTournaments';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
 import { ORGANIZER_BASE } from '@/lib/constants';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 type TournamentType = Database['public']['Enums']['tournament_type'];
 
@@ -23,6 +25,12 @@ interface CreateTournamentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const tournamentTypes = [
+  { value: 'knockout' as TournamentType, label: 'إقصاء مباشر', icon: Swords, desc: 'من يخسر يخرج مباشرة', bg: 'from-red-500/20 to-orange-500/20' },
+  { value: 'league' as TournamentType, label: 'دوري', icon: Trophy, desc: 'كل فريق يلعب ضد الجميع', bg: 'from-blue-500/20 to-cyan-500/20' },
+  { value: 'groups' as TournamentType, label: 'مجموعات + إقصاء', icon: Layers, desc: 'مجموعات ثم مرحلة إقصاء', bg: 'from-purple-500/20 to-pink-500/20' },
+];
 
 export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentDialogProps) {
   const navigate = useNavigate();
@@ -37,22 +45,19 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [name, setName] = useState('');
   const [type, setType] = useState<TournamentType>('knockout');
   const [startDate, setStartDate] = useState('');
-  const [numTeams, setNumTeams] = useState(8);
   const [numGroups, setNumGroups] = useState(4);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [venueName, setVenueName] = useState('');
   const [venueAddress, setVenueAddress] = useState('');
   const [acceptJoinRequests, setAcceptJoinRequests] = useState(false);
-  const [maxTeams, setMaxTeams] = useState(16);
-  
-  // Stadium details
+  const [maxTeams, setMaxTeams] = useState<number | ''>('');
+
+  // Stadium
   const [stadiumImageFile, setStadiumImageFile] = useState<File | null>(null);
   const [stadiumImagePreview, setStadiumImagePreview] = useState<string | null>(null);
-  const [stadiumCapacity, setStadiumCapacity] = useState('');
-  const [stadiumAmenities, setStadiumAmenities] = useState('');
 
-  // Step 2: Teams (individual entry)
+  // Step 2
   const [teamsList, setTeamsList] = useState<string[]>([]);
   const [newTeamName, setNewTeamName] = useState('');
 
@@ -60,25 +65,11 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [drawResult, setDrawResult] = useState<any>(null);
 
   const resetForm = () => {
-    setStep(1);
-    setName('');
-    setType('knockout');
-    setStartDate('');
-    setNumTeams(8);
-    setNumGroups(4);
-    setLogoFile(null);
-    setLogoPreview(null);
-    setVenueName('');
-    setVenueAddress('');
-    setAcceptJoinRequests(false);
-    setMaxTeams(16);
-    setStadiumImageFile(null);
-    setStadiumImagePreview(null);
-    setStadiumCapacity('');
-    setStadiumAmenities('');
-    setTeamsList([]);
-    setNewTeamName('');
-    setDrawResult(null);
+    setStep(1); setName(''); setType('knockout'); setStartDate('');
+    setNumGroups(4); setLogoFile(null); setLogoPreview(null);
+    setVenueName(''); setVenueAddress(''); setAcceptJoinRequests(false);
+    setMaxTeams(''); setStadiumImageFile(null); setStadiumImagePreview(null);
+    setTeamsList([]); setNewTeamName(''); setDrawResult(null);
   };
 
   const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,10 +97,6 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
     }
   };
 
-  const handleRemoveTeam = (index: number) => {
-    setTeamsList(prev => prev.filter((_, i) => i !== index));
-  };
-
   const handleNext = async () => {
     if (step === 1) {
       if (!name.trim()) {
@@ -122,17 +109,20 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         toast({ title: 'خطأ', description: 'يرجى إدخال فريقين على الأقل', variant: 'destructive' });
         return;
       }
-
-      if (type === 'knockout' && teamsList.length !== numTeams) {
-        toast({ title: 'خطأ', description: `يجب إدخال ${numTeams} فريق`, variant: 'destructive' });
+      if (type === 'groups' && teamsList.length < numGroups * 2) {
+        toast({ title: 'خطأ', description: `يجب إدخال ${numGroups * 2} فريق على الأقل للمجموعات`, variant: 'destructive' });
         return;
       }
 
       setAiLoading(true);
       try {
-        const adjustedType = type === 'groups' ? 'groups' : 'knockout';
-        const result = await performAIDraw(teamsList, adjustedType as TournamentType, numGroups);
+        const drawType = type === 'league' ? 'knockout' : type;
+        const result = await performAIDraw(teamsList, drawType as TournamentType, type === 'groups' ? numGroups : undefined);
         if (result) {
+          // For league, just shuffle
+          if (type === 'league' && !result.draw) {
+            result.draw = teamsList.sort(() => Math.random() - 0.5);
+          }
           setDrawResult(result);
           setStep(3);
         }
@@ -145,7 +135,6 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const handleCreate = async () => {
     setLoading(true);
     try {
-      // Upload logo if exists
       let logoUrl: string | null = null;
       if (logoFile) {
         const fileExt = logoFile.name.split('.').pop();
@@ -157,41 +146,33 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         }
       }
 
-      // Upload stadium image if exists
-      let stadiumImageUrl: string | null = null;
+      let venuePhotos: string[] = [];
       if (stadiumImageFile) {
         const fileExt = stadiumImageFile.name.split('.').pop();
         const filePath = `stadiums/${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage.from('tournament-assets').upload(filePath, stadiumImageFile);
         if (!uploadError) {
           const { data: { publicUrl } } = supabase.storage.from('tournament-assets').getPublicUrl(filePath);
-          stadiumImageUrl = publicUrl;
+          venuePhotos = [publicUrl];
         }
       }
 
       const tournament = await createTournament({
-        name,
-        type,
-        startDate,
-        numTeams,
-        numGroups,
-        logoUrl,
-        venueName,
-        venueAddress,
+        name, type, startDate,
+        numTeams: teamsList.length,
+        numGroups: type === 'groups' ? numGroups : undefined,
+        teamsPerGroup: type === 'groups' ? Math.ceil(teamsList.length / numGroups) : undefined,
+        logoUrl, venueName, venueAddress,
         acceptJoinRequests,
-        maxTeams,
-        stadiumImageUrl,
-        stadiumCapacity: stadiumCapacity ? parseInt(stadiumCapacity) : null,
-        stadiumAmenities,
+        maxTeams: maxTeams ? Number(maxTeams) : undefined,
+        venuePhotos,
       });
 
       if (!tournament) return;
 
-      // Get ordered teams from draw
-      const orderedTeams =
-        type === 'groups'
-          ? Object.values(drawResult.groups || {}).flat()
-          : drawResult.draw || [];
+      const orderedTeams = type === 'groups'
+        ? Object.values(drawResult.groups || {}).flat()
+        : drawResult.draw || teamsList;
 
       const teams = await addTeams(tournament.id, orderedTeams as string[]);
       if (!teams) return;
@@ -200,6 +181,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         await generateKnockoutMatches(tournament.id, teams);
       } else if (type === 'groups' && drawResult.groups) {
         await generateGroupMatches(tournament.id, teams, drawResult.groups);
+      } else if (type === 'league') {
+        // Generate round-robin for league (no groups)
+        await generateLeagueMatches(tournament.id, teams);
       }
 
       toast({ title: 'تم بنجاح! 🎉', description: 'تم إنشاء البطولة وإجراء القرعة' });
@@ -211,6 +195,42 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
     }
   };
 
+  const generateLeagueMatches = async (tournamentId: string, teams: any[]) => {
+    const allMatches: any[] = [];
+    const allStandings: any[] = [];
+    let matchOrder = 1;
+
+    teams.forEach((team) => {
+      allStandings.push({
+        tournament_id: tournamentId, team_id: team.id, group_name: null,
+        position: 0, played: 0, won: 0, drawn: 0, lost: 0,
+        goals_for: 0, goals_against: 0, goal_difference: 0, points: 0,
+      });
+    });
+
+    for (let i = 0; i < teams.length; i++) {
+      for (let j = i + 1; j < teams.length; j++) {
+        allMatches.push({
+          tournament_id: tournamentId,
+          home_team_id: teams[i].id,
+          away_team_id: teams[j].id,
+          round: 1, match_order: matchOrder++,
+          status: 'scheduled' as const,
+        });
+      }
+    }
+
+    if (allStandings.length > 0) {
+      await supabase.from('standings').insert(allStandings);
+    }
+    if (allMatches.length > 0) {
+      await supabase.from('matches').insert(allMatches);
+    }
+    await supabase.from('tournaments').update({ status: 'upcoming' }).eq('id', tournamentId);
+  };
+
+  const stepLabels = ['معلومات البطولة', 'الفرق المشاركة', 'نتيجة القرعة'];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -219,40 +239,32 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
             <Trophy className="w-6 h-6 text-primary" />
             إنشاء بطولة جديدة
           </DialogTitle>
-          <DialogDescription>
-            {step === 1 && 'أدخل معلومات البطولة والملعب'}
-            {step === 2 && 'أضف الفرق المشاركة'}
-            {step === 3 && 'نتيجة القرعة الذكية'}
-          </DialogDescription>
+          <DialogDescription>{stepLabels[step - 1]}</DialogDescription>
         </DialogHeader>
 
         {/* Progress */}
-        <div className="flex items-center justify-center gap-2 my-4">
+        <div className="flex items-center gap-2 my-4">
           {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
-                s === step ? 'bg-primary text-primary-foreground' : s < step ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {s}
+            <div key={s} className="flex items-center gap-2 flex-1">
+              <div className={cn(
+                'w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all shrink-0',
+                s === step ? 'bg-primary text-primary-foreground scale-110' : s < step ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+              )}>{s}</div>
+              {s < 3 && <div className={cn('h-1 flex-1 rounded-full', s < step ? 'bg-primary/40' : 'bg-muted')} />}
             </div>
           ))}
         </div>
 
         {/* Step 1 */}
         {step === 1 && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Logo */}
             <div className="flex flex-col items-center gap-3">
               <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden">
                 {logoPreview ? (
                   <img src={logoPreview} alt="شعار" className="w-full h-full object-cover" />
                 ) : (
-                  <>
-                    <Camera className="w-6 h-6 text-muted-foreground mb-1" />
-                    <span className="text-xs text-muted-foreground">شعار البطولة</span>
-                  </>
+                  <><Camera className="w-6 h-6 text-muted-foreground mb-1" /><span className="text-xs text-muted-foreground">شعار البطولة</span></>
                 )}
                 <input type="file" accept="image/*" onChange={handleLogoSelect} className="sr-only" />
               </label>
@@ -263,38 +275,32 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
               <Input placeholder="مثال: بطولة الأبطال 2025" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
 
+            {/* Tournament Type Cards */}
             <div className="space-y-2">
               <Label>نظام البطولة</Label>
-              <Select value={type} onValueChange={(v) => setType(v as TournamentType)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="knockout">⚔️ الإقصاء المباشر (Knockout)</SelectItem>
-                  <SelectItem value="groups">📊 المجموعات (Groups)</SelectItem>
-                </SelectContent>
-              </Select>
-              {type === 'groups' && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  النظام المختلط: مرحلة المجموعات لتحديد المتأهلين ثم مرحلة الإقصاء المباشر
-                </p>
-              )}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {tournamentTypes.map((t) => (
+                  <Card
+                    key={t.value}
+                    className={cn(
+                      'cursor-pointer transition-all hover:scale-[1.02]',
+                      type === t.value ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'
+                    )}
+                    onClick={() => setType(t.value)}
+                  >
+                    <CardContent className={cn('p-4 bg-gradient-to-br rounded-lg', t.bg)}>
+                      <t.icon className={cn('w-8 h-8 mb-2', type === t.value ? 'text-primary' : 'text-muted-foreground')} />
+                      <h4 className="font-bold text-sm">{t.label}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">{t.desc}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label>تاريخ البداية</Label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>عدد الفرق</Label>
-              <Select value={numTeams.toString()} onValueChange={(v) => setNumTeams(parseInt(v))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="4">4 فرق</SelectItem>
-                  <SelectItem value="8">8 فرق</SelectItem>
-                  <SelectItem value="16">16 فريق</SelectItem>
-                  <SelectItem value="32">32 فريق</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {type === 'groups' && (
@@ -303,79 +309,63 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                 <Select value={numGroups.toString()} onValueChange={(v) => setNumGroups(parseInt(v))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="2">2 مجموعات</SelectItem>
-                    <SelectItem value="4">4 مجموعات</SelectItem>
-                    <SelectItem value="8">8 مجموعات</SelectItem>
+                    {[2, 3, 4, 6, 8].map(n => (
+                      <SelectItem key={n} value={n.toString()}>{n} مجموعات</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             )}
 
-            {/* Stadium Section */}
-            <div className="border-t pt-4 mt-4">
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-primary" />
-                تفاصيل الملعب
-              </h3>
-
-              {/* Stadium Image */}
-              <div className="mb-4">
-                <Label className="mb-2 block">صورة الملعب</Label>
+            {/* Stadium */}
+            <Card>
+              <CardContent className="p-4 space-y-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-primary" />تفاصيل الملعب
+                </h3>
                 <label className="w-full h-32 rounded-2xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden">
                   {stadiumImagePreview ? (
                     <img src={stadiumImagePreview} alt="ملعب" className="w-full h-full object-cover" />
                   ) : (
-                    <>
-                      <Image className="w-8 h-8 text-muted-foreground mb-2" />
-                      <span className="text-xs text-muted-foreground">اضغط لرفع صورة الملعب</span>
-                    </>
+                    <><Image className="w-8 h-8 text-muted-foreground mb-2" /><span className="text-xs text-muted-foreground">صورة الملعب</span></>
                   )}
                   <input type="file" accept="image/*" onChange={handleStadiumImageSelect} className="sr-only" />
                 </label>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>اسم الملعب / المكان</Label>
-                  <Input placeholder="ملعب المدينة" value={venueName} onChange={(e) => setVenueName(e.target.value)} />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">اسم الملعب</Label>
+                    <Input placeholder="ملعب المدينة" value={venueName} onChange={(e) => setVenueName(e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">العنوان</Label>
+                    <Input placeholder="المدينة، الحي" value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>العنوان</Label>
-                  <Input placeholder="المدينة، الحي" value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)} />
-                </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                <div className="space-y-2">
-                  <Label>السعة (عدد المقاعد)</Label>
-                  <Input type="number" placeholder="50000" value={stadiumCapacity} onChange={(e) => setStadiumCapacity(e.target.value)} />
+            {/* Join Requests */}
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-medium flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> استقبال طلبات الانضمام</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">السماح للفرق بإرسال طلبات</p>
+                  </div>
+                  <Switch checked={acceptJoinRequests} onCheckedChange={setAcceptJoinRequests} />
                 </div>
-                <div className="space-y-2">
-                  <Label>المرافق والخدمات</Label>
-                  <Input placeholder="مثال: موقف سيارات، مطاعم، ..." value={stadiumAmenities} onChange={(e) => setStadiumAmenities(e.target.value)} />
-                </div>
-              </div>
-            </div>
-
-            {/* Join requests toggle */}
-            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-              <div>
-                <Label className="text-sm font-medium">استقبال طلبات الانضمام</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">السماح للفرق بإرسال طلبات انضمام</p>
-              </div>
-              <Switch checked={acceptJoinRequests} onCheckedChange={setAcceptJoinRequests} />
-            </div>
-
-            {acceptJoinRequests && (
-              <div className="space-y-2">
-                <Label>الحد الأقصى للفرق</Label>
-                <Input type="number" min={2} max={64} value={maxTeams} onChange={(e) => setMaxTeams(parseInt(e.target.value) || 16)} />
-              </div>
-            )}
+                {acceptJoinRequests && (
+                  <div className="space-y-1">
+                    <Label className="text-xs">الحد الأقصى للفرق (اختياري)</Label>
+                    <Input type="number" min={2} placeholder="بلا حد" value={maxTeams} onChange={(e) => setMaxTeams(e.target.value ? parseInt(e.target.value) : '')} />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
 
-        {/* Step 2: Teams */}
+        {/* Step 2 */}
         {step === 2 && (
           <div className="space-y-4">
             <div className="flex gap-2">
@@ -386,9 +376,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                 onKeyDown={(e) => e.key === 'Enter' && handleAddTeam()}
                 className="flex-1"
               />
-              <Button onClick={handleAddTeam} variant="outline" size="icon">
-                <Plus className="w-4 h-4" />
-              </Button>
+              <Button onClick={handleAddTeam} variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
             </div>
 
             {teamsList.length > 0 && (
@@ -396,12 +384,10 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                 {teamsList.map((team, index) => (
                   <div key={index} className="flex items-center justify-between p-2.5 rounded-xl border bg-card group hover:border-primary/50 transition-colors">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">
-                        {index + 1}
-                      </span>
+                      <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">{index + 1}</span>
                       <span className="font-medium text-sm truncate">{team}</span>
                     </div>
-                    <button onClick={() => handleRemoveTeam(index)} className="opacity-0 group-hover:opacity-100 text-destructive p-1 transition-opacity">
+                    <button onClick={() => setTeamsList(prev => prev.filter((_, i) => i !== index))} className="opacity-0 group-hover:opacity-100 text-destructive p-1 transition-opacity">
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -410,74 +396,83 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
             )}
 
             <p className="text-sm text-muted-foreground text-center">
-              عدد الفرق المدخلة: <span className="font-bold text-foreground">{teamsList.length}</span> / {numTeams}
+              عدد الفرق: <span className="font-bold text-foreground">{teamsList.length}</span>
+              {type === 'groups' && <span className="text-xs"> (الحد الأدنى: {numGroups * 2})</span>}
             </p>
           </div>
         )}
 
-        {/* Step 3: Draw Result */}
+        {/* Step 3 */}
         {step === 3 && drawResult && (
           <div className="space-y-6">
-            <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-5 h-5 text-primary" />
-                <span className="font-bold text-primary">نتيجة القرعة الذكية</span>
-              </div>
-
-              {type === 'knockout' && drawResult.draw && (
-                <div className="space-y-2">
-                  {(drawResult.draw as string[]).reduce((acc: JSX.Element[], team: string, index: number) => {
-                    if (index % 2 === 0) {
-                      const opponent = drawResult.draw[index + 1];
-                      acc.push(
-                        <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                          <span className="font-medium">{team}</span>
-                          <span className="text-xs font-bold text-muted-foreground px-2 py-1 rounded bg-muted">VS</span>
-                          <span className="font-medium">{opponent}</span>
-                        </div>
-                      );
-                    }
-                    return acc;
-                  }, [])}
+            <Card className="border-primary/30 bg-primary/5">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  <span className="font-bold text-primary">نتيجة القرعة</span>
                 </div>
-              )}
 
-              {type === 'groups' && drawResult.groups && (
-                <div className="grid grid-cols-2 gap-3">
-                  {Object.entries(drawResult.groups as Record<string, string[]>).map(([groupName, groupTeams]) => (
-                    <div key={groupName} className="p-3 rounded-lg bg-background/50">
-                      <h4 className="font-bold text-primary mb-2 text-sm">المجموعة {groupName}</h4>
-                      <ul className="space-y-1">
-                        {groupTeams.map((team, i) => (
-                          <li key={i} className="text-sm flex items-center gap-1.5">
-                            <span className="w-5 h-5 rounded bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">{i + 1}</span>
-                            {team}
-                          </li>
+                {(type === 'knockout' || type === 'league') && drawResult.draw && (
+                  <div className="space-y-2">
+                    {type === 'knockout' ? (
+                      (drawResult.draw as string[]).reduce((acc: JSX.Element[], team: string, index: number) => {
+                        if (index % 2 === 0) {
+                          const opponent = drawResult.draw[index + 1];
+                          acc.push(
+                            <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-background/80">
+                              <span className="font-medium">{team}</span>
+                              <span className="text-xs font-bold text-muted-foreground px-2 py-1 rounded bg-muted">VS</span>
+                              <span className="font-medium">{opponent}</span>
+                            </div>
+                          );
+                        }
+                        return acc;
+                      }, [])
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {(drawResult.draw as string[]).map((team: string, i: number) => (
+                          <div key={i} className="p-2 rounded-lg bg-background/80 text-sm font-medium text-center">
+                            {i + 1}. {team}
+                          </div>
                         ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {type === 'groups' && drawResult.groups && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {Object.entries(drawResult.groups as Record<string, string[]>).map(([groupName, groupTeams]) => (
+                      <div key={groupName} className="p-3 rounded-lg bg-background/80">
+                        <h4 className="font-bold text-primary mb-2 text-sm">المجموعة {groupName}</h4>
+                        <ul className="space-y-1">
+                          {groupTeams.map((team, i) => (
+                            <li key={i} className="text-sm flex items-center gap-1.5">
+                              <span className="w-5 h-5 rounded bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">{i + 1}</span>
+                              {team}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
 
         {/* Actions */}
         <div className="flex gap-2 mt-4">
-          {step > 1 && (
-            <Button variant="outline" onClick={() => setStep(step - 1)}>السابق</Button>
-          )}
+          {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}>السابق</Button>}
           <div className="flex-1" />
           {step < 3 ? (
             <Button onClick={handleNext} disabled={aiLoading}>
               {aiLoading ? (
-                <><Loader2 className="w-4 h-4 ml-2 animate-spin" />جاري إجراء القرعة...</>
+                <><Loader2 className="w-4 h-4 ml-2 animate-spin" />جاري القرعة...</>
               ) : step === 2 ? (
-                <><Sparkles className="w-4 h-4 ml-2" />إجراء القرعة الذكية</>
-              ) : (
-                'التالي'
-              )}
+                <><Sparkles className="w-4 h-4 ml-2" />إجراء القرعة</>
+              ) : 'التالي'}
             </Button>
           ) : (
             <Button onClick={handleCreate} disabled={loading}>
