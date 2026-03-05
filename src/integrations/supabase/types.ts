@@ -198,6 +198,44 @@ export type Database = {
           },
         ]
       }
+      players: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          number: number
+          photo_url: string | null
+          position: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          number?: number
+          photo_url?: string | null
+          position?: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          number?: number
+          photo_url?: string | null
+          position?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
