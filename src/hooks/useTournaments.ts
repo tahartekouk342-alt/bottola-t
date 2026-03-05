@@ -80,7 +80,6 @@ export function useTournaments() {
 
   const deleteTournament = async (tournamentId: string) => {
     try {
-      // Delete related data first
       await supabase.from('standings').delete().eq('tournament_id', tournamentId);
       await supabase.from('matches').delete().eq('tournament_id', tournamentId);
       await supabase.from('teams').delete().eq('tournament_id', tournamentId);
@@ -235,9 +234,24 @@ export function useTournaments() {
 
   const startKnockoutFromGroups = async (tournamentId: string) => {
     try {
+      // First check if all group matches are completed
+      const { data: groupMatches } = await supabase
+        .from('matches')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .not('group_name', 'is', null);
+
+      if (groupMatches && groupMatches.length > 0) {
+        const incompleteGroupMatches = groupMatches.filter(m => m.status !== 'completed');
+        if (incompleteGroupMatches.length > 0) {
+          toast({ title: 'تنبيه ⚠️', description: `لم تكتمل ${incompleteGroupMatches.length} مباراة في المجموعات بعد`, variant: 'destructive' });
+          return null;
+        }
+      }
+
       const { data: standings } = await supabase
         .from('standings')
-        .select('*, team:team_id(*)')
+        .select('*')
         .eq('tournament_id', tournamentId)
         .order('group_name')
         .order('points', { ascending: false })
@@ -247,27 +261,26 @@ export function useTournaments() {
         throw new Error('لا توجد جداول ترتيب');
       }
 
-      const grouped = standings.reduce((acc, s) => {
+      // Group standings by group_name
+      const grouped: Record<string, typeof standings> = {};
+      for (const s of standings) {
         const key = s.group_name || 'A';
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(s);
-        return acc;
-      }, {} as Record<string, typeof standings>);
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(s);
+      }
 
-      const qualifiedTeamIds: string[] = [];
+      // Sort each group by points then goal_difference
+      for (const key of Object.keys(grouped)) {
+        grouped[key].sort((a, b) => {
+          const pointsDiff = (b.points || 0) - (a.points || 0);
+          if (pointsDiff !== 0) return pointsDiff;
+          return (b.goal_difference || 0) - (a.goal_difference || 0);
+        });
+      }
+
       const sortedGroups = Object.keys(grouped).sort();
       
-      for (const groupName of sortedGroups) {
-        const groupStandings = grouped[groupName];
-        const topTeams = groupStandings.slice(0, 2);
-        topTeams.forEach(s => qualifiedTeamIds.push(s.team_id));
-      }
-
-      if (qualifiedTeamIds.length < 2) {
-        throw new Error('عدد الفرق المتأهلة غير كافي');
-      }
-
-      // Cross-group pairing: 1st of group A vs 2nd of group B, etc.
+      // Get top 2 from each group
       const firsts: string[] = [];
       const seconds: string[] = [];
       for (const groupName of sortedGroups) {
@@ -276,7 +289,23 @@ export function useTournaments() {
         if (grp[1]) seconds.push(grp[1].team_id);
       }
 
-      const knockoutRound = Math.max(...standings.map(s => 1)) + 1;
+      if (firsts.length === 0 || seconds.length === 0) {
+        throw new Error('عدد الفرق المتأهلة غير كافي');
+      }
+
+      // Determine the next round number (after group matches)
+      const { data: existingMatches } = await supabase
+        .from('matches')
+        .select('round')
+        .eq('tournament_id', tournamentId)
+        .order('round', { ascending: false })
+        .limit(1);
+
+      const nextRound = existingMatches && existingMatches.length > 0 
+        ? (existingMatches[0].round || 1) + 1 
+        : 2;
+
+      // Cross-group pairing: 1st of group A vs 2nd of last group, etc.
       const matches = [];
       const reversedSeconds = [...seconds].reverse();
 
@@ -285,7 +314,7 @@ export function useTournaments() {
           tournament_id: tournamentId,
           home_team_id: firsts[i],
           away_team_id: reversedSeconds[i],
-          round: knockoutRound,
+          round: nextRound,
           match_order: i + 1,
           status: 'scheduled' as const,
         });
@@ -299,9 +328,9 @@ export function useTournaments() {
       await supabase.from('tournaments').update({ status: 'live' as TournamentStatus }).eq('id', tournamentId);
       toast({ title: 'تم بدء مرحلة الإقصاء 🏆', description: `${matches.length} مباراة في مرحلة الإقصاء` });
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting knockout from groups:', error);
-      toast({ title: 'خطأ', description: 'فشل في بدء مرحلة الإقصاء', variant: 'destructive' });
+      toast({ title: 'خطأ', description: error.message || 'فشل في بدء مرحلة الإقصاء', variant: 'destructive' });
       return null;
     }
   };
@@ -382,19 +411,14 @@ export function useTournaments() {
 
       const currentRound = allMatches[0].round || 1;
 
-      const { data: roundMatches } = await supabase
-        .from('matches').select('*').eq('tournament_id', tournamentId)
-        .eq('round', currentRound).eq('status', 'completed').is('group_name', null);
+      const currentRoundMatches = allMatches.filter(m => m.round === currentRound);
+      const completedRoundMatches = currentRoundMatches.filter(m => m.status === 'completed');
 
-      const { data: allRoundMatches } = await supabase
-        .from('matches').select('*').eq('tournament_id', tournamentId)
-        .eq('round', currentRound).is('group_name', null);
-
-      if (!roundMatches || !allRoundMatches || roundMatches.length < allRoundMatches.length) {
+      if (completedRoundMatches.length < currentRoundMatches.length) {
         throw new Error('لم تكتمل جميع مباريات الجولة الحالية');
       }
 
-      const winners = roundMatches.map(m => m.winner_id).filter(Boolean) as string[];
+      const winners = completedRoundMatches.map(m => m.winner_id).filter(Boolean) as string[];
 
       if (winners.length < 2) {
         toast({ title: '🏆 البطولة انتهت!', description: 'تم تحديد البطل' });

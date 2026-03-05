@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Camera, Loader2, Plus, X, Trash2, Save, Sparkles } from 'lucide-react';
+import { Camera, Loader2, Plus, X, Trash2, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,6 +20,7 @@ interface Player {
   position: string;
   photo_url?: string;
   photoFile?: File;
+  isNew?: boolean;
 }
 
 interface EditTeamDialogProps {
@@ -31,7 +32,7 @@ interface EditTeamDialogProps {
   onSave?: () => void;
 }
 
-const POSITIONS = {
+const POSITIONS: Record<string, string> = {
   goalkeeper: '🧤 حارس مرمى',
   defender: '🛡️ دفاع',
   midfielder: '⚽ وسط',
@@ -73,24 +74,27 @@ export function EditTeamDialog({
         setLogoPreview(team.logo_url || null);
       }
 
-      // Fetch players
+      // Fetch players from the players table
       const { data: playersData } = await supabase
-        .from('players')
+        .from('players' as any)
         .select('*')
         .eq('team_id', teamId)
         .order('number');
 
-      if (playersData) {
-        setPlayers(playersData.map(p => ({
+      if (playersData && Array.isArray(playersData)) {
+        setPlayers((playersData as any[]).map((p: any) => ({
           id: p.id,
           name: p.name,
           number: p.number,
           position: p.position,
           photo_url: p.photo_url,
         })));
+      } else {
+        setPlayers([]);
       }
     } catch (error) {
       console.error('Error fetching team data:', error);
+      setPlayers([]);
     } finally {
       setFetching(false);
     }
@@ -126,12 +130,13 @@ export function EditTeamDialog({
     }
 
     const player: Player = {
-      id: Date.now().toString(),
+      id: `new-${Date.now()}`,
       name: newPlayer.name.trim(),
       number: newPlayer.number || 1,
-      position: newPlayer.position as string || 'midfielder',
+      position: newPlayer.position || 'midfielder',
       photo_url: newPlayerPhotoPreview || undefined,
       photoFile: newPlayerPhotoFile || undefined,
+      isNew: true,
     };
 
     setPlayers(prev => [...prev, player]);
@@ -142,33 +147,6 @@ export function EditTeamDialog({
 
   const handleRemovePlayer = (id: string) => {
     setPlayers(prev => prev.filter(p => p.id !== id));
-  };
-
-  const handleGeneratePlayerPhoto = async (playerId: string) => {
-    const player = players.find(p => p.id === playerId);
-    if (!player) return;
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-image', {
-        body: {
-          prompt: `Professional football player portrait, ${player.name}, wearing jersey number ${player.number}, ${POSITIONS[player.position as keyof typeof POSITIONS]}, high quality, realistic`,
-          style: 'realistic',
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.imageUrl) {
-        setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, photo_url: data.imageUrl } : p));
-        toast({ title: 'تم توليد الصورة بنجاح ✨' });
-      }
-    } catch (error) {
-      console.error('Error generating photo:', error);
-      toast({ title: 'خطأ في توليد الصورة', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleSave = async () => {
@@ -185,7 +163,7 @@ export function EditTeamDialog({
         }
       }
 
-      // Update players
+      // Save players
       for (const player of players) {
         let photoUrl = player.photo_url;
 
@@ -199,22 +177,20 @@ export function EditTeamDialog({
           }
         }
 
-        if (player.id.length > 10) {
-          // New player
-          await supabase.from('players').insert({
+        if (player.isNew) {
+          await (supabase.from('players' as any) as any).insert({
             team_id: teamId,
             name: player.name,
             number: player.number,
             position: player.position,
-            photo_url: photoUrl,
+            photo_url: photoUrl || null,
           });
         } else {
-          // Existing player
-          await supabase.from('players').update({
+          await (supabase.from('players' as any) as any).update({
             name: player.name,
             number: player.number,
             position: player.position,
-            photo_url: photoUrl,
+            photo_url: photoUrl || null,
           }).eq('id', player.id);
         }
       }
@@ -272,7 +248,6 @@ export function EditTeamDialog({
 
             {/* Add New Player */}
             <div className="space-y-3 p-4 rounded-lg border bg-muted/30 mb-4">
-              {/* Player Photo */}
               <div className="flex justify-center">
                 <label className="w-16 h-16 rounded-xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden">
                   {newPlayerPhotoPreview ? (
@@ -287,7 +262,6 @@ export function EditTeamDialog({
                 </label>
               </div>
 
-              {/* Player Details */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label className="text-xs">اسم اللاعب</Label>
@@ -301,10 +275,7 @@ export function EditTeamDialog({
                 <div className="space-y-1">
                   <Label className="text-xs">رقم القميص</Label>
                   <Input
-                    type="number"
-                    min="1"
-                    max="99"
-                    placeholder="1-99"
+                    type="number" min="1" max="99" placeholder="1-99"
                     value={newPlayer.number || ''}
                     onChange={(e) => setNewPlayer(prev => ({ ...prev, number: parseInt(e.target.value) || 1 }))}
                     className="text-sm"
@@ -312,13 +283,10 @@ export function EditTeamDialog({
                 </div>
               </div>
 
-              {/* Position */}
               <div className="space-y-1">
                 <Label className="text-xs">المركز</Label>
-                <Select value={newPlayer.position as string} onValueChange={(v) => setNewPlayer(prev => ({ ...prev, position: v }))}>
-                  <SelectTrigger className="text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
+                <Select value={newPlayer.position || 'midfielder'} onValueChange={(v) => setNewPlayer(prev => ({ ...prev, position: v }))}>
+                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="goalkeeper">🧤 حارس مرمى</SelectItem>
                     <SelectItem value="defender">🛡️ دفاع</SelectItem>
@@ -329,8 +297,7 @@ export function EditTeamDialog({
               </div>
 
               <Button onClick={handleAddPlayer} className="w-full" size="sm">
-                <Plus className="w-4 h-4 ml-2" />
-                إضافة اللاعب
+                <Plus className="w-4 h-4 ml-2" />إضافة اللاعب
               </Button>
             </div>
 
@@ -345,26 +312,14 @@ export function EditTeamDialog({
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm">{player.name}</p>
-                      <p className="text-xs text-muted-foreground">#{player.number} • {POSITIONS[player.position as keyof typeof POSITIONS]}</p>
+                      <p className="text-xs text-muted-foreground">#{player.number} • {POSITIONS[player.position] || player.position}</p>
                     </div>
-                    <div className="flex gap-1">
-                      {!player.photo_url && (
-                        <button
-                          onClick={() => handleGeneratePlayerPhoto(player.id)}
-                          disabled={loading}
-                          className="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors disabled:opacity-50"
-                          title="توليد صورة بالذكاء الاصطناعي"
-                        >
-                          <Sparkles className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleRemovePlayer(player.id)}
-                        className="text-destructive hover:bg-destructive/10 p-2 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleRemovePlayer(player.id)}
+                      className="text-destructive hover:bg-destructive/10 p-2 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 ))}
               </div>
