@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/hooks/use-theme';
+import { ORGANIZER_BASE } from '@/lib/constants';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,13 +12,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-export function ViewerHeader() {
+export function OrganizerHeader() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/');
+    navigate(`${ORGANIZER_BASE}`);
   };
 
   return (
@@ -35,11 +36,14 @@ export function ViewerHeader() {
             >
               <ArrowRight className="w-5 h-5" />
             </Button>
-            <Link to="/following" className="flex items-center gap-3 group">
+            <Link to={`${ORGANIZER_BASE}/dashboard`} className="flex items-center gap-3 group">
               <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center glow-primary transition-transform duration-300 group-hover:scale-105">
                 <Trophy className="w-7 h-7 text-primary-foreground" />
               </div>
-              <span className="font-display text-2xl font-bold text-foreground">Bottola</span>
+              <div className="flex flex-col">
+                <span className="font-display text-2xl font-bold text-foreground">Bottola</span>
+                <span className="text-xs text-muted-foreground font-semibold">لوحة تحكم المنظم</span>
+              </div>
             </Link>
           </div>
 
@@ -49,7 +53,7 @@ export function ViewerHeader() {
               variant="ghost"
               size="sm"
               className="rounded-xl hover:bg-secondary/50"
-              onClick={() => navigate('/notifications')}
+              onClick={() => navigate(`${ORGANIZER_BASE}/notifications`)}
               title="الإشعارات"
             >
               <Bell className="w-5 h-5" />
@@ -92,6 +96,17 @@ export function ViewerHeader() {
                     </Button>
                   </div>
                 </div>
+
+                <DropdownMenuSeparator />
+
+                {/* Settings Link */}
+                <DropdownMenuItem
+                  onClick={() => navigate(`${ORGANIZER_BASE}/settings`)}
+                  className="rounded-lg py-3 px-4 font-bold cursor-pointer hover:bg-primary/10 transition-all"
+                >
+                  <Settings className="ml-3 h-4 w-4" />
+                  إعدادات الحساب
+                </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
 
