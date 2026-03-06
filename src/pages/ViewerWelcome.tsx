@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trophy, Users, Star, ArrowLeft, Bell, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { supabase } from '@/integrations/supabase/client';
 
 const sportsBgs = [
@@ -90,7 +89,6 @@ export default function ViewerWelcome() {
           </div>
           <span className="font-display text-2xl font-bold text-foreground">Bottola</span>
         </div>
-        <ThemeToggle />
       </header>
 
       {/* Hero Section */}

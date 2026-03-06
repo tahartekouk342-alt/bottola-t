@@ -10,8 +10,10 @@ import { ORGANIZER_BASE } from "@/lib/constants";
 import ViewerWelcome from "./pages/ViewerWelcome";
 import ViewerAuth from "./pages/ViewerAuth";
 import ViewerHome from "./pages/ViewerHome";
+import ViewerTournamentsFeed from "./pages/ViewerTournamentsFeed";
 import Following from "./pages/Following";
 import Notifications from "./pages/Notifications";
+import ViewerSettings from "./pages/ViewerSettings";
 import OrganizerTournaments from "./pages/viewer/OrganizerTournaments";
 import ViewerTournamentDetails from "./pages/viewer/ViewerTournamentDetails";
 import { ViewerLayout } from "./components/viewer/ViewerLayout";
@@ -20,6 +22,8 @@ import { ViewerLayout } from "./components/viewer/ViewerLayout";
 import OrganizerWelcome from "./pages/OrganizerWelcome";
 import OrganizerAuth from "./pages/OrganizerAuth";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
+import OrganizerTournamentsList from "./pages/OrganizerTournamentsList";
+import OrganizerFollowers from "./pages/OrganizerFollowers";
 import OrganizerSettings from "./pages/OrganizerSettings";
 import TournamentDetails from "./pages/TournamentDetails";
 import { OrganizerLayout } from "./components/organizer/OrganizerLayout";
@@ -42,8 +46,10 @@ const App = () => (
 
             {/* Viewer with sidebar layout */}
             <Route path="/home" element={<ViewerLayout><ViewerHome /></ViewerLayout>} />
+            <Route path="/tournaments-feed" element={<ViewerLayout><ViewerTournamentsFeed /></ViewerLayout>} />
             <Route path="/following" element={<ViewerLayout><Following /></ViewerLayout>} />
             <Route path="/notifications" element={<ViewerLayout><Notifications /></ViewerLayout>} />
+            <Route path="/settings" element={<ViewerLayout><ViewerSettings /></ViewerLayout>} />
             <Route path="/viewer/organizer/:organizerId" element={<ViewerLayout><OrganizerTournaments /></ViewerLayout>} />
             <Route path="/viewer/tournament/:tournamentId" element={<ViewerLayout><ViewerTournamentDetails /></ViewerLayout>} />
 
@@ -51,6 +57,8 @@ const App = () => (
             <Route path={ORGANIZER_BASE} element={<OrganizerWelcome />} />
             <Route path={`${ORGANIZER_BASE}/auth`} element={<OrganizerAuth />} />
             <Route path={`${ORGANIZER_BASE}/dashboard`} element={<OrganizerLayout><OrganizerDashboard /></OrganizerLayout>} />
+            <Route path={`${ORGANIZER_BASE}/tournaments`} element={<OrganizerLayout><OrganizerTournamentsList /></OrganizerLayout>} />
+            <Route path={`${ORGANIZER_BASE}/followers`} element={<OrganizerLayout><OrganizerFollowers /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/settings`} element={<OrganizerLayout><OrganizerSettings /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/tournament/:id`} element={<OrganizerLayout><TournamentDetails /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/notifications`} element={<OrganizerLayout><Notifications /></OrganizerLayout>} />
