@@ -1,6 +1,15 @@
 import { cn } from '@/lib/utils';
-import { Calendar, Clock, MapPin } from 'lucide-react';
+import { Calendar, Clock, MapPin, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { MatchWithTeams } from '@/hooks/useTournamentDetails';
 
 interface MatchesListProps {
@@ -86,15 +95,29 @@ function MatchCardInline({ match, onClick, showDate, venueName, stadiumImageUrl 
   const isCompleted = match.status === 'completed';
   const isLive = match.status === 'live';
   const imgSrc = stadiumImageUrl || '/images/sport-stadium.jpg';
+  const [motmDialogOpen, setMotmDialogOpen] = useState(false);
+  const [selectedMotm, setSelectedMotm] = useState<string | null>(null);
+
+  const homeWon = match.home_score !== null && match.away_score !== null && match.home_score > match.away_score;
+  const awayWon = match.home_score !== null && match.away_score !== null && match.away_score > match.home_score;
+
+  const handleMotmSelect = (teamId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedMotm(teamId);
+  };
 
   return (
-    <div
-      className={cn(
-        'rounded-[1.75rem] border bg-card overflow-hidden cursor-pointer transition-all hover:shadow-lg group',
-        isLive && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
-      )}
-      onClick={onClick}
-    >
+    <>
+      <div
+        className={cn(
+          'rounded-[1.75rem] border overflow-hidden cursor-pointer transition-all hover:shadow-lg group',
+          isLive && 'ring-2 ring-primary ring-offset-2 ring-offset-background',
+          homeWon && 'bg-gradient-to-br from-yellow-500/20 via-yellow-400/10 to-amber-500/20 border-yellow-500/30',
+          awayWon && 'bg-gradient-to-br from-yellow-500/20 via-yellow-400/10 to-amber-500/20 border-yellow-500/30',
+          !homeWon && !awayWon && 'bg-card',
+        )}
+        onClick={onClick}
+      >
       {/* Stadium Mini Image Header */}
       <div className="relative h-24 overflow-hidden">
         <img
@@ -142,25 +165,46 @@ function MatchCardInline({ match, onClick, showDate, venueName, stadiumImageUrl 
         <div className="flex items-center justify-between gap-2">
           {/* Home Team */}
           <div className="flex flex-col items-center flex-1 text-center gap-2">
-            <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center shadow-sm border border-border group-hover:scale-110 transition-transform">
+            <div className={cn(
+              'w-14 h-14 rounded-xl flex items-center justify-center shadow-sm border-2 group-hover:scale-110 transition-transform relative',
+              homeWon && isCompleted ? 'bg-gradient-to-br from-yellow-400 to-amber-500 border-yellow-600 shadow-lg shadow-yellow-500/50' : 'bg-muted border-border'
+            )}>
               {match.home_team?.logo_url ? (
-                <img src={match.home_team.logo_url} alt={match.home_team.name} className="w-8 h-8 object-contain" />
+                <img src={match.home_team.logo_url} alt={match.home_team.name} className="w-10 h-10 object-contain" />
               ) : (
-                <span className="text-lg font-bold text-primary">{match.home_team?.name?.charAt(0) || '?'}</span>
+                <span className={cn('text-lg font-bold', homeWon && isCompleted ? 'text-white' : 'text-primary')}>
+                  {match.home_team?.name?.charAt(0) || '?'}
+                </span>
+              )}
+              {homeWon && isCompleted && (
+                <div className="absolute -top-2 -right-2 bg-yellow-400 rounded-full p-1 shadow-lg">
+                  <Star className="w-4 h-4 fill-yellow-600 text-yellow-600" />
+                </div>
               )}
             </div>
             <span className="font-bold text-xs line-clamp-1">{match.home_team?.name || 'TBD'}</span>
+            {isCompleted && (
+              <Button
+                size="sm"
+                variant={selectedMotm === match.home_team?.id ? 'default' : 'ghost'}
+                className="text-[9px] h-6 px-2 gap-1"
+                onClick={(e) => handleMotmSelect(match.home_team?.id || '', e)}
+              >
+                <Star className="w-3 h-3" />
+                MOTM
+              </Button>
+            )}
           </div>
 
           {/* Score / VS */}
           <div className="flex flex-col items-center justify-center min-w-[60px]">
             {(isLive || isCompleted) ? (
               <div className="flex items-center gap-2">
-                <span className={cn('text-2xl font-black tabular-nums', isLive && 'text-primary')}>
+                <span className={cn('text-2xl font-black tabular-nums', isLive && 'text-primary', homeWon && isCompleted && 'text-yellow-600')}>
                   {match.home_score ?? 0}
                 </span>
                 <span className="text-muted-foreground font-bold">-</span>
-                <span className={cn('text-2xl font-black tabular-nums', isLive && 'text-primary')}>
+                <span className={cn('text-2xl font-black tabular-nums', isLive && 'text-primary', awayWon && isCompleted && 'text-yellow-600')}>
                   {match.away_score ?? 0}
                 </span>
               </div>
@@ -175,14 +219,35 @@ function MatchCardInline({ match, onClick, showDate, venueName, stadiumImageUrl 
 
           {/* Away Team */}
           <div className="flex flex-col items-center flex-1 text-center gap-2">
-            <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center shadow-sm border border-border group-hover:scale-110 transition-transform">
+            <div className={cn(
+              'w-14 h-14 rounded-xl flex items-center justify-center shadow-sm border-2 group-hover:scale-110 transition-transform relative',
+              awayWon && isCompleted ? 'bg-gradient-to-br from-yellow-400 to-amber-500 border-yellow-600 shadow-lg shadow-yellow-500/50' : 'bg-muted border-border'
+            )}>
               {match.away_team?.logo_url ? (
-                <img src={match.away_team.logo_url} alt={match.away_team.name} className="w-8 h-8 object-contain" />
+                <img src={match.away_team.logo_url} alt={match.away_team.name} className="w-10 h-10 object-contain" />
               ) : (
-                <span className="text-lg font-bold text-primary">{match.away_team?.name?.charAt(0) || '?'}</span>
+                <span className={cn('text-lg font-bold', awayWon && isCompleted ? 'text-white' : 'text-primary')}>
+                  {match.away_team?.name?.charAt(0) || '?'}
+                </span>
+              )}
+              {awayWon && isCompleted && (
+                <div className="absolute -top-2 -left-2 bg-yellow-400 rounded-full p-1 shadow-lg">
+                  <Star className="w-4 h-4 fill-yellow-600 text-yellow-600" />
+                </div>
               )}
             </div>
             <span className="font-bold text-xs line-clamp-1">{match.away_team?.name || 'TBD'}</span>
+            {isCompleted && (
+              <Button
+                size="sm"
+                variant={selectedMotm === match.away_team?.id ? 'default' : 'ghost'}
+                className="text-[9px] h-6 px-2 gap-1"
+                onClick={(e) => handleMotmSelect(match.away_team?.id || '', e)}
+              >
+                <Star className="w-3 h-3" />
+                MOTM
+              </Button>
+            )}
           </div>
         </div>
 
@@ -195,7 +260,15 @@ function MatchCardInline({ match, onClick, showDate, venueName, stadiumImageUrl 
             </span>
           </div>
         )}
+
+        {/* MOTM Display */}
+        {selectedMotm && (
+          <div className="mt-2 pt-2 border-t border-dashed border-yellow-500/30 flex items-center justify-center gap-1 text-[10px] font-bold text-yellow-600">
+            <Star className="w-3 h-3 fill-yellow-500" />
+            رجل المباراة المختار
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }
