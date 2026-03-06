@@ -15,7 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import { ORGANIZER_BASE } from '@/lib/constants';
 
 const navItems = [
-  { title: 'بطولاتي', url: `dashboard`, icon: Trophy },
+  { title: 'بطولاتي', url: `tournaments`, icon: Trophy },
+  { title: 'المتابعون', url: `followers`, icon: UserPlus },
   { title: 'الإشعارات', url: `notifications`, icon: Bell },
   { title: 'الإعدادات', url: `settings`, icon: Settings },
 ];

@@ -1,4 +1,4 @@
-import { Trophy, Users, Bell, LogOut, Moon, Sun, User } from 'lucide-react';
+import { Trophy, Users, Bell, LogOut, Moon, Sun, User, Settings } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -23,9 +23,10 @@ import { useTheme } from '@/components/theme/ThemeProvider';
 import { supabase } from '@/integrations/supabase/client';
 
 const navItems = [
-  { title: 'البطولات', url: '/home', icon: Trophy },
+  { title: 'البطولات', url: '/tournaments-feed', icon: Trophy },
   { title: 'المتابعات', url: '/following', icon: Users },
   { title: 'الإشعارات', url: '/notifications', icon: Bell },
+  { title: 'الإعدادات', url: '/settings', icon: Settings },
 ];
 
 export function ViewerAppSidebar() {

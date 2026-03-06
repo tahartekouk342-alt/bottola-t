@@ -52,7 +52,7 @@ export default function TournamentDetails() {
   const {
     tournament, teams, matches, standings, loading, getRoundName, fetchTournamentDetails,
   } = useTournamentDetails(id);
-  const { updateMatchResult, deleteTournament, addTeams, generateKnockoutMatches, startKnockoutFromGroups, generateNextRound } = useTournaments();
+  const { updateMatchResult, deleteTournament, addTeams, generateKnockoutMatches, generateGroupMatches, performAIDraw, startKnockoutFromGroups, generateNextRound } = useTournaments();
 
   const [selectedMatch, setSelectedMatch] = useState<MatchWithTeams | null>(null);
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
@@ -125,8 +125,17 @@ export default function TournamentDetails() {
       const newTeams = await addTeams(id, teamsList);
       if (newTeams) {
         const { data: allTeams } = await supabase.from('teams').select('*').eq('tournament_id', id).order('seed');
-        if (allTeams && tournament?.type === 'knockout') {
-          await generateKnockoutMatches(id, allTeams);
+        if (allTeams) {
+          if (tournament?.type === 'knockout') {
+            await generateKnockoutMatches(id, allTeams);
+          } else if (tournament?.type === 'groups') {
+            // Perform draw and generate group matches
+            const numGroups = tournament.num_groups || Math.max(2, Math.floor(allTeams.length / (tournament.teams_per_group || 4)));
+            const drawResult = await performAIDraw(allTeams.map(t => t.name), 'groups', numGroups);
+            if (drawResult?.groups) {
+              await generateGroupMatches(id, allTeams, drawResult.groups);
+            }
+          }
         }
       }
       toast({ title: 'تم إضافة الفرق ✅' });

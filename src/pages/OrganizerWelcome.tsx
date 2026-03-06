@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trophy, Shield, Clock, Image, ArrowLeft, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { supabase } from '@/integrations/supabase/client';
 import { ORGANIZER_BASE } from '@/lib/constants';
 
@@ -92,7 +91,6 @@ export default function OrganizerWelcome() {
           <span className="font-display text-2xl font-bold text-foreground">Bottola</span>
           <span className="text-xs bg-accent/20 text-accent-foreground px-3 py-1 rounded-full font-semibold">منظم</span>
         </div>
-        <ThemeToggle />
       </header>
 
       {/* Hero Section */}
