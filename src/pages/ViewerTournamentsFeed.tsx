@@ -14,24 +14,33 @@ export default function ViewerTournamentsFeed() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    if (!authLoading && !user) navigate('/auth?role=viewer');
-  }, [user, authLoading, navigate]);
-
   const { data: tournaments, isLoading } = useQuery({
-    queryKey: ['followed-tournaments', user?.id],
+    queryKey: ['tournaments-feed', user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
-      const { data: follows } = await supabase.from('user_follows').select('following_id').eq('follower_id', user.id);
-      if (!follows || follows.length === 0) return [];
-      const followingIds = follows.map(f => f.following_id);
-      const { data: tournamentsData, error } = await supabase.from('tournaments').select('*').in('owner_id', followingIds).order('created_at', { ascending: false });
-      if (error) throw error;
-      const { data: profiles } = await supabase.from('profiles').select('*').in('user_id', followingIds);
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-      return (tournamentsData || []).map(t => ({ ...t, organizer: profileMap.get(t.owner_id || '') || null }));
-    },
-    enabled: !!user?.id
+      if (user?.id) {
+        // Get followed tournaments
+        const { data: follows } = await supabase.from('user_follows').select('following_id').eq('follower_id', user.id);
+        if (!follows || follows.length === 0) {
+          // Get all live tournaments if no followers
+          const { data: tournamentsData } = await supabase.from('tournaments').select('*').eq('status', 'live').order('created_at', { ascending: false }).limit(20);
+          const { data: profiles } = await supabase.from('profiles').select('*');
+          const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+          return (tournamentsData || []).map(t => ({ ...t, organizer: profileMap.get(t.owner_id || '') || null }));
+        }
+        const followingIds = follows.map(f => f.following_id);
+        const { data: tournamentsData, error } = await supabase.from('tournaments').select('*').in('owner_id', followingIds).order('created_at', { ascending: false });
+        if (error) throw error;
+        const { data: profiles } = await supabase.from('profiles').select('*').in('user_id', followingIds);
+        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+        return (tournamentsData || []).map(t => ({ ...t, organizer: profileMap.get(t.owner_id || '') || null }));
+      } else {
+        // Get all live tournaments for guests
+        const { data: tournamentsData } = await supabase.from('tournaments').select('*').eq('status', 'live').order('created_at', { ascending: false });
+        const { data: profiles } = await supabase.from('profiles').select('*');
+        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+        return (tournamentsData || []).map(t => ({ ...t, organizer: profileMap.get(t.owner_id || '') || null }));
+      }
+    }
   });
 
   if (authLoading) {

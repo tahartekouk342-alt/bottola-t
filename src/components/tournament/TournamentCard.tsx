@@ -40,16 +40,18 @@ export function TournamentCard({ name, teams, startDate, status, type, logoUrl, 
       {/* Visual Header / Image Area */}
       <div className="relative h-52 overflow-hidden bg-gradient-to-br from-secondary/50 to-secondary/30">
         {/* Stadium Background Image */}
-        {stadiumImageUrl && (
+        {stadiumImageUrl ? (
           <img
             src={stadiumImageUrl}
             alt={name}
-            className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-500"
+            className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity duration-500"
           />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5" />
         )}
         
         {/* Background Image / Placeholder */}
-        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent z-10" />
         <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors duration-500" />
         
         {/* Sport Icon Background Overlay */}

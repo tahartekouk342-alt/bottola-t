@@ -1,7 +1,5 @@
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Users, Bell, Settings, Loader2 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { Trophy } from 'lucide-react';
 
 const menuItems = [
   {
@@ -12,43 +10,10 @@ const menuItems = [
     color: 'from-orange-500 to-amber-600',
     ring: 'ring-orange-500/60',
   },
-  {
-    title: 'المتابعات',
-    icon: Users,
-    path: '/following',
-    image: '/images/sport-basketball.jpg',
-    color: 'from-emerald-500 to-green-600',
-    ring: 'ring-emerald-500/60',
-  },
-  {
-    title: 'الإشعارات',
-    icon: Bell,
-    path: '/notifications',
-    image: '/images/sport-football.jpg',
-    color: 'from-blue-500 to-cyan-600',
-    ring: 'ring-blue-500/60',
-  },
-  {
-    title: 'الإعدادات',
-    icon: Settings,
-    path: '/settings',
-    image: '/images/sport-volleyball.jpg',
-    color: 'from-slate-500 to-gray-600',
-    ring: 'ring-slate-500/60',
-  },
 ];
 
 export default function ViewerHome() {
-  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!authLoading && !user) navigate('/auth?role=viewer');
-  }, [user, authLoading, navigate]);
-
-  if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-  }
 
   return (
     <div className="min-h-screen relative overflow-hidden" dir="rtl">

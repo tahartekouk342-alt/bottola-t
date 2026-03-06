@@ -1,47 +1,21 @@
-import { Trophy, Bell, LogOut, ArrowRight, Settings, Moon, Sun } from 'lucide-react';
+import { Trophy, Bell } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useTheme } from '@/components/theme/ThemeProvider';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 export function ViewerHeader() {
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
-  };
 
   return (
     <header className="sticky top-0 z-50 glass-effect border-b border-white/10">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo & Back Button */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-xl hover:bg-secondary/50"
-              onClick={() => navigate(-1)}
-              title="رجوع"
-            >
-              <ArrowRight className="w-5 h-5" />
-            </Button>
-            <Link to="/following" className="flex items-center gap-3 group">
-              <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center glow-primary transition-transform duration-300 group-hover:scale-105">
-                <Trophy className="w-7 h-7 text-primary-foreground" />
-              </div>
-              <span className="font-display text-2xl font-bold text-foreground">Bottola</span>
-            </Link>
-          </div>
+          {/* Logo */}
+          <Link to="/home" className="flex items-center gap-3 group">
+            <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center glow-primary transition-transform duration-300 group-hover:scale-105">
+              <Trophy className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <span className="font-display text-2xl font-bold text-foreground">Bottola</span>
+          </Link>
 
           {/* Right Actions */}
           <div className="flex items-center gap-3">
@@ -54,57 +28,6 @@ export function ViewerHeader() {
             >
               <Bell className="w-5 h-5" />
             </Button>
-
-            {/* Settings Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-xl hover:bg-secondary/50"
-                  title="الإعدادات"
-                >
-                  <Settings className="w-5 h-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 rounded-2xl">
-                {/* Theme Toggle */}
-                <div className="px-4 py-3 flex items-center justify-between">
-                  <span className="text-sm font-semibold">المظهر</span>
-                  <div className="flex gap-1">
-                    <Button
-                      variant={theme === 'light' ? 'default' : 'ghost'}
-                      size="sm"
-                      className="rounded-lg h-8 w-8 p-0"
-                      onClick={() => setTheme('light')}
-                      title="وضع فاتح"
-                    >
-                      <Sun className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant={theme === 'dark' ? 'default' : 'ghost'}
-                      size="sm"
-                      className="rounded-lg h-8 w-8 p-0"
-                      onClick={() => setTheme('dark')}
-                      title="وضع داكن"
-                    >
-                      <Moon className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <DropdownMenuSeparator />
-
-                {/* Logout */}
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="rounded-lg py-3 px-4 font-bold cursor-pointer text-red-400 hover:bg-red-400/10 transition-all"
-                >
-                  <LogOut className="ml-3 h-4 w-4" />
-                  تسجيل الخروج
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
       </div>
