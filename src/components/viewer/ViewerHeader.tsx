@@ -2,7 +2,7 @@ import { Trophy, Bell, LogOut, ArrowRight, Settings, Moon, Sun } from 'lucide-re
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/components/theme/ThemeProvider';
 import {
   DropdownMenu,
   DropdownMenuContent,
