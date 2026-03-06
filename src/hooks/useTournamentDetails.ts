@@ -46,28 +46,50 @@ export function useTournamentDetails(tournamentId: string | undefined) {
       if (teamsError) throw teamsError;
       setTeams(teamsData || []);
 
-      // Fetch matches with team details using explicit hints
+      // Fetch matches with team details - use safer nested select
       const { data: matchesData, error: matchesError } = await supabase
         .from('matches')
-        .select(`
-          *,
-          home_team:teams!matches_home_team_id_fkey(*),
-          away_team:teams!matches_away_team_id_fkey(*),
-          winner:teams!matches_winner_id_fkey(*)
-        `)
+        .select('*')
         .eq('tournament_id', tournamentId)
         .order('round', { ascending: true })
         .order('match_order', { ascending: true });
 
       if (matchesError) throw matchesError;
-      setMatches((matchesData as unknown as MatchWithTeams[]) || []);
 
-      // Fetch standings
+      // Fetch team data separately and enrich matches
+      if (matchesData && matchesData.length > 0) {
+        const homeTeamIds = [...new Set(matchesData.map(m => m.home_team_id))];
+        const awayTeamIds = [...new Set(matchesData.map(m => m.away_team_id))];
+        const winnerTeamIds = [...new Set(matchesData.map(m => m.winner_id).filter(Boolean))];
+        const allTeamIds = [...new Set([...homeTeamIds, ...awayTeamIds, ...winnerTeamIds])];
+
+        const { data: allTeams } = await supabase
+          .from('teams')
+          .select('*')
+          .in('id', allTeamIds);
+
+        const teamsMap = new Map((allTeams || []).map(t => [t.id, t]));
+
+        const enrichedMatches: MatchWithTeams[] = matchesData.map(match => ({
+          ...match,
+          home_team: teamsMap.get(match.home_team_id) || null,
+          away_team: teamsMap.get(match.away_team_id) || null,
+          winner: match.winner_id ? teamsMap.get(match.winner_id) || null : null,
+        }));
+
+        setMatches(enrichedMatches);
+      } else {
+        setMatches([]);
+      }
+
+      // Fetch standings - order by group, then by points and goal difference
       const { data: standingsData, error: standingsError } = await supabase
         .from('standings')
         .select('*')
         .eq('tournament_id', tournamentId)
-        .order('points', { ascending: false });
+        .order('group_name', { ascending: true })
+        .order('points', { ascending: false })
+        .order('goal_difference', { ascending: false });
 
       if (standingsError) throw standingsError;
       setStandings(standingsData || []);
