@@ -393,10 +393,10 @@ export function useTournaments() {
       toast({ title: 'تم تحديث النتيجة', description: `${homeScore} - ${awayScore}` });
 
       // Auto-progress logic for knockout/mixed systems
-      const { data: tournament } = await supabase.from('tournaments').select('*').eq('id', match.tournament_id).single();
+      const { data: tournament, error: tournamentError } = await supabase.from('tournaments').select('*').eq('id', match.tournament_id).single();
       
       // For group tournaments, auto-trigger knockout when all group matches are done
-      if (tournament && tournament.type === 'groups') {
+      if (tournament && !tournamentError && tournament.type === 'groups') {
         const { data: allGroupMatches } = await supabase
           .from('matches')
           .select('*')
@@ -417,7 +417,7 @@ export function useTournaments() {
       }
 
       // For knockout tournaments, auto-generate next round when current round is complete
-      if (tournament && (tournament.type === 'knockout' || tournament.type === 'groups')) {
+      if (tournament && !tournamentError && (tournament.type === 'knockout' || tournament.type === 'groups')) {
         if (!match.group_name) {
           const { data: allKnockoutMatches } = await supabase
             .from('matches')
