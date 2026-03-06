@@ -393,49 +393,55 @@ export function useTournaments() {
       toast({ title: 'تم تحديث النتيجة', description: `${homeScore} - ${awayScore}` });
 
       // Auto-progress logic for knockout/mixed systems
-      const { data: tournament, error: tournamentError } = await supabase.from('tournaments').select('*').eq('id', match.tournament_id).single();
-      
-      // For group tournaments, auto-trigger knockout when all group matches are done
-      if (tournament && !tournamentError && tournament.type === 'groups') {
-        const { data: allGroupMatches } = await supabase
-          .from('matches')
-          .select('*')
-          .eq('tournament_id', match.tournament_id)
-          .not('group_name', 'is', null);
-
-        if (allGroupMatches && allGroupMatches.every(m => m.status === 'completed')) {
-          const { data: knockoutMatches } = await supabase
+      try {
+        const { data: tournament } = await supabase.from('tournaments').select('*').eq('id', match.tournament_id).single();
+        
+        if (!tournament) return true;
+        
+        // For group tournaments, auto-trigger knockout when all group matches are done
+        if (tournament.type === 'groups') {
+          const { data: allGroupMatches } = await supabase
             .from('matches')
             .select('*')
             .eq('tournament_id', match.tournament_id)
-            .is('group_name', null);
-          
-          if (!knockoutMatches || knockoutMatches.length === 0) {
-            await startKnockoutFromGroups(match.tournament_id, false);
-          }
-        }
-      }
+            .not('group_name', 'is', null);
 
-      // For knockout tournaments, auto-generate next round when current round is complete
-      if (tournament && !tournamentError && (tournament.type === 'knockout' || tournament.type === 'groups')) {
-        if (!match.group_name) {
-          const { data: allKnockoutMatches } = await supabase
-            .from('matches')
-            .select('*')
-            .eq('tournament_id', match.tournament_id)
-            .is('group_name', null)
-            .order('round', { ascending: false });
-
-          if (allKnockoutMatches && allKnockoutMatches.length > 0) {
-            const currentRound = allKnockoutMatches[0].round || 1;
-            const currentRoundMatches = allKnockoutMatches.filter(m => m.round === currentRound);
-            const completedMatches = currentRoundMatches.filter(m => m.status === 'completed');
-
-            if (completedMatches.length === currentRoundMatches.length && currentRoundMatches.length > 1) {
-              await generateNextRound(match.tournament_id, false);
+          if (allGroupMatches && allGroupMatches.every(m => m.status === 'completed')) {
+            const { data: knockoutMatches } = await supabase
+              .from('matches')
+              .select('*')
+              .eq('tournament_id', match.tournament_id)
+              .is('group_name', null);
+            
+            if (!knockoutMatches || knockoutMatches.length === 0) {
+              await startKnockoutFromGroups(match.tournament_id, false);
             }
           }
         }
+
+        // For knockout tournaments, auto-generate next round when current round is complete
+        if (tournament.type === 'knockout' || tournament.type === 'groups') {
+          if (!match.group_name) {
+            const { data: allKnockoutMatches } = await supabase
+              .from('matches')
+              .select('*')
+              .eq('tournament_id', match.tournament_id)
+              .is('group_name', null)
+              .order('round', { ascending: false });
+
+            if (allKnockoutMatches && allKnockoutMatches.length > 0) {
+              const currentRound = allKnockoutMatches[0].round || 1;
+              const currentRoundMatches = allKnockoutMatches.filter(m => m.round === currentRound);
+              const completedMatches = currentRoundMatches.filter(m => m.status === 'completed');
+
+              if (completedMatches.length === currentRoundMatches.length && currentRoundMatches.length > 1) {
+                await generateNextRound(match.tournament_id, false);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error in auto-progress logic:', error);
       }
 
       return true;
