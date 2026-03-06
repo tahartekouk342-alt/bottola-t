@@ -173,19 +173,36 @@ export function useTournaments() {
 
   const generateGroupMatches = async (tournamentId: string, teams: Team[], groups: Record<string, string[]>) => {
     try {
+      if (!groups || Object.keys(groups).length === 0) {
+        throw new Error('لا توجد مجموعات');
+      }
+
       const allStandings: any[] = [];
       const allMatches: any[] = [];
       let matchOrder = 1;
 
       for (const [groupName, groupTeamNames] of Object.entries(groups)) {
+        if (!groupTeamNames || groupTeamNames.length === 0) {
+          console.warn(`المجموعة ${groupName} فارغة`);
+          continue;
+        }
+
         const groupTeams = groupTeamNames
           .map(name => teams.find(t => t.name === name))
           .filter(Boolean) as Team[];
 
-        for (const team of groupTeams) {
-          await supabase.from('teams').update({ group_name: groupName }).eq('id', team.id);
+        if (groupTeams.length === 0) {
+          console.warn(`لم يتم العثور على فرق في المجموعة ${groupName}`);
+          continue;
         }
 
+        // Update team group assignments
+        for (const team of groupTeams) {
+          const { error: updateError } = await supabase.from('teams').update({ group_name: groupName }).eq('id', team.id);
+          if (updateError) console.error(`خطأ في تحديث الفريق ${team.name}:`, updateError);
+        }
+
+        // Create standings
         groupTeams.forEach((team, index) => {
           allStandings.push({
             tournament_id: tournamentId,
@@ -197,6 +214,7 @@ export function useTournaments() {
           });
         });
 
+        // Create matches (round-robin)
         for (let i = 0; i < groupTeams.length; i++) {
           for (let j = i + 1; j < groupTeams.length; j++) {
             allMatches.push({
@@ -212,27 +230,27 @@ export function useTournaments() {
         }
       }
 
-      if (allStandings.length > 0) {
-        const { error: standingsError } = await supabase.from('standings').insert(allStandings);
-        if (standingsError) throw standingsError;
+      if (allStandings.length === 0 || allMatches.length === 0) {
+        throw new Error('فشل في إنشاء مباريات المجموعات');
       }
 
-      if (allMatches.length > 0) {
-        const { error: matchesError } = await supabase.from('matches').insert(allMatches);
-        if (matchesError) throw matchesError;
-      }
+      const { error: standingsError } = await supabase.from('standings').insert(allStandings);
+      if (standingsError) throw standingsError;
+
+      const { error: matchesError } = await supabase.from('matches').insert(allMatches);
+      if (matchesError) throw matchesError;
 
       await supabase.from('tournaments').update({ status: 'upcoming' as TournamentStatus }).eq('id', tournamentId);
-      toast({ title: 'تم إنشاء المجموعات ✅', description: `تم إنشاء ${allMatches.length} مباراة في مرحلة المجموعات` });
+      toast({ title: 'تم إنشاء المجموعات ✅', description: `تم إنشاء ${allMatches.length} مباراة في ${Object.keys(groups).length} مجموعة` });
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating group matches:', error);
-      toast({ title: 'خطأ', description: 'فشل في إنشاء المجموعات', variant: 'destructive' });
+      toast({ title: 'خطأ', description: error.message || 'فشل في إنشاء المجموعات', variant: 'destructive' });
       return null;
     }
   };
 
-  const startKnockoutFromGroups = async (tournamentId: string) => {
+  const startKnockoutFromGroups = async (tournamentId: string, showToast = true) => {
     try {
       // First check if all group matches are completed
       const { data: groupMatches } = await supabase
@@ -244,7 +262,7 @@ export function useTournaments() {
       if (groupMatches && groupMatches.length > 0) {
         const incompleteGroupMatches = groupMatches.filter(m => m.status !== 'completed');
         if (incompleteGroupMatches.length > 0) {
-          toast({ title: 'تنبيه ⚠️', description: `لم تكتمل ${incompleteGroupMatches.length} مباراة في المجموعات بعد`, variant: 'destructive' });
+          if (showToast) toast({ title: 'تنبيه ⚠️', description: `لم تكتمل ${incompleteGroupMatches.length} مباراة في المجموعات بعد`, variant: 'destructive' });
           return null;
         }
       }
@@ -326,33 +344,57 @@ export function useTournaments() {
       }
 
       await supabase.from('tournaments').update({ status: 'live' as TournamentStatus }).eq('id', tournamentId);
-      toast({ title: 'تم بدء مرحلة الإقصاء 🏆', description: `${matches.length} مباراة في مرحلة الإقصاء` });
+      if (showToast) toast({ title: 'تم بدء مرحلة الإقصاء 🏆', description: `${matches.length} مباراة في مرحلة الإقصاء` });
       return true;
     } catch (error: any) {
       console.error('Error starting knockout from groups:', error);
-      toast({ title: 'خطأ', description: error.message || 'فشل في بدء مرحلة الإقصاء', variant: 'destructive' });
+      if (showToast) toast({ title: 'خطأ', description: error.message || 'فشل في بدء مرحلة الإقصاء', variant: 'destructive' });
       return null;
     }
   };
 
-  const updateStandings = async (tournamentId: string, homeTeamId: string, awayTeamId: string, homeScore: number, awayScore: number) => {
+  const updateStandings = async (tournamentId: string, homeTeamId: string, awayTeamId: string, homeScore: number, awayScore: number, groupName?: string) => {
     try {
-      const { data: homeSt } = await supabase
-        .from('standings').select('*').eq('tournament_id', tournamentId).eq('team_id', homeTeamId).single();
-      const { data: awaySt } = await supabase
-        .from('standings').select('*').eq('tournament_id', tournamentId).eq('team_id', awayTeamId).single();
+      // Fetch the home team's standing - include group filter if provided
+      let homeQuery = supabase
+        .from('standings')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .eq('team_id', homeTeamId);
+      
+      if (groupName) {
+        homeQuery = homeQuery.eq('group_name', groupName);
+      }
+      
+      const { data: homeStandings } = await homeQuery;
+      const homeSt = homeStandings?.[0];
+
+      // Fetch the away team's standing - include group filter if provided
+      let awayQuery = supabase
+        .from('standings')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .eq('team_id', awayTeamId);
+      
+      if (groupName) {
+        awayQuery = awayQuery.eq('group_name', groupName);
+      }
+      
+      const { data: awayStandings } = await awayQuery;
+      const awaySt = awayStandings?.[0];
 
       if (homeSt) {
         const won = homeScore > awayScore ? 1 : 0;
         const drawn = homeScore === awayScore ? 1 : 0;
         const lost = homeScore < awayScore ? 1 : 0;
         const points = (homeSt.points || 0) + (won ? 3 : drawn ? 1 : 0);
-        await supabase.from('standings').update({
+        const { error: updateError } = await supabase.from('standings').update({
           played: (homeSt.played || 0) + 1, won: (homeSt.won || 0) + won,
           drawn: (homeSt.drawn || 0) + drawn, lost: (homeSt.lost || 0) + lost,
           goals_for: (homeSt.goals_for || 0) + homeScore, goals_against: (homeSt.goals_against || 0) + awayScore,
           goal_difference: ((homeSt.goals_for || 0) + homeScore) - ((homeSt.goals_against || 0) + awayScore), points,
         }).eq('id', homeSt.id);
+        if (updateError) console.error('Error updating home team standing:', updateError);
       }
 
       if (awaySt) {
@@ -360,12 +402,13 @@ export function useTournaments() {
         const drawn = homeScore === awayScore ? 1 : 0;
         const lost = awayScore < homeScore ? 1 : 0;
         const points = (awaySt.points || 0) + (won ? 3 : drawn ? 1 : 0);
-        await supabase.from('standings').update({
+        const { error: updateError } = await supabase.from('standings').update({
           played: (awaySt.played || 0) + 1, won: (awaySt.won || 0) + won,
           drawn: (awaySt.drawn || 0) + drawn, lost: (awaySt.lost || 0) + lost,
           goals_for: (awaySt.goals_for || 0) + awayScore, goals_against: (awaySt.goals_against || 0) + homeScore,
           goal_difference: ((awaySt.goals_for || 0) + awayScore) - ((awaySt.goals_against || 0) + homeScore), points,
         }).eq('id', awaySt.id);
+        if (updateError) console.error('Error updating away team standing:', updateError);
       }
     } catch (error) {
       console.error('Error updating standings:', error);
@@ -387,10 +430,63 @@ export function useTournaments() {
       if (updateError) throw updateError;
 
       if (match.group_name) {
-        await updateStandings(match.tournament_id, match.home_team_id, match.away_team_id, homeScore, awayScore);
+        await updateStandings(match.tournament_id, match.home_team_id, match.away_team_id, homeScore, awayScore, match.group_name);
       }
 
       toast({ title: 'تم تحديث النتيجة', description: `${homeScore} - ${awayScore}` });
+
+      // Auto-progress logic for knockout/mixed systems
+      try {
+        const { data: tournament } = await supabase.from('tournaments').select('*').eq('id', match.tournament_id).single();
+        
+        if (!tournament) return true;
+        
+        // For group tournaments, auto-trigger knockout when all group matches are done
+        if (tournament.type === 'groups') {
+          const { data: allGroupMatches } = await supabase
+            .from('matches')
+            .select('*')
+            .eq('tournament_id', match.tournament_id)
+            .not('group_name', 'is', null);
+
+          if (allGroupMatches && allGroupMatches.every(m => m.status === 'completed')) {
+            const { data: knockoutMatches } = await supabase
+              .from('matches')
+              .select('*')
+              .eq('tournament_id', match.tournament_id)
+              .is('group_name', null);
+            
+            if (!knockoutMatches || knockoutMatches.length === 0) {
+              await startKnockoutFromGroups(match.tournament_id, false);
+            }
+          }
+        }
+
+        // For knockout tournaments, auto-generate next round when current round is complete
+        if (tournament.type === 'knockout' || tournament.type === 'groups') {
+          if (!match.group_name) {
+            const { data: allKnockoutMatches } = await supabase
+              .from('matches')
+              .select('*')
+              .eq('tournament_id', match.tournament_id)
+              .is('group_name', null)
+              .order('round', { ascending: false });
+
+            if (allKnockoutMatches && allKnockoutMatches.length > 0) {
+              const currentRound = allKnockoutMatches[0].round || 1;
+              const currentRoundMatches = allKnockoutMatches.filter(m => m.round === currentRound);
+              const completedMatches = currentRoundMatches.filter(m => m.status === 'completed');
+
+              if (completedMatches.length === currentRoundMatches.length && currentRoundMatches.length > 1) {
+                await generateNextRound(match.tournament_id, false);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error in auto-progress logic:', error);
+      }
+
       return true;
     } catch (error) {
       console.error('Error updating match result:', error);
@@ -399,7 +495,7 @@ export function useTournaments() {
     }
   };
 
-  const generateNextRound = async (tournamentId: string) => {
+  const generateNextRound = async (tournamentId: string, showToast = true) => {
     try {
       const { data: allMatches } = await supabase
         .from('matches').select('*').eq('tournament_id', tournamentId)
@@ -421,7 +517,7 @@ export function useTournaments() {
       const winners = completedRoundMatches.map(m => m.winner_id).filter(Boolean) as string[];
 
       if (winners.length < 2) {
-        toast({ title: '🏆 البطولة انتهت!', description: 'تم تحديد البطل' });
+        if (showToast) toast({ title: '🏆 البطولة انتهت!', description: 'تم تحديد البطل' });
         await supabase.from('tournaments').update({ status: 'completed' as TournamentStatus }).eq('id', tournamentId);
         return true;
       }
@@ -446,11 +542,11 @@ export function useTournaments() {
         if (error) throw error;
       }
 
-      toast({ title: 'تم إنشاء الجولة التالية', description: `${nextMatches.length} مباراة جديدة` });
+      if (showToast) toast({ title: 'تم إنشاء الجولة التالية', description: `${nextMatches.length} مباراة جديدة` });
       return true;
     } catch (error: any) {
       console.error('Error generating next round:', error);
-      toast({ title: 'خطأ', description: error.message || 'فشل في إنشاء الجولة التالية', variant: 'destructive' });
+      if (showToast) toast({ title: 'خطأ', description: error.message || 'فشل في إنشاء الجولة التالية', variant: 'destructive' });
       return null;
     }
   };

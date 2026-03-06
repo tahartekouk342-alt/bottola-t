@@ -1,8 +1,8 @@
-import { Trophy, Bell, LogOut, ArrowRight, Settings, Moon, Sun } from 'lucide-react';
+import { Trophy, Bell, LogOut, ArrowRight, Settings, Moon, Sun, Home } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/components/theme/ThemeProvider';
 import { ORGANIZER_BASE } from '@/lib/constants';
 import {
   DropdownMenu,
@@ -53,6 +53,16 @@ export function OrganizerHeader() {
               variant="ghost"
               size="sm"
               className="rounded-xl hover:bg-secondary/50"
+              onClick={() => navigate('/')}
+              title="الرئيسية"
+            >
+              <Home className="w-5 h-5" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-xl hover:bg-secondary/50"
               onClick={() => navigate(`${ORGANIZER_BASE}/notifications`)}
               title="الإشعارات"
             >
@@ -98,6 +108,15 @@ export function OrganizerHeader() {
                 </div>
 
                 <DropdownMenuSeparator />
+
+                {/* Home Link */}
+                <DropdownMenuItem
+                  onClick={() => navigate('/')}
+                  className="rounded-lg py-3 px-4 font-bold cursor-pointer hover:bg-primary/10 transition-all"
+                >
+                  <Home className="ml-3 h-4 w-4" />
+                  الرئيسية
+                </DropdownMenuItem>
 
                 {/* Settings Link */}
                 <DropdownMenuItem
