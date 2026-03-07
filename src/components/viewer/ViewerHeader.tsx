@@ -1,6 +1,5 @@
-import { Trophy, Menu } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { ReactNode } from 'react';
 
 interface ViewerHeaderProps {
