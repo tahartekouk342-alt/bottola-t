@@ -84,7 +84,6 @@ export function ViewerSidebar() {
 
   const navItems = [
     { label: 'المتابعات', href: '/following', icon: Users },
-    { label: 'الإشعارات', href: '/notifications', icon: Bell, badge: unreadCount },
   ];
 
   return (
@@ -154,7 +153,7 @@ export function ViewerSidebar() {
                 )}
               </Button>
 
-              {navItems.filter(item => item.label !== 'الإشعارات').map((item) => (
+              {navItems.map((item) => (
                 <Button
                   key={item.href}
                   variant={location.pathname === item.href ? 'secondary' : 'ghost'}
