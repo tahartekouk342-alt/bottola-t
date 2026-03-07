@@ -269,7 +269,7 @@ function MatchCardInline({ match, onClick, showDate, venueName, stadiumImageUrl 
           </div>
         )}
       </div>
-      </div>
+    </div>
     </>
   );
 }
