@@ -1,10 +1,13 @@
-import { Trophy, Bell } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Trophy, Menu } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { ReactNode } from 'react';
 
-export function ViewerHeader() {
-  const navigate = useNavigate();
+interface ViewerHeaderProps {
+  sidebar?: ReactNode;
+}
 
+export function ViewerHeader({ sidebar }: ViewerHeaderProps) {
   return (
     <header className="sticky top-0 z-50 glass-effect border-b border-white/10">
       <div className="container mx-auto px-4">
@@ -17,17 +20,9 @@ export function ViewerHeader() {
             <span className="font-display text-2xl font-bold text-foreground">Bottola</span>
           </Link>
 
-          {/* Right Actions */}
+          {/* Menu Button */}
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-xl hover:bg-secondary/50"
-              onClick={() => navigate('/notifications')}
-              title="الإشعارات"
-            >
-              <Bell className="w-5 h-5" />
-            </Button>
+            {sidebar}
           </div>
         </div>
       </div>

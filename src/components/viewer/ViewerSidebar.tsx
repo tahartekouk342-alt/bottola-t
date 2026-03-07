@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Users, Bell, Settings, User, LogOut, Camera, Save, Loader2, Trophy, Home } from 'lucide-react';
+import { Menu, Users, Bell, Settings, User, LogOut, Camera, Save, Loader2, Trophy, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -90,11 +90,11 @@ export function ViewerSidebar() {
   return (
     <Sheet open={open} onOpenChange={handleOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
+        <Button variant="ghost" size="icon" className="rounded-xl hover:bg-secondary/50">
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-80 p-0">
+      <SheetContent side="right" className="w-80 p-0 bg-card border-l border-border">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="p-4 border-b border-border">
@@ -139,7 +139,22 @@ export function ViewerSidebar() {
                 البطولات
               </Button>
 
-              {navItems.map((item) => (
+              {/* Notifications */}
+              <Button
+                variant={location.pathname === '/notifications' ? 'secondary' : 'ghost'}
+                className="w-full justify-start gap-3 h-12"
+                onClick={() => { navigate('/notifications'); setOpen(false); }}
+              >
+                <Bell className="w-5 h-5" />
+                الإشعارات
+                {unreadCount > 0 && (
+                  <Badge className="mr-auto gradient-primary text-primary-foreground border-0 h-5 min-w-[20px] flex items-center justify-center text-xs">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Badge>
+                )}
+              </Button>
+
+              {navItems.filter(item => item.label !== 'الإشعارات').map((item) => (
                 <Button
                   key={item.href}
                   variant={location.pathname === item.href ? 'secondary' : 'ghost'}
