@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trophy, Calendar, Users, Loader2, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -6,37 +6,33 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function ViewerTournamentsFeed() {
-  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    if (!authLoading && !user) navigate('/auth?role=viewer');
-  }, [user, authLoading, navigate]);
-
+  // Show ALL tournaments for everyone (no auth required)
   const { data: tournaments, isLoading } = useQuery({
-    queryKey: ['followed-tournaments', user?.id],
+    queryKey: ['all-tournaments-feed'],
     queryFn: async () => {
-      if (!user?.id) return [];
-      const { data: follows } = await supabase.from('user_follows').select('following_id').eq('follower_id', user.id);
-      if (!follows || follows.length === 0) return [];
-      const followingIds = follows.map(f => f.following_id);
-      const { data: tournamentsData, error } = await supabase.from('tournaments').select('*').in('owner_id', followingIds).order('created_at', { ascending: false });
+      const { data: tournamentsData, error } = await supabase
+        .from('tournaments')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (error) throw error;
-      const { data: profiles } = await supabase.from('profiles').select('*').in('user_id', followingIds);
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      // Get organizer profiles
+      const ownerIds = [...new Set((tournamentsData || []).map(t => t.owner_id).filter(Boolean))];
+      let profileMap = new Map();
+      if (ownerIds.length > 0) {
+        const { data: profiles } = await supabase.from('profiles').select('*').in('user_id', ownerIds as string[]);
+        profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      }
+
       return (tournamentsData || []).map(t => ({ ...t, organizer: profileMap.get(t.owner_id || '') || null }));
     },
-    enabled: !!user?.id
   });
-
-  if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-  }
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { label: string; variant: 'secondary' | 'outline' | 'destructive' | 'default' }> = {
@@ -56,7 +52,7 @@ export default function ViewerTournamentsFeed() {
     <div className="container mx-auto px-4 py-8" dir="rtl">
       <div className="mb-8">
         <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">البطولات</h1>
-        <p className="text-muted-foreground">بطولات المنظمين الذين تتابعهم</p>
+        <p className="text-muted-foreground">جميع البطولات المتاحة</p>
       </div>
       <div className="relative mb-8 max-w-md">
         <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -105,7 +101,7 @@ export default function ViewerTournamentsFeed() {
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <Trophy className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
             <h3 className="text-2xl font-display font-bold mb-2">لا توجد بطولات</h3>
-            <p className="text-muted-foreground">تابع منظمين لرؤية بطولاتهم هنا</p>
+            <p className="text-muted-foreground">لم يتم إنشاء أي بطولات بعد</p>
           </CardContent>
         </Card>
       )}

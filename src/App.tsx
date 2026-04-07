@@ -44,7 +44,7 @@ const App = () => (
             <Route path="/" element={<ViewerWelcome />} />
             <Route path="/auth" element={<ViewerAuth />} />
 
-            {/* Viewer with sidebar layout */}
+            {/* Viewer with sidebar layout - accessible to guests */}
             <Route path="/home" element={<ViewerLayout><ViewerHome /></ViewerLayout>} />
             <Route path="/tournaments-feed" element={<ViewerLayout><ViewerTournamentsFeed /></ViewerLayout>} />
             <Route path="/following" element={<ViewerLayout><Following /></ViewerLayout>} />

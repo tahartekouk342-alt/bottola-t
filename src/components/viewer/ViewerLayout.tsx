@@ -1,9 +1,6 @@
-import { ReactNode, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { ReactNode } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { ViewerAppSidebar } from '@/components/viewer/ViewerAppSidebar';
-import { useAuth } from '@/hooks/useAuth';
-import { Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface ViewerLayoutProps {
@@ -11,23 +8,11 @@ interface ViewerLayoutProps {
 }
 
 export function ViewerLayout({ children }: ViewerLayoutProps) {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !user) navigate('/auth?role=viewer');
-  }, [user, loading, navigate]);
-
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-  }
-
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full" dir="rtl">
         <ViewerAppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Top bar */}
           <header className="sticky top-0 z-50 h-14 flex items-center gap-3 px-4 border-b border-border glass-effect">
             <SidebarTrigger className="shrink-0" />
             <Link to="/home" className="flex items-center gap-2 group">
