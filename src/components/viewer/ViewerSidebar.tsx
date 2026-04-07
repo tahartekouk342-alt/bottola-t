@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Users, Bell, Settings, User, LogOut, Camera, Save, Loader2, Trophy, Home } from 'lucide-react';
+import { Menu, X, Users, Bell, Settings, User, LogOut, Moon, Sun, Camera, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +25,7 @@ export function ViewerSidebar() {
   const { resolvedTheme, setTheme } = useTheme();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [sidebarTab, setSidebarTab] = useState(user ? 'menu' : 'welcome');
+  const [sidebarTab, setSidebarTab] = useState('menu');
 
   // Profile edit state
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
@@ -113,32 +113,12 @@ export function ViewerSidebar() {
           </div>
 
           <Tabs value={sidebarTab} onValueChange={setSidebarTab} className="flex-1 flex flex-col">
-            <TabsList className={cn('mx-4 mt-3', user ? 'grid grid-cols-2' : 'hidden')}>
+            <TabsList className="grid grid-cols-2 mx-4 mt-3">
               <TabsTrigger value="menu">القائمة</TabsTrigger>
               <TabsTrigger value="profile">الملف الشخصي</TabsTrigger>
             </TabsList>
 
             <TabsContent value="menu" className="flex-1 overflow-y-auto p-4 space-y-2 mt-0">
-              {/* Home */}
-              <Button
-                variant={location.pathname === '/home' ? 'secondary' : 'ghost'}
-                className="w-full justify-start gap-3 h-12"
-                onClick={() => { navigate('/home'); setOpen(false); }}
-              >
-                <Home className="w-5 h-5" />
-                الرئيسية
-              </Button>
-
-              {/* Tournaments */}
-              <Button
-                variant={location.pathname === '/tournaments-feed' ? 'secondary' : 'ghost'}
-                className="w-full justify-start gap-3 h-12"
-                onClick={() => { navigate('/tournaments-feed'); setOpen(false); }}
-              >
-                <Trophy className="w-5 h-5" />
-                البطولات
-              </Button>
-
               {navItems.map((item) => (
                 <Button
                   key={item.href}
@@ -158,13 +138,14 @@ export function ViewerSidebar() {
 
               <Separator className="my-4" />
 
+              {/* Theme Toggle */}
               <Button
                 variant="ghost"
                 className="w-full justify-start gap-3 h-12"
-                onClick={() => { navigate('/settings'); setOpen(false); }}
+                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
               >
-                <Settings className="w-5 h-5" />
-                الإعدادات
+                {resolvedTheme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {resolvedTheme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}
               </Button>
 
               <Separator className="my-4" />
@@ -179,21 +160,7 @@ export function ViewerSidebar() {
               </Button>
             </TabsContent>
 
-            <TabsContent value="welcome" className="flex-1 flex flex-col items-center justify-center p-4 space-y-4 mt-0">
-              <div className="text-center space-y-3">
-                <Trophy className="w-12 h-12 text-primary mx-auto" />
-                <h3 className="font-bold text-lg">مرحباً بك في Bottola</h3>
-                <p className="text-sm text-muted-foreground">تابع البطولات والمباريات لحظة بلحظة</p>
-              </div>
-              <Button
-                className="w-full gradient-primary text-primary-foreground rounded-xl h-12"
-                onClick={() => { navigate('/auth?role=viewer'); setOpen(false); }}
-              >
-                ابدأ الآن
-              </Button>
-            </TabsContent>
-
-            {user && <TabsContent value="profile" className="flex-1 overflow-y-auto p-4 space-y-4 mt-0">
+            <TabsContent value="profile" className="flex-1 overflow-y-auto p-4 space-y-4 mt-0">
               {/* Avatar */}
               <div className="flex flex-col items-center gap-3">
                 <div className="relative">
@@ -225,7 +192,7 @@ export function ViewerSidebar() {
                 {saving ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Save className="w-4 h-4 ml-2" />}
                 حفظ
               </Button>
-            </TabsContent>}
+            </TabsContent>
           </Tabs>
         </div>
       </SheetContent>

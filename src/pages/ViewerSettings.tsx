@@ -25,12 +25,13 @@ export default function ViewerSettings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if (!authLoading && !user) { navigate('/auth?role=viewer'); return; }
     if (profile) {
       setDisplayName(profile.display_name || '');
       setBio(profile.bio || '');
       setAvatarUrl(profile.avatar_url);
     }
-  }, [profile]);
+  }, [profile, user, authLoading, navigate]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -69,8 +70,7 @@ export default function ViewerSettings() {
     <div className="container mx-auto px-4 py-8 max-w-2xl" dir="rtl">
       <h1 className="font-display text-3xl font-bold mb-8">الإعدادات</h1>
 
-      {/* Profile - Only show if logged in */}
-      {user && (
+      {/* Profile */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><User className="w-5 h-5" />الملف الشخصي</CardTitle>
@@ -107,7 +107,6 @@ export default function ViewerSettings() {
           </Button>
         </CardContent>
       </Card>
-      )}
 
       {/* Theme */}
       <Card>

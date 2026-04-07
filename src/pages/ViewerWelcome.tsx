@@ -109,16 +109,16 @@ export default function ViewerWelcome() {
               className="btn-primary text-lg px-12 w-full sm:w-auto"
               onClick={() => navigate('/auth?role=viewer')}
             >
-              ابدأ الآن
-              <ArrowLeft className="w-5 h-5 mr-2" />
+              إنشاء حساب مجاني
             </Button>
             <Button
               size="lg"
               variant="outline"
               className="text-lg px-12 w-full sm:w-auto rounded-2xl border-white/20 hover:bg-secondary/50"
-              onClick={() => navigate('/home')}
+              onClick={() => navigate('/auth?role=viewer&tab=login')}
             >
-              تصفح بدون حساب
+              تسجيل الدخول
+              <ArrowLeft className="w-5 h-5 mr-2" />
             </Button>
           </div>
         </div>
