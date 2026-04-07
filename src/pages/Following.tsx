@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Trophy, UserPlus, UserMinus, Loader2, Search } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Trophy, UserPlus, UserMinus, Loader2, Search, LogIn } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useFollowing } from '@/hooks/useFollowing';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Following() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { organizers, following, loadingOrganizers, loadingFollowing, follow, unfollow } = useFollowing(user?.id);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -20,9 +23,22 @@ export default function Following() {
     (org.bio && org.bio.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const handleFollow = (organizerId: string) => {
+    if (!user) {
+      toast({ title: 'يجب تسجيل الدخول أولاً', description: 'سجل دخولك لمتابعة المنظمين', variant: 'destructive' });
+      navigate('/auth?role=viewer');
+      return;
+    }
+    follow(organizerId);
+  };
+
+  const handleUnfollow = (organizerId: string) => {
+    if (!user) return;
+    unfollow(organizerId);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8" dir="rtl">
-      {/* Header with sport-themed background */}
       <div className="relative overflow-hidden rounded-2xl mb-8">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'url(/images/sport-basketball.jpg)', backgroundSize: 'cover' }} />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent" />
@@ -37,12 +53,27 @@ export default function Following() {
         </div>
       </div>
 
+      {!user && (
+        <Card className="mb-6 border-primary/20 bg-primary/5">
+          <CardContent className="p-4 flex items-center gap-4">
+            <LogIn className="w-8 h-8 text-primary shrink-0" />
+            <div className="flex-1">
+              <p className="font-bold text-sm">سجل دخولك لمتابعة المنظمين</p>
+              <p className="text-xs text-muted-foreground">يمكنك تصفح المنظمين، لكن المتابعة تتطلب حساباً</p>
+            </div>
+            <Button size="sm" onClick={() => navigate('/auth?role=viewer')} className="gradient-primary text-primary-foreground rounded-xl">
+              تسجيل الدخول
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="discover" className="space-y-6">
         <TabsList className="grid w-full max-w-md grid-cols-2 rounded-2xl bg-secondary/50 p-1">
           <TabsTrigger value="discover" className="flex items-center gap-2 rounded-xl">
             <Users className="w-4 h-4" />اكتشاف المنظمين
           </TabsTrigger>
-          <TabsTrigger value="following" className="flex items-center gap-2 rounded-xl">
+          <TabsTrigger value="following" className="flex items-center gap-2 rounded-xl" disabled={!user}>
             <UserPlus className="w-4 h-4" />متابعاتي ({following?.length || 0})
           </TabsTrigger>
         </TabsList>
@@ -50,12 +81,7 @@ export default function Following() {
         <TabsContent value="discover">
           <div className="relative mb-6 max-w-md">
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              placeholder="ابحث عن منظم..."
-              className="pr-12 rounded-2xl bg-secondary/40 border-border"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <Input placeholder="ابحث عن منظم..." className="pr-12 rounded-2xl bg-secondary/40 border-border" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
 
           {loadingOrganizers ? (
@@ -63,12 +89,11 @@ export default function Following() {
           ) : filteredOrganizers && filteredOrganizers.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredOrganizers.map((organizer) => (
-                <OrganizerCard
-                  key={organizer.id}
-                  organizer={organizer}
-                  onFollow={() => follow(organizer.user_id)}
-                  onUnfollow={() => unfollow(organizer.user_id)}
+                <OrganizerCard key={organizer.id} organizer={organizer}
+                  onFollow={() => handleFollow(organizer.user_id)}
+                  onUnfollow={() => handleUnfollow(organizer.user_id)}
                   onViewTournaments={() => navigate(`/viewer/organizer/${organizer.user_id}`)}
+                  isGuest={!user}
                 />
               ))}
             </div>
@@ -133,12 +158,12 @@ interface OrganizerCardProps {
   onFollow: () => void;
   onUnfollow: () => void;
   onViewTournaments: () => void;
+  isGuest?: boolean;
 }
 
-function OrganizerCard({ organizer, onFollow, onUnfollow, onViewTournaments }: OrganizerCardProps) {
+function OrganizerCard({ organizer, onFollow, onUnfollow, onViewTournaments, isGuest }: OrganizerCardProps) {
   return (
     <Card className="overflow-hidden hover:border-primary/50 transition-all group">
-      {/* Subtle sport background */}
       <div className="h-16 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent" />
         <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'url(/images/sport-volleyball.jpg)', backgroundSize: 'cover' }} />
@@ -154,7 +179,7 @@ function OrganizerCard({ organizer, onFollow, onUnfollow, onViewTournaments }: O
             <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{organizer.bio || 'منظم بطولات رياضية'}</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-6 text-sm mb-4 px-1">
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-primary" />

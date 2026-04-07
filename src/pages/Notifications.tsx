@@ -1,4 +1,4 @@
-import { Bell, CheckCheck, Trophy, Loader2, Calendar, Swords } from 'lucide-react';
+import { Bell, CheckCheck, Trophy, Loader2, Calendar, Swords, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,13 +17,27 @@ export default function Notifications() {
   const navigate = useNavigate();
   const { notifications, isLoading, markAsRead, markAllAsRead, unreadCount } = useNotifications(user?.id);
 
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center" dir="rtl">
+        <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
+          <Bell className="w-10 h-10 text-primary" />
+        </div>
+        <h2 className="text-2xl font-display font-bold mb-3">الإشعارات</h2>
+        <p className="text-muted-foreground mb-6">سجل دخولك لتلقي إشعارات البطولات والمباريات</p>
+        <Button onClick={() => navigate('/auth?role=viewer')} className="gradient-primary text-primary-foreground rounded-xl gap-2">
+          <LogIn className="w-4 h-4" />تسجيل الدخول
+        </Button>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return <div className="flex items-center justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl" dir="rtl">
-      {/* Header with sport-themed background */}
       <div className="relative overflow-hidden rounded-2xl mb-8">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'url(/images/sport-stadium.jpg)', backgroundSize: 'cover' }} />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent" />
@@ -60,15 +74,13 @@ export default function Notifications() {
           {notifications.map((notification) => {
             const IconComponent = typeIcons[notification.type] || Bell;
             return (
-              <Card
-                key={notification.id}
+              <Card key={notification.id}
                 className={cn("transition-all duration-200 cursor-pointer hover:border-primary/50 overflow-hidden",
                   !notification.is_read && "border-primary/30 bg-primary/5")}
                 onClick={() => {
                   if (!notification.is_read) markAsRead(notification.id);
                   if (notification.related_tournament_id) navigate(`/viewer/tournament/${notification.related_tournament_id}`);
-                }}
-              >
+                }}>
                 <CardContent className="p-4 flex items-start gap-4">
                   <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0",
                     !notification.is_read ? "bg-primary/20" : "bg-muted")}>

@@ -1,17 +1,9 @@
-import { Trophy, Users, Bell, LogOut, Moon, Sun, User, Settings } from 'lucide-react';
+import { Trophy, Users, Bell, LogOut, Moon, Sun, User, Settings, LogIn } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarFooter,
-  useSidebar,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -21,13 +13,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { supabase } from '@/integrations/supabase/client';
-
-const navItems = [
-  { title: 'البطولات', url: '/tournaments-feed', icon: Trophy },
-  { title: 'المتابعات', url: '/following', icon: Users },
-  { title: 'الإشعارات', url: '/notifications', icon: Bell },
-  { title: 'الإعدادات', url: '/settings', icon: Settings },
-];
 
 export function ViewerAppSidebar() {
   const { state } = useSidebar();
@@ -45,24 +30,56 @@ export function ViewerAppSidebar() {
     navigate('/');
   };
 
+  // Items available to everyone
+  const publicItems = [
+    { title: 'البطولات', url: '/tournaments-feed', icon: Trophy },
+  ];
+
+  // Items requiring login
+  const authItems = [
+    { title: 'المتابعات', url: '/following', icon: Users },
+    { title: 'الإشعارات', url: '/notifications', icon: Bell },
+    { title: 'الإعدادات', url: '/settings', icon: Settings },
+  ];
+
+  const navItems = user ? [...publicItems, ...authItems] : publicItems;
+
   return (
     <Sidebar collapsible="icon" side="right">
       <SidebarContent>
-        {/* Profile */}
+        {/* Profile or Login CTA */}
         {!collapsed && (
           <div className="p-4 border-b border-sidebar-border">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10 shrink-0">
-                <AvatarImage src={profile?.avatar_url || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
-                  {profile?.display_name?.charAt(0) || <User className="w-4 h-4" />}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate">{profile?.display_name || user?.email}</p>
-                <p className="text-xs text-muted-foreground">مشاهد</p>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <Avatar className="w-10 h-10 shrink-0">
+                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
+                    {profile?.display_name?.charAt(0) || <User className="w-4 h-4" />}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate">{profile?.display_name || user?.email}</p>
+                  <p className="text-xs text-muted-foreground">مشاهد</p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <Button
+                onClick={() => navigate('/auth?role=viewer')}
+                className="w-full gradient-primary text-primary-foreground rounded-xl gap-2"
+              >
+                <LogIn className="w-4 h-4" />
+                ابدأ الآن
+              </Button>
+            )}
+          </div>
+        )}
+
+        {collapsed && !user && (
+          <div className="p-2">
+            <Button size="icon" onClick={() => navigate('/auth?role=viewer')} className="w-full gradient-primary text-primary-foreground">
+              <LogIn className="w-4 h-4" />
+            </Button>
           </div>
         )}
 
@@ -72,10 +89,7 @@ export function ViewerAppSidebar() {
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                  >
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
                       <item.icon className="ml-2 h-5 w-5" />
                       {!collapsed && <span className="flex-1">{item.title}</span>}
@@ -101,13 +115,17 @@ export function ViewerAppSidebar() {
               {!collapsed && <span>{resolvedTheme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <Separator />
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleSignOut} className="text-destructive hover:text-destructive">
-              <LogOut className="ml-2 h-5 w-5" />
-              {!collapsed && <span>تسجيل الخروج</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {user && (
+            <>
+              <Separator />
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleSignOut} className="text-destructive hover:text-destructive">
+                  <LogOut className="ml-2 h-5 w-5" />
+                  {!collapsed && <span>تسجيل الخروج</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </>
+          )}
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
