@@ -42,22 +42,7 @@ export default function ViewerWelcome() {
   const navigate = useNavigate();
   const [currentBg, setCurrentBg] = useState(0);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single()
-          .then(({ data }) => {
-            if (data?.role === 'viewer') {
-              navigate('/home');
-            }
-          });
-      }
-    });
-  }, [navigate]);
+  // No auto-redirect - let users browse freely from welcome page
 
   useEffect(() => {
     const timer = setInterval(() => {
