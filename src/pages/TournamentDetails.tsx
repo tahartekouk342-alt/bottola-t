@@ -224,6 +224,9 @@ export default function TournamentDetails() {
                     {statusMap[tournament.status]?.label}
                   </Badge>
                   <span className="text-sm text-white/80 drop-shadow">{teams.length} فريق · {matches.length} مباراة · {typeMap[tournament.type]}</span>
+                  {(tournament as any).referee_name && (
+                    <span className="text-xs text-white/70 drop-shadow">الحكم: {(tournament as any).referee_name}</span>
+                  )}
                 </div>
               </div>
             </div>
