@@ -143,11 +143,15 @@ export function JoinRequestDialog({ open, onOpenChange, tournamentId, tournament
         })
       );
 
+      const playerNamesList = playersData.map(p => p.name);
+      const playerPhotosList = playersData.map(p => p.photo_url || '');
+
       const { error } = await supabase.from('join_requests').insert({
         tournament_id: tournamentId,
         team_name: teamName.trim(),
         team_logo_url: logoUrl,
-        players_data: playersData,
+        player_names: playerNamesList,
+        player_photos: playerPhotosList,
         requested_by: user?.id || null,
       });
 
