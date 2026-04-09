@@ -201,7 +201,6 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const generateLeagueMatches = async (tournamentId: string, teams: any[]) => {
     const allMatches: any[] = [];
     const allStandings: any[] = [];
-    let matchOrder = 1;
 
     teams.forEach((team) => {
       allStandings.push({
@@ -211,16 +210,33 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       });
     });
 
-    for (let i = 0; i < teams.length; i++) {
-      for (let j = i + 1; j < teams.length; j++) {
-        allMatches.push({
-          tournament_id: tournamentId,
-          home_team_id: teams[i].id,
-          away_team_id: teams[j].id,
-          round: 1, match_order: matchOrder++,
-          status: 'scheduled' as const,
-        });
+    // Generate round-robin with proper matchday assignment
+    const n = teams.length;
+    const isOdd = n % 2 !== 0;
+    const teamList = [...teams];
+    if (isOdd) teamList.push(null); // Add bye
+    const numRounds = teamList.length - 1;
+    const half = teamList.length / 2;
+    let matchOrder = 1;
+
+    for (let round = 0; round < numRounds; round++) {
+      for (let i = 0; i < half; i++) {
+        const home = teamList[i];
+        const away = teamList[teamList.length - 1 - i];
+        if (home && away) {
+          allMatches.push({
+            tournament_id: tournamentId,
+            home_team_id: home.id,
+            away_team_id: away.id,
+            round: round + 1,
+            match_order: matchOrder++,
+            status: 'scheduled' as const,
+          });
+        }
       }
+      // Rotate teams (keep first fixed)
+      const last = teamList.pop()!;
+      teamList.splice(1, 0, last);
     }
 
     if (allStandings.length > 0) {
