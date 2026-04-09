@@ -50,6 +50,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [venueName, setVenueName] = useState('');
   const [venueAddress, setVenueAddress] = useState('');
+  const [refereeName, setRefereeName] = useState('');
   const [acceptJoinRequests, setAcceptJoinRequests] = useState(false);
   const [maxTeams, setMaxTeams] = useState<number | ''>('');
 
