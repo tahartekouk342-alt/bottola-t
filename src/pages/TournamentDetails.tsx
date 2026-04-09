@@ -188,7 +188,7 @@ export default function TournamentDetails() {
   const winner = tournament.status === 'completed' && knockoutMatches.length > 0
     ? knockoutMatches.find(m => m.round === currentMaxRound && m.status === 'completed')?.winner : null;
   const canAddTeams = teams.length === 0 && matches.length === 0;
-  const canStart = tournament.status !== 'live' && tournament.status !== 'completed' && tournament.type !== 'groups' && matches.length > 0;
+  const canStart = tournament.status !== 'live' && tournament.status !== 'completed' && matches.length > 0 && tournament.type !== 'groups';
 
   const visibleTabs = tabs.filter(tab => {
     if (tab.id === 'bracket' && tournament.type === 'league') return false;
