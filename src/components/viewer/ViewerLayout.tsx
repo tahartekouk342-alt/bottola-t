@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { ViewerAppSidebar } from '@/components/viewer/ViewerAppSidebar';
 import { Link } from 'react-router-dom';
@@ -8,6 +9,13 @@ interface ViewerLayoutProps {
 }
 
 export function ViewerLayout({ children }: ViewerLayoutProps) {
+  const location = useLocation();
+  const isHome = location.pathname === '/home';
+
+  if (isHome) {
+    return <>{children}</>;
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full" dir="rtl">

@@ -1,4 +1,4 @@
-import { Trophy, Bell, Settings, LogOut, Moon, Sun, User, UserPlus } from 'lucide-react';
+import { Trophy, Bell, Settings, LogOut, Moon, Sun, User, UserPlus, Home } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -15,10 +15,11 @@ import { Badge } from '@/components/ui/badge';
 import { ORGANIZER_BASE } from '@/lib/constants';
 
 const navItems = [
-  { title: 'بطولاتي', url: `tournaments`, icon: Trophy },
-  { title: 'المتابعون', url: `followers`, icon: UserPlus },
-  { title: 'الإشعارات', url: `notifications`, icon: Bell },
-  { title: 'الإعدادات', url: `settings`, icon: Settings },
+  { title: 'الرئيسية', url: 'dashboard', icon: Home },
+  { title: 'بطولاتي', url: 'tournaments', icon: Trophy },
+  { title: 'المتابعون', url: 'followers', icon: UserPlus },
+  { title: 'الإشعارات', url: 'notifications', icon: Bell },
+  { title: 'الإعدادات', url: 'settings', icon: Settings },
 ];
 
 export function OrganizerAppSidebar() {
@@ -63,10 +64,7 @@ export function OrganizerAppSidebar() {
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                  >
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={`${ORGANIZER_BASE}/${item.url}`} end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
                       <item.icon className="ml-2 h-5 w-5" />
                       {!collapsed && <span className="flex-1">{item.title}</span>}
