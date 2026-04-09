@@ -347,6 +347,12 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
               </CardContent>
             </Card>
 
+            {/* Referee */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><Gavel className="w-4 h-4 text-primary" /> اسم الحكم (اختياري)</Label>
+              <Input placeholder="اسم الحكم" value={refereeName} onChange={(e) => setRefereeName(e.target.value)} />
+            </div>
+
             {/* Join Requests */}
             <Card>
               <CardContent className="p-4 space-y-3">
