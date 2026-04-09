@@ -90,9 +90,11 @@ export default function TournamentDetails() {
     if (!id) return;
     try {
       if (tournament?.type === 'groups') {
+        // Start knockout phase from groups
         const result = await startKnockoutFromGroups(id);
         if (result) fetchTournamentDetails();
       } else {
+        // Knockout and league: just set status to live
         await supabase.from('tournaments').update({ status: 'live' }).eq('id', id);
         toast({ title: 'تم بدء البطولة 🔴' });
         fetchTournamentDetails();
@@ -186,7 +188,7 @@ export default function TournamentDetails() {
   const winner = tournament.status === 'completed' && knockoutMatches.length > 0
     ? knockoutMatches.find(m => m.round === currentMaxRound && m.status === 'completed')?.winner : null;
   const canAddTeams = teams.length === 0 && matches.length === 0;
-  const canStart = tournament.status !== 'live' && tournament.status !== 'completed' && tournament.type !== 'groups' && matches.length > 0;
+  const canStart = tournament.status !== 'live' && tournament.status !== 'completed' && matches.length > 0 && tournament.type !== 'groups';
 
   const visibleTabs = tabs.filter(tab => {
     if (tab.id === 'bracket' && tournament.type === 'league') return false;
@@ -224,6 +226,9 @@ export default function TournamentDetails() {
                     {statusMap[tournament.status]?.label}
                   </Badge>
                   <span className="text-sm text-white/80 drop-shadow">{teams.length} فريق · {matches.length} مباراة · {typeMap[tournament.type]}</span>
+                  {(tournament as any).referee_name && (
+                    <span className="text-xs text-white/70 drop-shadow">الحكم: {(tournament as any).referee_name}</span>
+                  )}
                 </div>
               </div>
             </div>

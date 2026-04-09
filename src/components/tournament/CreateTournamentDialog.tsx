@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Sparkles, Trophy, Camera, X, Plus, Image, MapPin, Swords, Users, Layers } from 'lucide-react';
+import { Loader2, Sparkles, Trophy, Camera, X, Plus, Image, MapPin, Swords, Users, Layers, Gavel } from 'lucide-react';
 import { useTournaments } from '@/hooks/useTournaments';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
@@ -50,6 +50,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [venueName, setVenueName] = useState('');
   const [venueAddress, setVenueAddress] = useState('');
+  const [refereeName, setRefereeName] = useState('');
   const [acceptJoinRequests, setAcceptJoinRequests] = useState(false);
   const [maxTeams, setMaxTeams] = useState<number | ''>('');
 
@@ -67,7 +68,8 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const resetForm = () => {
     setStep(1); setName(''); setType('knockout'); setStartDate('');
     setNumGroups(4); setLogoFile(null); setLogoPreview(null);
-    setVenueName(''); setVenueAddress(''); setAcceptJoinRequests(false);
+    setVenueName(''); setVenueAddress(''); setRefereeName('');
+    setAcceptJoinRequests(false);
     setMaxTeams(''); setStadiumImageFile(null); setStadiumImagePreview(null);
     setTeamsList([]); setNewTeamName(''); setDrawResult(null);
   };
@@ -163,6 +165,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         numGroups: type === 'groups' ? numGroups : undefined,
         teamsPerGroup: type === 'groups' ? Math.ceil(teamsList.length / numGroups) : undefined,
         logoUrl, venueName, venueAddress,
+        refereeName,
         acceptJoinRequests,
         maxTeams: maxTeams ? Number(maxTeams) : undefined,
         venuePhotos,
@@ -198,7 +201,6 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const generateLeagueMatches = async (tournamentId: string, teams: any[]) => {
     const allMatches: any[] = [];
     const allStandings: any[] = [];
-    let matchOrder = 1;
 
     teams.forEach((team) => {
       allStandings.push({
@@ -208,16 +210,33 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       });
     });
 
-    for (let i = 0; i < teams.length; i++) {
-      for (let j = i + 1; j < teams.length; j++) {
-        allMatches.push({
-          tournament_id: tournamentId,
-          home_team_id: teams[i].id,
-          away_team_id: teams[j].id,
-          round: 1, match_order: matchOrder++,
-          status: 'scheduled' as const,
-        });
+    // Generate round-robin with proper matchday assignment
+    const n = teams.length;
+    const isOdd = n % 2 !== 0;
+    const teamList = [...teams];
+    if (isOdd) teamList.push(null); // Add bye
+    const numRounds = teamList.length - 1;
+    const half = teamList.length / 2;
+    let matchOrder = 1;
+
+    for (let round = 0; round < numRounds; round++) {
+      for (let i = 0; i < half; i++) {
+        const home = teamList[i];
+        const away = teamList[teamList.length - 1 - i];
+        if (home && away) {
+          allMatches.push({
+            tournament_id: tournamentId,
+            home_team_id: home.id,
+            away_team_id: away.id,
+            round: round + 1,
+            match_order: matchOrder++,
+            status: 'scheduled' as const,
+          });
+        }
       }
+      // Rotate teams (keep first fixed)
+      const last = teamList.pop()!;
+      teamList.splice(1, 0, last);
     }
 
     if (allStandings.length > 0) {
@@ -343,6 +362,12 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                 </div>
               </CardContent>
             </Card>
+
+            {/* Referee */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><Gavel className="w-4 h-4 text-primary" /> اسم الحكم (اختياري)</Label>
+              <Input placeholder="اسم الحكم" value={refereeName} onChange={(e) => setRefereeName(e.target.value)} />
+            </div>
 
             {/* Join Requests */}
             <Card>

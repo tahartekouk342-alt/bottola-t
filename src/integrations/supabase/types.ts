@@ -395,6 +395,7 @@ export type Database = {
           num_groups: number | null
           num_teams: number
           owner_id: string | null
+          referee_name: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["tournament_status"]
           teams_per_group: number | null
@@ -416,6 +417,7 @@ export type Database = {
           num_groups?: number | null
           num_teams?: number
           owner_id?: string | null
+          referee_name?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["tournament_status"]
           teams_per_group?: number | null
@@ -437,6 +439,7 @@ export type Database = {
           num_groups?: number | null
           num_teams?: number
           owner_id?: string | null
+          referee_name?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["tournament_status"]
           teams_per_group?: number | null

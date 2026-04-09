@@ -1,4 +1,4 @@
-import { Trophy, Users, Bell, LogOut, Moon, Sun, User, Settings, LogIn } from 'lucide-react';
+import { Trophy, Users, Bell, LogOut, Moon, Sun, User, Settings, LogIn, Home } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -30,12 +30,11 @@ export function ViewerAppSidebar() {
     navigate('/');
   };
 
-  // Items available to everyone
   const publicItems = [
+    { title: 'الرئيسية', url: '/home', icon: Home },
     { title: 'البطولات', url: '/tournaments-feed', icon: Trophy },
   ];
 
-  // Items requiring login
   const authItems = [
     { title: 'المتابعات', url: '/following', icon: Users },
     { title: 'الإشعارات', url: '/notifications', icon: Bell },
@@ -47,7 +46,6 @@ export function ViewerAppSidebar() {
   return (
     <Sidebar collapsible="icon" side="right">
       <SidebarContent>
-        {/* Profile or Login CTA */}
         {!collapsed && (
           <div className="p-4 border-b border-sidebar-border">
             {user ? (

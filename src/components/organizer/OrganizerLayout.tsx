@@ -1,5 +1,5 @@
 import { ReactNode, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { OrganizerAppSidebar } from '@/components/organizer/OrganizerAppSidebar';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,6 +14,8 @@ interface OrganizerLayoutProps {
 export function OrganizerLayout({ children }: OrganizerLayoutProps) {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isDashboard = location.pathname === `${ORGANIZER_BASE}/dashboard`;
 
   useEffect(() => {
     if (!loading && !user) navigate(`${ORGANIZER_BASE}/auth?tab=login`);
@@ -21,6 +23,11 @@ export function OrganizerLayout({ children }: OrganizerLayoutProps) {
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  }
+
+  // Dashboard shows without sidebar (circular cards layout)
+  if (isDashboard) {
+    return <>{children}</>;
   }
 
   return (
