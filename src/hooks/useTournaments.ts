@@ -388,8 +388,13 @@ export function useTournaments() {
 
       if (updateError) throw updateError;
 
-      if (match.group_name) {
-        await updateStandings(match.tournament_id, match.home_team_id, match.away_team_id, homeScore, awayScore);
+      // Update standings for group matches OR league matches (where standings exist)
+      if (match.home_team_id && match.away_team_id) {
+        const { data: homeSt } = await supabase
+          .from('standings').select('*').eq('tournament_id', match.tournament_id).eq('team_id', match.home_team_id).maybeSingle();
+        if (homeSt) {
+          await updateStandings(match.tournament_id, match.home_team_id, match.away_team_id, homeScore, awayScore);
+        }
       }
 
       toast({ title: 'تم تحديث النتيجة', description: `${homeScore} - ${awayScore}` });
