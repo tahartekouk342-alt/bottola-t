@@ -57,6 +57,8 @@ export default function OrganizerTournamentsList() {
                 startDate={tournament.start_date ? new Date(tournament.start_date).toLocaleDateString('ar-SA') : 'غير محدد'}
                 status={tournament.status === 'draft' ? 'upcoming' : tournament.status}
                 type={tournament.type} logoUrl={tournament.logo_url} venueName={tournament.venue_name}
+                stadiumImageUrl={tournament.venue_photos?.[0]}
+                refereeName={(tournament as any).referee_name}
               />
             </div>
           ))}
