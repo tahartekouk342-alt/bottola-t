@@ -68,7 +68,8 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const resetForm = () => {
     setStep(1); setName(''); setType('knockout'); setStartDate('');
     setNumGroups(4); setLogoFile(null); setLogoPreview(null);
-    setVenueName(''); setVenueAddress(''); setAcceptJoinRequests(false);
+    setVenueName(''); setVenueAddress(''); setRefereeName('');
+    setAcceptJoinRequests(false);
     setMaxTeams(''); setStadiumImageFile(null); setStadiumImagePreview(null);
     setTeamsList([]); setNewTeamName(''); setDrawResult(null);
   };
