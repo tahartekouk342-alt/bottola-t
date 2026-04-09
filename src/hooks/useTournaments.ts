@@ -41,6 +41,7 @@ export function useTournaments() {
     logoUrl?: string | null;
     venueName?: string;
     venueAddress?: string;
+    refereeName?: string;
     acceptJoinRequests?: boolean;
     maxTeams?: number;
     venuePhotos?: string[];
@@ -60,6 +61,7 @@ export function useTournaments() {
           logo_url: tournament.logoUrl || null,
           venue_name: tournament.venueName || null,
           venue_address: tournament.venueAddress || null,
+          referee_name: (tournament as any).refereeName || null,
           accept_join_requests: tournament.acceptJoinRequests || false,
           max_teams: tournament.maxTeams || null,
           venue_photos: tournament.venuePhotos || [],
