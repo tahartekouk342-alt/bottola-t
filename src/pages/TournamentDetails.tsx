@@ -90,9 +90,11 @@ export default function TournamentDetails() {
     if (!id) return;
     try {
       if (tournament?.type === 'groups') {
+        // Start knockout phase from groups
         const result = await startKnockoutFromGroups(id);
         if (result) fetchTournamentDetails();
       } else {
+        // Knockout and league: just set status to live
         await supabase.from('tournaments').update({ status: 'live' }).eq('id', id);
         toast({ title: 'تم بدء البطولة 🔴' });
         fetchTournamentDetails();
