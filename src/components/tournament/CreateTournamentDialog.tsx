@@ -165,6 +165,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         numGroups: type === 'groups' ? numGroups : undefined,
         teamsPerGroup: type === 'groups' ? Math.ceil(teamsList.length / numGroups) : undefined,
         logoUrl, venueName, venueAddress,
+        refereeName,
         acceptJoinRequests,
         maxTeams: maxTeams ? Number(maxTeams) : undefined,
         venuePhotos,
