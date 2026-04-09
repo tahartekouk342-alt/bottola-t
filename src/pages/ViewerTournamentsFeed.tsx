@@ -1,52 +1,60 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Calendar, Users, Loader2, Search } from 'lucide-react';
+import { Trophy, Loader2, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { TournamentCard } from '@/components/tournament/TournamentCard';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function ViewerTournamentsFeed() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Show ALL tournaments for everyone (no auth required)
   const { data: tournaments, isLoading } = useQuery({
     queryKey: ['all-tournaments-feed'],
     queryFn: async () => {
-      const { data: tournamentsData, error } = await supabase
+      const { data, error } = await supabase
         .from('tournaments')
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
 
-      // Get organizer profiles
-      const ownerIds = [...new Set((tournamentsData || []).map(t => t.owner_id).filter(Boolean))];
+      const ownerIds = [...new Set((data || []).map(t => t.owner_id).filter(Boolean))];
       let profileMap = new Map();
       if (ownerIds.length > 0) {
         const { data: profiles } = await supabase.from('profiles').select('*').in('user_id', ownerIds as string[]);
         profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
       }
 
-      return (tournamentsData || []).map(t => ({ ...t, organizer: profileMap.get(t.owner_id || '') || null }));
+      // Get team counts
+      const tournamentIds = (data || []).map(t => t.id);
+      let teamCountMap = new Map<string, number>();
+      if (tournamentIds.length > 0) {
+        const { data: teams } = await supabase.from('teams').select('tournament_id').in('tournament_id', tournamentIds);
+        if (teams) {
+          teams.forEach(t => teamCountMap.set(t.tournament_id, (teamCountMap.get(t.tournament_id) || 0) + 1));
+        }
+      }
+
+      return (data || []).map(t => ({
+        ...t,
+        organizer: profileMap.get(t.owner_id || '') || null,
+        teamCount: teamCountMap.get(t.id) || t.num_teams,
+      }));
     },
   });
-
-  const getStatusBadge = (status: string) => {
-    const config: Record<string, { label: string; variant: 'secondary' | 'outline' | 'destructive' | 'default' }> = {
-      draft: { label: 'مسودة', variant: 'secondary' }, upcoming: { label: 'قادمة', variant: 'outline' },
-      live: { label: 'جارية', variant: 'destructive' }, completed: { label: 'منتهية', variant: 'default' }
-    };
-    return config[status] || config.draft;
-  };
-  const getTypeBadge = (type: string) => ({ knockout: 'إقصائية', league: 'دوري', groups: 'مجموعات' }[type] || type);
 
   const filtered = tournaments?.filter(t =>
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.organizer?.display_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const mapStatus = (s: string) => {
+    if (s === 'live') return 'live' as const;
+    if (s === 'completed') return 'completed' as const;
+    return 'upcoming' as const;
+  };
 
   return (
     <div className="container mx-auto px-4 py-8" dir="rtl">
@@ -62,39 +70,22 @@ export default function ViewerTournamentsFeed() {
         <div className="flex items-center justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
       ) : filtered && filtered.length > 0 ? (
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((tournament) => {
-            const statusConfig = getStatusBadge(tournament.status);
-            return (
-              <Card key={tournament.id} className="card-interactive cursor-pointer" onClick={() => navigate(`/viewer/tournament/${tournament.id}`)}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-lg truncate">{tournament.name}</CardTitle>
-                      <Badge variant="secondary" className="mt-2">{getTypeBadge(tournament.type)}</Badge>
-                    </div>
-                    <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                    <div className="flex items-center gap-1.5"><Users className="w-4 h-4" /><span>{tournament.num_teams} فريق</span></div>
-                    {tournament.start_date && (
-                      <div className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /><span>{new Date(tournament.start_date).toLocaleDateString('ar-SA')}</span></div>
-                    )}
-                  </div>
-                  {tournament.organizer && (
-                    <div className="flex items-center gap-3 pt-3 border-t border-border">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={tournament.organizer.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{tournament.organizer.display_name?.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm text-muted-foreground">{tournament.organizer.display_name}</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+          {filtered.map((tournament) => (
+            <TournamentCard
+              key={tournament.id}
+              id={tournament.id}
+              name={tournament.name}
+              teams={tournament.teamCount}
+              startDate={tournament.start_date ? new Date(tournament.start_date).toLocaleDateString('ar-SA') : 'غير محدد'}
+              status={mapStatus(tournament.status)}
+              type={tournament.type}
+              logoUrl={tournament.logo_url}
+              venueName={tournament.venue_name}
+              stadiumImageUrl={tournament.venue_photos?.[0]}
+              refereeName={(tournament as any).referee_name}
+              onClick={() => navigate(`/viewer/tournament/${tournament.id}`)}
+            />
+          ))}
         </div>
       ) : (
         <Card className="border-dashed rounded-3xl">
