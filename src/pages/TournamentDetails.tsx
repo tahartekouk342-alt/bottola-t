@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { BracketView } from '@/components/tournament/BracketView';
 import { MatchesList } from '@/components/tournament/MatchesList';
 import { UpdateMatchDialog } from '@/components/tournament/UpdateMatchDialog';
 import { JoinRequestsPanel } from '@/components/tournament/JoinRequestsPanel';
 import { EditTeamDialog } from '@/components/tournament/EditTeamDialog';
+import { VictoryConfetti } from '@/components/effects/VictoryConfetti';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
