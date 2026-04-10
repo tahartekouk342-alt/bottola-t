@@ -186,8 +186,21 @@ export default function TournamentDetails() {
     );
   }
 
-  const winner = tournament.status === 'completed' && knockoutMatches.length > 0
+  const winnerTeam = tournament.status === 'completed' && knockoutMatches.length > 0
     ? knockoutMatches.find(m => m.round === currentMaxRound && m.status === 'completed')?.winner : null;
+  // For league, winner is top of standings
+  const leagueWinner = tournament.status === 'completed' && tournament.type === 'league' && standings.length > 0
+    ? teams.find(t => t.id === [...standings].sort((a, b) => (b.points || 0) - (a.points || 0))[0]?.team_id) : null;
+  const winner = winnerTeam || leagueWinner || null;
+  
+  const [showVictory, setShowVictory] = useState(false);
+  useEffect(() => {
+    if (winner) {
+      const timer = setTimeout(() => setShowVictory(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [winner?.id]);
+
   const canAddTeams = teams.length === 0 && matches.length === 0;
   const canStart = tournament.status !== 'live' && tournament.status !== 'completed' && matches.length > 0 && tournament.type !== 'groups';
 
@@ -198,58 +211,67 @@ export default function TournamentDetails() {
     return true;
   });
 
+  const sportType = (tournament as any).sport_type || 'football';
+  const sportEmoji = sportType === 'basketball' ? '🏀' : '⚽';
+
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      {/* Victory Celebration */}
+      <VictoryConfetti
+        trigger={showVictory}
+        teamName={winner?.name}
+        teamLogo={winner?.logo_url}
+        sportType={sportType}
+        onComplete={() => setShowVictory(false)}
+      />
+
       {/* Hero */}
       <div className="relative border-b overflow-hidden">
-        <div className="relative h-56 md:h-72">
+        <div className="relative h-48 md:h-64">
           <img src={tournament.venue_photos?.[0] || '/images/sport-stadium.jpg'} alt={tournament.venue_name || 'ملعب'} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-background" />
 
           <Button variant="ghost" size="sm" onClick={() => navigate(`${ORGANIZER_BASE}/dashboard`)}
-            className="absolute top-4 right-4 z-20 bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm rounded-xl">
+            className="absolute top-3 right-3 z-20 bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm rounded-xl">
             <ArrowRight className="w-4 h-4 ml-1" />رجوع
           </Button>
 
-          <div className="absolute bottom-4 right-4 left-4 z-10 flex items-end justify-between">
+          <div className="absolute bottom-3 right-3 left-3 z-10 flex items-end justify-between">
             <div className="flex items-center gap-3">
               {tournament.logo_url ? (
-                <img src={tournament.logo_url} alt={tournament.name} className="w-14 h-14 rounded-xl object-cover border-2 border-white/80 shadow-lg" />
+                <img src={tournament.logo_url} alt={tournament.name} className="w-12 h-12 rounded-xl object-cover border-2 border-white/80 shadow-lg" />
               ) : (
-                <div className="w-14 h-14 rounded-xl bg-primary/90 flex items-center justify-center shadow-lg border-2 border-white/80">
-                  <Trophy className="w-7 h-7 text-primary-foreground" />
+                <div className="w-12 h-12 rounded-xl bg-primary/90 flex items-center justify-center shadow-lg border-2 border-white/80">
+                  <Trophy className="w-6 h-6 text-primary-foreground" />
                 </div>
               )}
               <div>
-                <h1 className="font-display text-xl md:text-2xl font-bold text-white drop-shadow-lg">{tournament.name}</h1>
-                <div className="flex items-center gap-2 mt-1">
+                <h1 className="font-display text-lg md:text-xl font-bold text-white drop-shadow-lg">{tournament.name}</h1>
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                   <Badge variant={statusMap[tournament.status]?.variant || 'secondary'} className="text-xs">
                     {statusMap[tournament.status]?.label}
                   </Badge>
-                  <span className="text-sm text-white/80 drop-shadow">{teams.length} فريق · {matches.length} مباراة · {typeMap[tournament.type]}</span>
-                  {(tournament as any).referee_name && (
-                    <span className="text-xs text-white/70 drop-shadow">الحكم: {(tournament as any).referee_name}</span>
-                  )}
+                  <span className="text-xs text-white/80 drop-shadow">{sportEmoji} {teams.length} فريق · {matches.length} مباراة · {typeMap[tournament.type]}</span>
                 </div>
               </div>
             </div>
-            <div className="flex gap-2 shrink-0">
+            <div className="flex gap-1.5 shrink-0">
               {canGenerateNextRound && (
-                <Button onClick={handleNextRound} size="sm" className="bg-white/20 text-white border-white/30 hover:bg-white/30 backdrop-blur-sm">
-                  <SkipForward className="w-4 h-4 ml-1" />الجولة التالية
+                <Button onClick={handleNextRound} size="sm" className="bg-white/20 text-white border-white/30 hover:bg-white/30 backdrop-blur-sm text-xs">
+                  <SkipForward className="w-3.5 h-3.5 ml-1" />التالية
                 </Button>
               )}
               {canStartKnockout && (
-                <Button onClick={handleStartTournament} className="gradient-primary text-primary-foreground" size="sm">
-                  <Play className="w-4 h-4 ml-1" />بدء الإقصاء
+                <Button onClick={handleStartTournament} className="gradient-primary text-primary-foreground text-xs" size="sm">
+                  <Play className="w-3.5 h-3.5 ml-1" />بدء الإقصاء
                 </Button>
               )}
               {canStart && (
-                <Button onClick={handleStartTournament} className="gradient-primary text-primary-foreground" size="sm">
-                  <Play className="w-4 h-4 ml-1" />بدء
+                <Button onClick={handleStartTournament} className="gradient-primary text-primary-foreground text-xs" size="sm">
+                  <Play className="w-3.5 h-3.5 ml-1" />بدء
                 </Button>
               )}
-              <Button variant="destructive" onClick={handleDelete} size="sm"><Trash2 className="w-4 h-4" /></Button>
+              <Button variant="destructive" onClick={handleDelete} size="sm"><Trash2 className="w-3.5 h-3.5" /></Button>
             </div>
           </div>
         </div>
@@ -273,15 +295,18 @@ export default function TournamentDetails() {
       </div>
 
       <div className="p-4 lg:p-6 max-w-7xl mx-auto">
-        {/* Winner */}
+        {/* Winner Banner */}
         {winner && (
-          <div className="mb-6 relative overflow-hidden rounded-2xl border border-primary/30">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent" />
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'url(/images/sport-stadium.jpg)', backgroundSize: 'cover' }} />
-            <div className="relative p-8 text-center">
-              <Trophy className="w-16 h-16 mx-auto mb-3 text-primary drop-shadow-lg" />
-              <h2 className="text-2xl font-bold text-primary mb-2">🏆 البطل</h2>
-              <p className="text-3xl font-display font-bold">{winner.name}</p>
+          <div className="mb-6 relative overflow-hidden rounded-2xl border-2 border-yellow-400/30 animate-fade-in">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 via-primary/10 to-yellow-400/10" />
+            <div className="relative p-6 text-center">
+              {winner.logo_url ? (
+                <img src={winner.logo_url} alt={winner.name} className="w-16 h-16 rounded-full mx-auto mb-3 object-cover border-4 border-yellow-400/50 shadow-xl" />
+              ) : (
+                <Trophy className="w-14 h-14 mx-auto mb-3 text-yellow-500 drop-shadow-lg" />
+              )}
+              <h2 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">🏆 البطل 🏆</h2>
+              <p className="text-2xl font-display font-black">{winner.name}</p>
             </div>
           </div>
         )}
