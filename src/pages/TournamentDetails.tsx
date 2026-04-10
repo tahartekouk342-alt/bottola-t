@@ -162,9 +162,21 @@ export default function TournamentDetails() {
   const allCurrentRoundCompleted = currentRoundMatches.length > 0 && currentRoundMatches.every(m => m.status === 'completed');
   const canGenerateNextRound = allCurrentRoundCompleted && currentRoundMatches.length > 1;
 
-  // Check if all group matches are completed (for groups type)
   const allGroupMatchesCompleted = groupMatches.length > 0 && groupMatches.every(m => m.status === 'completed');
   const canStartKnockout = tournament?.type === 'groups' && allGroupMatchesCompleted && knockoutMatches.length === 0;
+
+  const winnerTeam = tournament?.status === 'completed' && knockoutMatches.length > 0
+    ? knockoutMatches.find(m => m.round === currentMaxRound && m.status === 'completed')?.winner : null;
+  const leagueWinner = tournament?.status === 'completed' && tournament?.type === 'league' && standings.length > 0
+    ? teams.find(t => t.id === [...standings].sort((a, b) => (b.points || 0) - (a.points || 0))[0]?.team_id) : null;
+  const winner = winnerTeam || leagueWinner || null;
+
+  useEffect(() => {
+    if (winner) {
+      const timer = setTimeout(() => setShowVictory(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [winner?.id]);
 
   if (loading) {
     return (
@@ -186,19 +198,6 @@ export default function TournamentDetails() {
       </div>
     );
   }
-
-  const winnerTeam = tournament?.status === 'completed' && knockoutMatches.length > 0
-    ? knockoutMatches.find(m => m.round === currentMaxRound && m.status === 'completed')?.winner : null;
-  const leagueWinner = tournament?.status === 'completed' && tournament?.type === 'league' && standings.length > 0
-    ? teams.find(t => t.id === [...standings].sort((a, b) => (b.points || 0) - (a.points || 0))[0]?.team_id) : null;
-  const winner = winnerTeam || leagueWinner || null;
-  
-  useEffect(() => {
-    if (winner) {
-      const timer = setTimeout(() => setShowVictory(true), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [winner?.id]);
 
   const canAddTeams = teams.length === 0 && matches.length === 0;
   const canStart = tournament.status !== 'live' && tournament.status !== 'completed' && matches.length > 0 && tournament.type !== 'groups';
