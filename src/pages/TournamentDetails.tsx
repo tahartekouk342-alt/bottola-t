@@ -62,6 +62,7 @@ export default function TournamentDetails() {
   const [teamsList, setTeamsList] = useState<string[]>([]);
   const [addingTeams, setAddingTeams] = useState(false);
   const [editTeam, setEditTeam] = useState<{ id: string; name: string; logoUrl?: string } | null>(null);
+  const [showVictory, setShowVictory] = useState(false);
 
   const currentTab = searchParams.get('tab') || 'matches';
   const handleTabChange = (value: string) => setSearchParams({ tab: value });
