@@ -32,6 +32,11 @@ const tournamentTypes = [
   { value: 'groups' as TournamentType, label: 'مجموعات + إقصاء', icon: Layers, desc: 'مجموعات ثم مرحلة إقصاء', bg: 'from-purple-500/20 to-pink-500/20' },
 ];
 
+const sportTypes = [
+  { value: 'football', label: 'كرة القدم', icon: '⚽' },
+  { value: 'basketball', label: 'كرة السلة', icon: '🏀' },
+];
+
 export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentDialogProps) {
   const navigate = useNavigate();
   const { createTournament, addTeams, performAIDraw, generateKnockoutMatches, generateGroupMatches } = useTournaments();
@@ -44,8 +49,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   // Step 1
   const [name, setName] = useState('');
   const [type, setType] = useState<TournamentType>('knockout');
+  const [sportType, setSportType] = useState<'football' | 'basketball'>('football');
   const [startDate, setStartDate] = useState('');
-  const [numGroups, setNumGroups] = useState(4);
+  const [numGroups, setNumGroups] = useState(2);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [venueName, setVenueName] = useState('');
@@ -54,7 +60,6 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [acceptJoinRequests, setAcceptJoinRequests] = useState(false);
   const [maxTeams, setMaxTeams] = useState<number | ''>('');
 
-  // Stadium
   const [stadiumImageFile, setStadiumImageFile] = useState<File | null>(null);
   const [stadiumImagePreview, setStadiumImagePreview] = useState<string | null>(null);
 
@@ -66,8 +71,8 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [drawResult, setDrawResult] = useState<any>(null);
 
   const resetForm = () => {
-    setStep(1); setName(''); setType('knockout'); setStartDate('');
-    setNumGroups(4); setLogoFile(null); setLogoPreview(null);
+    setStep(1); setName(''); setType('knockout'); setSportType('football'); setStartDate('');
+    setNumGroups(2); setLogoFile(null); setLogoPreview(null);
     setVenueName(''); setVenueAddress(''); setRefereeName('');
     setAcceptJoinRequests(false);
     setMaxTeams(''); setStadiumImageFile(null); setStadiumImagePreview(null);
@@ -118,15 +123,24 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
 
       setAiLoading(true);
       try {
-        const drawType = type === 'league' ? 'knockout' : type;
-        const result = await performAIDraw(teamsList, drawType as TournamentType, type === 'groups' ? numGroups : undefined);
-        if (result) {
-          // For league, just shuffle
-          if (type === 'league' && !result.draw) {
-            result.draw = teamsList.sort(() => Math.random() - 0.5);
+        if (type === 'groups') {
+          const result = await performAIDraw(teamsList, 'groups', numGroups);
+          if (result) {
+            setDrawResult(result);
+            setStep(3);
           }
-          setDrawResult(result);
+        } else if (type === 'league') {
+          // For league, just shuffle
+          const shuffled = [...teamsList].sort(() => Math.random() - 0.5);
+          setDrawResult({ draw: shuffled });
           setStep(3);
+        } else {
+          // knockout
+          const result = await performAIDraw(teamsList, 'knockout');
+          if (result) {
+            setDrawResult(result);
+            setStep(3);
+          }
         }
       } finally {
         setAiLoading(false);
@@ -169,6 +183,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         acceptJoinRequests,
         maxTeams: maxTeams ? Number(maxTeams) : undefined,
         venuePhotos,
+        sportType,
       });
 
       if (!tournament) return;
@@ -185,7 +200,6 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       } else if (type === 'groups' && drawResult.groups) {
         await generateGroupMatches(tournament.id, teams, drawResult.groups);
       } else if (type === 'league') {
-        // Generate round-robin for league (no groups)
         await generateLeagueMatches(tournament.id, teams);
       }
 
@@ -210,11 +224,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       });
     });
 
-    // Generate round-robin with proper matchday assignment
     const n = teams.length;
-    const isOdd = n % 2 !== 0;
     const teamList = [...teams];
-    if (isOdd) teamList.push(null); // Add bye
+    if (n % 2 !== 0) teamList.push(null);
     const numRounds = teamList.length - 1;
     const half = teamList.length / 2;
     let matchOrder = 1;
@@ -234,7 +246,6 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
           });
         }
       }
-      // Rotate teams (keep first fixed)
       const last = teamList.pop()!;
       teamList.splice(1, 0, last);
     }
@@ -248,6 +259,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
     await supabase.from('tournaments').update({ status: 'upcoming' }).eq('id', tournamentId);
   };
 
+  const scoreLabel = sportType === 'basketball' ? 'نقاط' : 'أهداف';
   const stepLabels = ['معلومات البطولة', 'الفرق المشاركة', 'نتيجة القرعة'];
 
   return (
@@ -292,6 +304,28 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
             <div className="space-y-2">
               <Label>اسم البطولة</Label>
               <Input placeholder="مثال: بطولة الأبطال 2025" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+
+            {/* Sport Type */}
+            <div className="space-y-2">
+              <Label>نوع الرياضة</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {sportTypes.map((s) => (
+                  <Card
+                    key={s.value}
+                    className={cn(
+                      'cursor-pointer transition-all hover:scale-[1.02]',
+                      sportType === s.value ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'
+                    )}
+                    onClick={() => setSportType(s.value as 'football' | 'basketball')}
+                  >
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <span className="text-2xl">{s.icon}</span>
+                      <span className="font-bold text-sm">{s.label}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
 
             {/* Tournament Type Cards */}
@@ -407,7 +441,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
             {teamsList.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
                 {teamsList.map((team, index) => (
-                  <div key={index} className="flex items-center justify-between p-2.5 rounded-xl border bg-card group hover:border-primary/50 transition-colors">
+                  <div key={index} className="flex items-center justify-between p-2.5 rounded-xl border bg-card group hover:border-primary/50 transition-colors animate-fade-in">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">{index + 1}</span>
                       <span className="font-medium text-sm truncate">{team}</span>
@@ -444,7 +478,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                         if (index % 2 === 0) {
                           const opponent = drawResult.draw[index + 1];
                           acc.push(
-                            <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-background/80">
+                            <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-background/80 animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
                               <span className="font-medium">{team}</span>
                               <span className="text-xs font-bold text-muted-foreground px-2 py-1 rounded bg-muted">VS</span>
                               <span className="font-medium">{opponent}</span>
@@ -456,7 +490,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {(drawResult.draw as string[]).map((team: string, i: number) => (
-                          <div key={i} className="p-2 rounded-lg bg-background/80 text-sm font-medium text-center">
+                          <div key={i} className="p-2 rounded-lg bg-background/80 text-sm font-medium text-center animate-fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
                             {i + 1}. {team}
                           </div>
                         ))}
@@ -468,7 +502,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                 {type === 'groups' && drawResult.groups && (
                   <div className="grid grid-cols-2 gap-3">
                     {Object.entries(drawResult.groups as Record<string, string[]>).map(([groupName, groupTeams]) => (
-                      <div key={groupName} className="p-3 rounded-lg bg-background/80">
+                      <div key={groupName} className="p-3 rounded-lg bg-background/80 animate-fade-in">
                         <h4 className="font-bold text-primary mb-2 text-sm">المجموعة {groupName}</h4>
                         <ul className="space-y-1">
                           {groupTeams.map((team, i) => (

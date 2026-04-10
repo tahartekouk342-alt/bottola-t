@@ -83,6 +83,7 @@ export default function ViewerTournamentsFeed() {
               venueName={tournament.venue_name}
               stadiumImageUrl={tournament.venue_photos?.[0]}
               refereeName={(tournament as any).referee_name}
+              sportType={(tournament as any).sport_type || 'football'}
               onClick={() => navigate(`/viewer/tournament/${tournament.id}`)}
             />
           ))}

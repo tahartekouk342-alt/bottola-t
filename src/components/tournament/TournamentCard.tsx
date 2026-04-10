@@ -1,4 +1,4 @@
-import { Trophy, Users, Calendar, ChevronLeft, MapPin, Target, Gavel } from 'lucide-react';
+import { Trophy, Users, Calendar, ChevronLeft, MapPin, Target, Gavel, Dribbble } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -8,8 +8,9 @@ interface TournamentCardProps {
   name: string;
   teams: number;
   startDate: string;
-  status: 'upcoming' | 'live' | 'completed';
+  status: 'upcoming' | 'live' | 'completed' | 'draft';
   type: 'knockout' | 'league' | 'groups';
+  sportType?: 'football' | 'basketball';
   logoUrl?: string | null;
   venueName?: string | null;
   stadiumImageUrl?: string | null;
@@ -18,102 +19,88 @@ interface TournamentCardProps {
 }
 
 const statusConfig = {
-  upcoming: { label: 'قريباً', variant: 'secondary' as const, color: 'text-blue-400 bg-blue-400/10' },
-  live: { label: 'جارية', variant: 'destructive' as const, color: 'text-red-400 bg-red-400/10' },
-  completed: { label: 'منتهية', variant: 'outline' as const, color: 'text-emerald-400 bg-emerald-400/10' },
+  draft: { label: 'مسودة', color: 'text-muted-foreground bg-muted/60' },
+  upcoming: { label: 'قريباً', color: 'text-blue-500 bg-blue-500/10' },
+  live: { label: 'جارية', color: 'text-red-500 bg-red-500/10' },
+  completed: { label: 'منتهية', color: 'text-emerald-500 bg-emerald-500/10' },
 };
 
 const typeConfig = {
-  knockout: { label: 'إقصاء مباشر', icon: <Target className="w-4 h-4" /> },
-  league: { label: 'دوري', icon: <Trophy className="w-4 h-4" /> },
-  groups: { label: 'مجموعات + إقصاء', icon: <Users className="w-4 h-4" /> },
+  knockout: { label: 'إقصاء مباشر', icon: <Target className="w-3 h-3" /> },
+  league: { label: 'دوري', icon: <Trophy className="w-3 h-3" /> },
+  groups: { label: 'مجموعات', icon: <Users className="w-3 h-3" /> },
 };
 
-export function TournamentCard({ name, teams, startDate, status, type, logoUrl, venueName, stadiumImageUrl, refereeName, onClick }: TournamentCardProps) {
+const sportConfig = {
+  football: { label: '⚽ كرة القدم', icon: '⚽' },
+  basketball: { label: '🏀 كرة السلة', icon: '🏀' },
+};
+
+export function TournamentCard({ name, teams, startDate, status, type, sportType = 'football', logoUrl, venueName, stadiumImageUrl, refereeName, onClick }: TournamentCardProps) {
+  const sport = sportConfig[sportType] || sportConfig.football;
+  
   return (
     <Card
       onClick={onClick}
       className={cn(
-        "card-interactive group relative overflow-hidden transition-all duration-500 rounded-3xl",
-        status === 'live' && "border-primary/40 ring-1 ring-primary/20"
+        "group relative overflow-hidden transition-all duration-300 rounded-2xl cursor-pointer hover:shadow-lg hover:-translate-y-1",
+        status === 'live' && "ring-1 ring-primary/30"
       )}
     >
-      {/* Visual Header */}
-      <div className="relative h-52 overflow-hidden bg-gradient-to-br from-secondary/50 to-secondary/30">
+      {/* Compact Header */}
+      <div className="relative h-28 overflow-hidden bg-gradient-to-br from-secondary/50 to-secondary/30">
         {stadiumImageUrl && (
-          <img src={stadiumImageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
+          <img src={stadiumImageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 group-hover:scale-105 transition-all duration-500" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent z-10" />
-        <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
 
-        {/* Status Badge */}
-        <div className="absolute top-4 left-4 z-20">
-          <Badge className={cn("px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border-none backdrop-blur-md", statusConfig[status].color)}>
-            {status === 'live' && <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse" />}
-            {statusConfig[status].label}
+        {/* Status + Sport */}
+        <div className="absolute top-2.5 left-2.5 right-2.5 z-20 flex items-center justify-between">
+          <Badge className={cn("px-2.5 py-1 rounded-full text-[10px] font-bold border-none backdrop-blur-md", statusConfig[status]?.color)}>
+            {status === 'live' && <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5 animate-pulse" />}
+            {statusConfig[status]?.label}
           </Badge>
+          <span className="text-sm">{sport.icon}</span>
         </div>
 
-        {/* Tournament Logo */}
-        <div className="absolute bottom-0 left-6 translate-y-1/2 z-20">
-          <div className="w-24 h-24 rounded-2xl bg-card border-4 border-background shadow-2xl flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-500">
+        {/* Logo */}
+        <div className="absolute -bottom-5 right-4 z-20">
+          <div className="w-14 h-14 rounded-xl bg-card border-2 border-background shadow-lg flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-300">
             {logoUrl ? (
               <img src={logoUrl} alt={name} className="w-full h-full object-cover" />
             ) : (
-              <Trophy className="w-12 h-12 text-primary" />
+              <Trophy className="w-7 h-7 text-primary" />
             )}
           </div>
         </div>
       </div>
 
-      <CardContent className="p-6 pt-16 relative z-10">
-        <div className="flex items-start justify-between mb-5">
-          <div className="flex flex-col gap-2 flex-1">
-            <span className="text-xs font-bold text-primary uppercase tracking-wider">بطولة رسمية</span>
-            <h3 className="font-display text-2xl font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-300">{name}</h3>
-          </div>
-          <div className="w-11 h-11 rounded-full bg-secondary/50 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 flex-shrink-0 mr-2">
-            <ChevronLeft className="w-5 h-5" />
+      <CardContent className="p-3.5 pt-8">
+        <div className="flex items-start justify-between mb-3">
+          <h3 className="font-display text-base font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors duration-200 flex-1">{name}</h3>
+          <div className="w-7 h-7 rounded-full bg-secondary/50 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200 shrink-0 mr-2">
+            <ChevronLeft className="w-3.5 h-3.5" />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-secondary/40 border border-white/5">
-            <Users className="w-4 h-4 text-primary flex-shrink-0" />
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs text-muted-foreground font-bold">الفرق</span>
-              <span className="text-sm font-bold truncate">{teams} فريق</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-secondary/40 border border-white/5">
-            <Calendar className="w-4 h-4 text-primary flex-shrink-0" />
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs text-muted-foreground font-bold">البداية</span>
-              <span className="text-sm font-bold truncate">{startDate}</span>
-            </div>
-          </div>
+        {/* Info Row */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+          <span className="flex items-center gap-1"><Users className="w-3 h-3 text-primary" />{teams} فريق</span>
+          <span className="text-border">·</span>
+          <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-primary" />{startDate}</span>
+          <span className="text-border">·</span>
+          <span className="flex items-center gap-1">{typeConfig[type].icon}{typeConfig[type].label}</span>
         </div>
 
-        {/* Venue & Referee */}
-        <div className="flex flex-col gap-2 pt-4 border-t border-white/5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              {venueName ? (
-                <><MapPin className="w-4 h-4 text-primary flex-shrink-0" /><span className="text-xs font-bold truncate max-w-[140px]">{venueName}</span></>
-              ) : (
-                <><Target className="w-4 h-4 text-primary flex-shrink-0" /><span className="text-xs font-bold">ملاعب معتمدة</span></>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
-              {typeConfig[type].icon}
-              <span className="hidden sm:inline">{typeConfig[type].label}</span>
-            </div>
-          </div>
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/50">
+          {venueName ? (
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><MapPin className="w-3 h-3 text-primary" />{venueName}</span>
+          ) : (
+            <span className="text-[10px] text-muted-foreground">—</span>
+          )}
           {refereeName && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Gavel className="w-4 h-4 text-primary flex-shrink-0" />
-              <span className="text-xs font-bold">الحكم: {refereeName}</span>
-            </div>
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><Gavel className="w-3 h-3 text-primary" />{refereeName}</span>
           )}
         </div>
       </CardContent>

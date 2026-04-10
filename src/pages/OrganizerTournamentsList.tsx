@@ -55,10 +55,11 @@ export default function OrganizerTournamentsList() {
               <TournamentCard
                 id={tournament.id} name={tournament.name} teams={tournament.num_teams}
                 startDate={tournament.start_date ? new Date(tournament.start_date).toLocaleDateString('ar-SA') : 'غير محدد'}
-                status={tournament.status === 'draft' ? 'upcoming' : tournament.status}
+                status={tournament.status}
                 type={tournament.type} logoUrl={tournament.logo_url} venueName={tournament.venue_name}
                 stadiumImageUrl={tournament.venue_photos?.[0]}
                 refereeName={(tournament as any).referee_name}
+                sportType={(tournament as any).sport_type || 'football'}
               />
             </div>
           ))}
