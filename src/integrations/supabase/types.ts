@@ -396,6 +396,7 @@ export type Database = {
           num_teams: number
           owner_id: string | null
           referee_name: string | null
+          sport_type: Database["public"]["Enums"]["sport_type"]
           start_date: string | null
           status: Database["public"]["Enums"]["tournament_status"]
           teams_per_group: number | null
@@ -418,6 +419,7 @@ export type Database = {
           num_teams?: number
           owner_id?: string | null
           referee_name?: string | null
+          sport_type?: Database["public"]["Enums"]["sport_type"]
           start_date?: string | null
           status?: Database["public"]["Enums"]["tournament_status"]
           teams_per_group?: number | null
@@ -440,6 +442,7 @@ export type Database = {
           num_teams?: number
           owner_id?: string | null
           referee_name?: string | null
+          sport_type?: Database["public"]["Enums"]["sport_type"]
           start_date?: string | null
           status?: Database["public"]["Enums"]["tournament_status"]
           teams_per_group?: number | null
@@ -509,6 +512,7 @@ export type Database = {
     Enums: {
       app_role: "organizer" | "viewer"
       match_status: "scheduled" | "live" | "completed"
+      sport_type: "football" | "basketball"
       tournament_status: "draft" | "upcoming" | "live" | "completed"
       tournament_type: "knockout" | "league" | "groups"
     }
@@ -640,6 +644,7 @@ export const Constants = {
     Enums: {
       app_role: ["organizer", "viewer"],
       match_status: ["scheduled", "live", "completed"],
+      sport_type: ["football", "basketball"],
       tournament_status: ["draft", "upcoming", "live", "completed"],
       tournament_type: ["knockout", "league", "groups"],
     },
