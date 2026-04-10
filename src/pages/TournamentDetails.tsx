@@ -187,14 +187,12 @@ export default function TournamentDetails() {
     );
   }
 
-  const winnerTeam = tournament.status === 'completed' && knockoutMatches.length > 0
+  const winnerTeam = tournament?.status === 'completed' && knockoutMatches.length > 0
     ? knockoutMatches.find(m => m.round === currentMaxRound && m.status === 'completed')?.winner : null;
-  // For league, winner is top of standings
-  const leagueWinner = tournament.status === 'completed' && tournament.type === 'league' && standings.length > 0
+  const leagueWinner = tournament?.status === 'completed' && tournament?.type === 'league' && standings.length > 0
     ? teams.find(t => t.id === [...standings].sort((a, b) => (b.points || 0) - (a.points || 0))[0]?.team_id) : null;
   const winner = winnerTeam || leagueWinner || null;
   
-  const [showVictory, setShowVictory] = useState(false);
   useEffect(() => {
     if (winner) {
       const timer = setTimeout(() => setShowVictory(true), 500);
