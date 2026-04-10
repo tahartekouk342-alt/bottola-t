@@ -45,6 +45,7 @@ export function useTournaments() {
     acceptJoinRequests?: boolean;
     maxTeams?: number;
     venuePhotos?: string[];
+    sportType?: string;
   }) => {
     try {
       const { data, error } = await supabase
@@ -61,10 +62,11 @@ export function useTournaments() {
           logo_url: tournament.logoUrl || null,
           venue_name: tournament.venueName || null,
           venue_address: tournament.venueAddress || null,
-          referee_name: (tournament as any).refereeName || null,
+          referee_name: tournament.refereeName || null,
           accept_join_requests: tournament.acceptJoinRequests || false,
           max_teams: tournament.maxTeams || null,
           venue_photos: tournament.venuePhotos || [],
+          sport_type: (tournament.sportType as any) || 'football',
         })
         .select()
         .single();
