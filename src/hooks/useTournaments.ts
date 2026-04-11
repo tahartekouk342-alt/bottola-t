@@ -376,18 +376,17 @@ export function useTournaments() {
     }
   };
 
-  const updateMatchResult = async (matchId: string, homeScore: number, awayScore: number) => {
+  const updateMatchResult = async (matchId: string, homeScore: number, awayScore: number, manOfMatchName?: string) => {
     try {
       const { data: match, error: fetchError } = await supabase.from('matches').select('*').eq('id', matchId).single();
       if (fetchError) throw fetchError;
 
       const winnerId = homeScore > awayScore ? match.home_team_id : homeScore < awayScore ? match.away_team_id : null;
 
-      const { error: updateError } = await supabase
-        .from('matches')
-        .update({ home_score: homeScore, away_score: awayScore, status: 'completed' as const, winner_id: winnerId })
-        .eq('id', matchId);
+      const updateData: any = { home_score: homeScore, away_score: awayScore, status: 'completed' as const, winner_id: winnerId };
+      if (manOfMatchName) updateData.man_of_match_name = manOfMatchName;
 
+      const { error: updateError } = await supabase.from('matches').update(updateData).eq('id', matchId);
       if (updateError) throw updateError;
 
       // Update standings for group matches OR league matches (where standings exist)
@@ -396,6 +395,48 @@ export function useTournaments() {
           .from('standings').select('*').eq('tournament_id', match.tournament_id).eq('team_id', match.home_team_id).maybeSingle();
         if (homeSt) {
           await updateStandings(match.tournament_id, match.home_team_id, match.away_team_id, homeScore, awayScore);
+        }
+      }
+
+      // Auto-advance: check if all matches in current knockout round are done, then generate next round
+      if (!match.group_name && winnerId) {
+        const { data: roundMatches } = await supabase.from('matches')
+          .select('*').eq('tournament_id', match.tournament_id).eq('round', match.round).is('group_name', null);
+
+        if (roundMatches) {
+          // Mark this match as completed in our local copy
+          const updatedRoundMatches = roundMatches.map(m => m.id === matchId ? { ...m, status: 'completed' as const, winner_id: winnerId } : m);
+          const allCompleted = updatedRoundMatches.every(m => m.status === 'completed');
+          const winners = updatedRoundMatches.map(m => m.winner_id).filter(Boolean) as string[];
+
+          if (allCompleted && winners.length >= 2) {
+            // Auto-generate next round
+            const nextRound = (match.round || 1) + 1;
+            const nextMatches = [];
+            for (let i = 0; i < winners.length; i += 2) {
+              if (winners[i + 1]) {
+                nextMatches.push({
+                  tournament_id: match.tournament_id,
+                  home_team_id: winners[i],
+                  away_team_id: winners[i + 1],
+                  round: nextRound,
+                  match_order: Math.floor(i / 2) + 1,
+                  status: 'scheduled' as const,
+                });
+              }
+            }
+            if (nextMatches.length > 0) {
+              await supabase.from('matches').insert(nextMatches);
+              toast({ title: 'تم إنشاء الجولة التالية تلقائياً ⚡', description: `${nextMatches.length} مباراة جديدة` });
+            } else if (winners.length === 1) {
+              // Tournament completed - one winner
+              await supabase.from('tournaments').update({ status: 'completed' as TournamentStatus }).eq('id', match.tournament_id);
+              toast({ title: '🏆 البطولة انتهت!', description: 'تم تحديد البطل' });
+            }
+          } else if (allCompleted && winners.length === 1) {
+            await supabase.from('tournaments').update({ status: 'completed' as TournamentStatus }).eq('id', match.tournament_id);
+            toast({ title: '🏆 البطولة انتهت!', description: 'تم تحديد البطل' });
+          }
         }
       }
 
