@@ -6,12 +6,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Sparkles, Trophy, Camera, X, Plus, Image, MapPin, Swords, Users, Layers, Gavel } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Sparkles, Trophy, Camera, X, Plus, Image, MapPin, Swords, Users, Layers, Gavel, Clock } from 'lucide-react';
 import { useTournaments } from '@/hooks/useTournaments';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
@@ -27,9 +25,9 @@ interface CreateTournamentDialogProps {
 }
 
 const tournamentTypes = [
-  { value: 'knockout' as TournamentType, label: 'إقصاء مباشر', icon: Swords, desc: 'من يخسر يخرج مباشرة', bg: 'from-red-500/20 to-orange-500/20' },
-  { value: 'league' as TournamentType, label: 'دوري', icon: Trophy, desc: 'كل فريق يلعب ضد الجميع', bg: 'from-blue-500/20 to-cyan-500/20' },
-  { value: 'groups' as TournamentType, label: 'مجموعات + إقصاء', icon: Layers, desc: 'مجموعات ثم مرحلة إقصاء', bg: 'from-purple-500/20 to-pink-500/20' },
+  { value: 'knockout' as TournamentType, label: 'إقصاء مباشر', icon: Swords, desc: 'من يخسر يخرج مباشرة', bg: 'from-red-500/20 to-orange-500/20', available: true },
+  { value: 'league' as TournamentType, label: 'دوري', icon: Trophy, desc: 'كل فريق يلعب ضد الجميع', bg: 'from-blue-500/20 to-cyan-500/20', available: false },
+  { value: 'groups' as TournamentType, label: 'مجموعات + إقصاء', icon: Layers, desc: 'مجموعات ثم مرحلة إقصاء', bg: 'from-purple-500/20 to-pink-500/20', available: false },
 ];
 
 const sportTypes = [
@@ -39,19 +37,17 @@ const sportTypes = [
 
 export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentDialogProps) {
   const navigate = useNavigate();
-  const { createTournament, addTeams, performAIDraw, generateKnockoutMatches, generateGroupMatches } = useTournaments();
+  const { createTournament, addTeams, performAIDraw, generateKnockoutMatches } = useTournaments();
   const { toast } = useToast();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
 
-  // Step 1
   const [name, setName] = useState('');
   const [type, setType] = useState<TournamentType>('knockout');
   const [sportType, setSportType] = useState<'football' | 'basketball'>('football');
   const [startDate, setStartDate] = useState('');
-  const [numGroups, setNumGroups] = useState(2);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [venueName, setVenueName] = useState('');
@@ -59,20 +55,15 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [refereeName, setRefereeName] = useState('');
   const [acceptJoinRequests, setAcceptJoinRequests] = useState(false);
   const [maxTeams, setMaxTeams] = useState<number | ''>('');
-
   const [stadiumImageFile, setStadiumImageFile] = useState<File | null>(null);
   const [stadiumImagePreview, setStadiumImagePreview] = useState<string | null>(null);
-
-  // Step 2
   const [teamsList, setTeamsList] = useState<string[]>([]);
   const [newTeamName, setNewTeamName] = useState('');
-
-  // Step 3
   const [drawResult, setDrawResult] = useState<any>(null);
 
   const resetForm = () => {
     setStep(1); setName(''); setType('knockout'); setSportType('football'); setStartDate('');
-    setNumGroups(2); setLogoFile(null); setLogoPreview(null);
+    setLogoFile(null); setLogoPreview(null);
     setVenueName(''); setVenueAddress(''); setRefereeName('');
     setAcceptJoinRequests(false);
     setMaxTeams(''); setStadiumImageFile(null); setStadiumImagePreview(null);
@@ -116,31 +107,12 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         toast({ title: 'خطأ', description: 'يرجى إدخال فريقين على الأقل', variant: 'destructive' });
         return;
       }
-      if (type === 'groups' && teamsList.length < numGroups * 2) {
-        toast({ title: 'خطأ', description: `يجب إدخال ${numGroups * 2} فريق على الأقل للمجموعات`, variant: 'destructive' });
-        return;
-      }
-
       setAiLoading(true);
       try {
-        if (type === 'groups') {
-          const result = await performAIDraw(teamsList, 'groups', numGroups);
-          if (result) {
-            setDrawResult(result);
-            setStep(3);
-          }
-        } else if (type === 'league') {
-          // For league, just shuffle
-          const shuffled = [...teamsList].sort(() => Math.random() - 0.5);
-          setDrawResult({ draw: shuffled });
+        const result = await performAIDraw(teamsList, 'knockout');
+        if (result) {
+          setDrawResult(result);
           setStep(3);
-        } else {
-          // knockout
-          const result = await performAIDraw(teamsList, 'knockout');
-          if (result) {
-            setDrawResult(result);
-            setStep(3);
-          }
         }
       } finally {
         setAiLoading(false);
@@ -174,34 +146,21 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       }
 
       const tournament = await createTournament({
-        name, type, startDate,
+        name, type: 'knockout', startDate,
         numTeams: teamsList.length,
-        numGroups: type === 'groups' ? numGroups : undefined,
-        teamsPerGroup: type === 'groups' ? Math.ceil(teamsList.length / numGroups) : undefined,
-        logoUrl, venueName, venueAddress,
-        refereeName,
+        logoUrl, venueName, venueAddress, refereeName,
         acceptJoinRequests,
         maxTeams: maxTeams ? Number(maxTeams) : undefined,
-        venuePhotos,
-        sportType,
+        venuePhotos, sportType,
       });
 
       if (!tournament) return;
 
-      const orderedTeams = type === 'groups'
-        ? Object.values(drawResult.groups || {}).flat()
-        : drawResult.draw || teamsList;
-
+      const orderedTeams = drawResult.draw || teamsList;
       const teams = await addTeams(tournament.id, orderedTeams as string[]);
       if (!teams) return;
 
-      if (type === 'knockout') {
-        await generateKnockoutMatches(tournament.id, teams);
-      } else if (type === 'groups' && drawResult.groups) {
-        await generateGroupMatches(tournament.id, teams, drawResult.groups);
-      } else if (type === 'league') {
-        await generateLeagueMatches(tournament.id, teams);
-      }
+      await generateKnockoutMatches(tournament.id, teams);
 
       toast({ title: 'تم بنجاح! 🎉', description: 'تم إنشاء البطولة وإجراء القرعة' });
       onOpenChange(false);
@@ -212,54 +171,6 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
     }
   };
 
-  const generateLeagueMatches = async (tournamentId: string, teams: any[]) => {
-    const allMatches: any[] = [];
-    const allStandings: any[] = [];
-
-    teams.forEach((team) => {
-      allStandings.push({
-        tournament_id: tournamentId, team_id: team.id, group_name: null,
-        position: 0, played: 0, won: 0, drawn: 0, lost: 0,
-        goals_for: 0, goals_against: 0, goal_difference: 0, points: 0,
-      });
-    });
-
-    const n = teams.length;
-    const teamList = [...teams];
-    if (n % 2 !== 0) teamList.push(null);
-    const numRounds = teamList.length - 1;
-    const half = teamList.length / 2;
-    let matchOrder = 1;
-
-    for (let round = 0; round < numRounds; round++) {
-      for (let i = 0; i < half; i++) {
-        const home = teamList[i];
-        const away = teamList[teamList.length - 1 - i];
-        if (home && away) {
-          allMatches.push({
-            tournament_id: tournamentId,
-            home_team_id: home.id,
-            away_team_id: away.id,
-            round: round + 1,
-            match_order: matchOrder++,
-            status: 'scheduled' as const,
-          });
-        }
-      }
-      const last = teamList.pop()!;
-      teamList.splice(1, 0, last);
-    }
-
-    if (allStandings.length > 0) {
-      await supabase.from('standings').insert(allStandings);
-    }
-    if (allMatches.length > 0) {
-      await supabase.from('matches').insert(allMatches);
-    }
-    await supabase.from('tournaments').update({ status: 'upcoming' }).eq('id', tournamentId);
-  };
-
-  const scoreLabel = sportType === 'basketball' ? 'نقاط' : 'أهداف';
   const stepLabels = ['معلومات البطولة', 'الفرق المشاركة', 'نتيجة القرعة'];
 
   return (
@@ -289,7 +200,6 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         {/* Step 1 */}
         {step === 1 && (
           <div className="space-y-5">
-            {/* Logo */}
             <div className="flex flex-col items-center gap-3">
               <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden">
                 {logoPreview ? (
@@ -311,14 +221,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
               <Label>نوع الرياضة</Label>
               <div className="grid grid-cols-2 gap-3">
                 {sportTypes.map((s) => (
-                  <Card
-                    key={s.value}
-                    className={cn(
-                      'cursor-pointer transition-all hover:scale-[1.02]',
-                      sportType === s.value ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'
-                    )}
-                    onClick={() => setSportType(s.value as 'football' | 'basketball')}
-                  >
+                  <Card key={s.value} className={cn('cursor-pointer transition-all hover:scale-[1.02]',
+                    sportType === s.value ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50')}
+                    onClick={() => setSportType(s.value as 'football' | 'basketball')}>
                     <CardContent className="p-3 flex items-center gap-3">
                       <span className="text-2xl">{s.icon}</span>
                       <span className="font-bold text-sm">{s.label}</span>
@@ -328,21 +233,24 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
               </div>
             </div>
 
-            {/* Tournament Type Cards */}
+            {/* Tournament Type */}
             <div className="space-y-2">
               <Label>نظام البطولة</Label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {tournamentTypes.map((t) => (
-                  <Card
-                    key={t.value}
-                    className={cn(
-                      'cursor-pointer transition-all hover:scale-[1.02]',
-                      type === t.value ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'
+                  <Card key={t.value}
+                    className={cn('transition-all relative',
+                      t.available ? 'cursor-pointer hover:scale-[1.02]' : 'opacity-60 cursor-not-allowed',
+                      type === t.value && t.available ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'
                     )}
-                    onClick={() => setType(t.value)}
-                  >
+                    onClick={() => { if (t.available) setType(t.value); }}>
                     <CardContent className={cn('p-4 bg-gradient-to-br rounded-lg', t.bg)}>
-                      <t.icon className={cn('w-8 h-8 mb-2', type === t.value ? 'text-primary' : 'text-muted-foreground')} />
+                      {!t.available && (
+                        <Badge className="absolute top-2 left-2 bg-yellow-500/90 text-white border-0 text-[10px] gap-1">
+                          <Clock className="w-3 h-3" /> قريباً
+                        </Badge>
+                      )}
+                      <t.icon className={cn('w-8 h-8 mb-2', type === t.value && t.available ? 'text-primary' : 'text-muted-foreground')} />
                       <h4 className="font-bold text-sm">{t.label}</h4>
                       <p className="text-xs text-muted-foreground mt-1">{t.desc}</p>
                     </CardContent>
@@ -355,20 +263,6 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
               <Label>تاريخ البداية</Label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             </div>
-
-            {type === 'groups' && (
-              <div className="space-y-2">
-                <Label>عدد المجموعات</Label>
-                <Select value={numGroups.toString()} onValueChange={(v) => setNumGroups(parseInt(v))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {[2, 3, 4, 6, 8].map(n => (
-                      <SelectItem key={n} value={n.toString()}>{n} مجموعات</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
 
             {/* Stadium */}
             <Card>
@@ -397,13 +291,11 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
               </CardContent>
             </Card>
 
-            {/* Referee */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2"><Gavel className="w-4 h-4 text-primary" /> اسم الحكم (اختياري)</Label>
               <Input placeholder="اسم الحكم" value={refereeName} onChange={(e) => setRefereeName(e.target.value)} />
             </div>
 
-            {/* Join Requests */}
             <Card>
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
@@ -428,16 +320,12 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         {step === 2 && (
           <div className="space-y-4">
             <div className="flex gap-2">
-              <Input
-                placeholder="اسم الفريق"
-                value={newTeamName}
+              <Input placeholder="اسم الفريق" value={newTeamName}
                 onChange={(e) => setNewTeamName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddTeam()}
-                className="flex-1"
-              />
+                className="flex-1" />
               <Button onClick={handleAddTeam} variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
             </div>
-
             {teamsList.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
                 {teamsList.map((team, index) => (
@@ -453,10 +341,8 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                 ))}
               </div>
             )}
-
             <p className="text-sm text-muted-foreground text-center">
               عدد الفرق: <span className="font-bold text-foreground">{teamsList.length}</span>
-              {type === 'groups' && <span className="text-xs"> (الحد الأدنى: {numGroups * 2})</span>}
             </p>
           </div>
         )}
@@ -470,50 +356,21 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                   <Sparkles className="w-5 h-5 text-primary" />
                   <span className="font-bold text-primary">نتيجة القرعة</span>
                 </div>
-
-                {(type === 'knockout' || type === 'league') && drawResult.draw && (
+                {drawResult.draw && (
                   <div className="space-y-2">
-                    {type === 'knockout' ? (
-                      (drawResult.draw as string[]).reduce((acc: JSX.Element[], team: string, index: number) => {
-                        if (index % 2 === 0) {
-                          const opponent = drawResult.draw[index + 1];
-                          acc.push(
-                            <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-background/80 animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
-                              <span className="font-medium">{team}</span>
-                              <span className="text-xs font-bold text-muted-foreground px-2 py-1 rounded bg-muted">VS</span>
-                              <span className="font-medium">{opponent}</span>
-                            </div>
-                          );
-                        }
-                        return acc;
-                      }, [])
-                    ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {(drawResult.draw as string[]).map((team: string, i: number) => (
-                          <div key={i} className="p-2 rounded-lg bg-background/80 text-sm font-medium text-center animate-fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
-                            {i + 1}. {team}
+                    {(drawResult.draw as string[]).reduce((acc: JSX.Element[], team: string, index: number) => {
+                      if (index % 2 === 0) {
+                        const opponent = drawResult.draw[index + 1];
+                        acc.push(
+                          <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-background/80 animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+                            <span className="font-medium">{team}</span>
+                            <span className="text-xs font-bold text-muted-foreground px-2 py-1 rounded bg-muted">VS</span>
+                            <span className="font-medium">{opponent || 'BYE'}</span>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {type === 'groups' && drawResult.groups && (
-                  <div className="grid grid-cols-2 gap-3">
-                    {Object.entries(drawResult.groups as Record<string, string[]>).map(([groupName, groupTeams]) => (
-                      <div key={groupName} className="p-3 rounded-lg bg-background/80 animate-fade-in">
-                        <h4 className="font-bold text-primary mb-2 text-sm">المجموعة {groupName}</h4>
-                        <ul className="space-y-1">
-                          {groupTeams.map((team, i) => (
-                            <li key={i} className="text-sm flex items-center gap-1.5">
-                              <span className="w-5 h-5 rounded bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">{i + 1}</span>
-                              {team}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
+                        );
+                      }
+                      return acc;
+                    }, [])}
                   </div>
                 )}
               </CardContent>
@@ -527,19 +384,14 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
           <div className="flex-1" />
           {step < 3 ? (
             <Button onClick={handleNext} disabled={aiLoading}>
-              {aiLoading ? (
-                <><Loader2 className="w-4 h-4 ml-2 animate-spin" />جاري القرعة...</>
-              ) : step === 2 ? (
-                <><Sparkles className="w-4 h-4 ml-2" />إجراء القرعة</>
-              ) : 'التالي'}
+              {aiLoading ? <><Loader2 className="w-4 h-4 ml-2 animate-spin" />جاري القرعة...</>
+                : step === 2 ? <><Sparkles className="w-4 h-4 ml-2" />إجراء القرعة</>
+                : 'التالي'}
             </Button>
           ) : (
             <Button onClick={handleCreate} disabled={loading}>
-              {loading ? (
-                <><Loader2 className="w-4 h-4 ml-2 animate-spin" />جاري الإنشاء...</>
-              ) : (
-                <><Trophy className="w-4 h-4 ml-2" />إنشاء البطولة</>
-              )}
+              {loading ? <><Loader2 className="w-4 h-4 ml-2 animate-spin" />جاري الإنشاء...</>
+                : <><Trophy className="w-4 h-4 ml-2" />إنشاء البطولة</>}
             </Button>
           )}
         </div>
