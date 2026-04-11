@@ -13,7 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  ArrowRight, Trophy, Users, Calendar, GitBranch, TableIcon, Trash2, Plus, Play, Loader2, X, UserPlus, SkipForward, Edit,
+  ArrowRight, Trophy, Users, Calendar, GitBranch, TableIcon, Trash2, Plus, Play, Loader2, X, UserPlus, SkipForward, Edit, Star,
 } from 'lucide-react';
 import { useTournamentDetails, type MatchWithTeams } from '@/hooks/useTournamentDetails';
 import { useTournaments } from '@/hooks/useTournaments';
