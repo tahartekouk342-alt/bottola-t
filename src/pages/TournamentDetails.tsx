@@ -13,7 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  ArrowRight, Trophy, Users, Calendar, GitBranch, TableIcon, Trash2, Plus, Play, Loader2, X, UserPlus, SkipForward, Edit,
+  ArrowRight, Trophy, Users, Calendar, GitBranch, TableIcon, Trash2, Plus, Play, Loader2, X, UserPlus, SkipForward, Edit, Star,
 } from 'lucide-react';
 import { useTournamentDetails, type MatchWithTeams } from '@/hooks/useTournamentDetails';
 import { useTournaments } from '@/hooks/useTournaments';
@@ -74,8 +74,8 @@ export default function TournamentDetails() {
     }
   };
 
-  const handleUpdateMatch = async (matchId: string, homeScore: number, awayScore: number) => {
-    const result = await updateMatchResult(matchId, homeScore, awayScore);
+  const handleUpdateMatch = async (matchId: string, homeScore: number, awayScore: number, manOfMatch?: string) => {
+    const result = await updateMatchResult(matchId, homeScore, awayScore, manOfMatch);
     if (result) fetchTournamentDetails();
     return result;
   };
@@ -294,20 +294,31 @@ export default function TournamentDetails() {
 
       <div className="p-4 lg:p-6 max-w-7xl mx-auto">
         {/* Winner Banner */}
-        {winner && (
-          <div className="mb-6 relative overflow-hidden rounded-2xl border-2 border-yellow-400/30 animate-fade-in">
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 via-primary/10 to-yellow-400/10" />
-            <div className="relative p-6 text-center">
-              {winner.logo_url ? (
-                <img src={winner.logo_url} alt={winner.name} className="w-16 h-16 rounded-full mx-auto mb-3 object-cover border-4 border-yellow-400/50 shadow-xl" />
-              ) : (
-                <Trophy className="w-14 h-14 mx-auto mb-3 text-yellow-500 drop-shadow-lg" />
-              )}
-              <h2 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">🏆 البطل 🏆</h2>
-              <p className="text-2xl font-display font-black">{winner.name}</p>
+        {winner && (() => {
+          const finalMatch = knockoutMatches.find(m => m.round === currentMaxRound && m.status === 'completed');
+          const manOfMatch = (finalMatch as any)?.man_of_match_name;
+          return (
+            <div className="mb-6 relative overflow-hidden rounded-2xl border-2 border-yellow-400/30 animate-fade-in">
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 via-primary/10 to-yellow-400/10" />
+              <div className="relative p-6 text-center">
+                {winner.logo_url ? (
+                  <img src={winner.logo_url} alt={winner.name} className="w-16 h-16 rounded-full mx-auto mb-3 object-cover border-4 border-yellow-400/50 shadow-xl" />
+                ) : (
+                  <Trophy className="w-14 h-14 mx-auto mb-3 text-yellow-500 drop-shadow-lg" />
+                )}
+                <h2 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">🏆 البطل 🏆</h2>
+                <p className="text-2xl font-display font-black">{winner.name}</p>
+                {manOfMatch && (
+                  <div className="mt-3 pt-3 border-t border-yellow-400/20 inline-flex items-center gap-2 text-sm">
+                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    <span className="text-muted-foreground">رجل المباراة النهائية:</span>
+                    <span className="font-bold">{manOfMatch}</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Add Teams */}
         {canAddTeams && (
@@ -533,7 +544,7 @@ export default function TournamentDetails() {
         )}
       </div>
 
-      <UpdateMatchDialog match={selectedMatch} open={matchDialogOpen} onOpenChange={setMatchDialogOpen} onUpdate={handleUpdateMatch} />
+      <UpdateMatchDialog match={selectedMatch} open={matchDialogOpen} onOpenChange={setMatchDialogOpen} onUpdate={handleUpdateMatch} tournamentType={tournament?.type} />
       
       {editTeam && (
         <EditTeamDialog

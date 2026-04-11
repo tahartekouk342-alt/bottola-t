@@ -15,7 +15,7 @@ import { useTheme } from '@/components/theme/ThemeProvider';
 import { supabase } from '@/integrations/supabase/client';
 
 export function ViewerAppSidebar() {
-  const { state } = useSidebar();
+  const { state, toggleSidebar, isMobile } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
   const navigate = useNavigate();
@@ -28,6 +28,10 @@ export function ViewerAppSidebar() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/');
+  };
+
+  const handleNavClick = () => {
+    if (isMobile) toggleSidebar();
   };
 
   const publicItems = [
@@ -62,12 +66,9 @@ export function ViewerAppSidebar() {
                 </div>
               </div>
             ) : (
-              <Button
-                onClick={() => navigate('/auth?role=viewer')}
-                className="w-full gradient-primary text-primary-foreground rounded-xl gap-2"
-              >
-                <LogIn className="w-4 h-4" />
-                ابدأ الآن
+              <Button onClick={() => { navigate('/auth?role=viewer'); handleNavClick(); }}
+                className="w-full gradient-primary text-primary-foreground rounded-xl gap-2">
+                <LogIn className="w-4 h-4" /> ابدأ الآن
               </Button>
             )}
           </div>
@@ -75,7 +76,7 @@ export function ViewerAppSidebar() {
 
         {collapsed && !user && (
           <div className="p-2">
-            <Button size="icon" onClick={() => navigate('/auth?role=viewer')} className="w-full gradient-primary text-primary-foreground">
+            <Button size="icon" onClick={() => { navigate('/auth?role=viewer'); handleNavClick(); }} className="w-full gradient-primary text-primary-foreground">
               <LogIn className="w-4 h-4" />
             </Button>
           </div>
@@ -87,7 +88,7 @@ export function ViewerAppSidebar() {
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} onClick={handleNavClick}>
                     <NavLink to={item.url} end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
                       <item.icon className="ml-2 h-5 w-5" />
                       {!collapsed && <span className="flex-1">{item.title}</span>}
@@ -108,7 +109,7 @@ export function ViewerAppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
+            <SidebarMenuButton onClick={() => { setTheme(resolvedTheme === 'dark' ? 'light' : 'dark'); handleNavClick(); }}>
               {resolvedTheme === 'dark' ? <Sun className="ml-2 h-5 w-5" /> : <Moon className="ml-2 h-5 w-5" />}
               {!collapsed && <span>{resolvedTheme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}</span>}
             </SidebarMenuButton>
@@ -117,7 +118,7 @@ export function ViewerAppSidebar() {
             <>
               <Separator />
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleSignOut} className="text-destructive hover:text-destructive">
+                <SidebarMenuButton onClick={() => { handleSignOut(); handleNavClick(); }} className="text-destructive hover:text-destructive">
                   <LogOut className="ml-2 h-5 w-5" />
                   {!collapsed && <span>تسجيل الخروج</span>}
                 </SidebarMenuButton>

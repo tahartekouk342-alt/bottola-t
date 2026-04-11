@@ -23,7 +23,7 @@ const navItems = [
 ];
 
 export function OrganizerAppSidebar() {
-  const { state } = useSidebar();
+  const { state, toggleSidebar, isMobile } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
   const navigate = useNavigate();
@@ -36,6 +36,10 @@ export function OrganizerAppSidebar() {
   const handleSignOut = async () => {
     await signOut();
     navigate(`${ORGANIZER_BASE}`);
+  };
+
+  const handleNavClick = () => {
+    if (isMobile) toggleSidebar();
   };
 
   return (
@@ -64,7 +68,7 @@ export function OrganizerAppSidebar() {
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} onClick={handleNavClick}>
                     <NavLink to={`${ORGANIZER_BASE}/${item.url}`} end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
                       <item.icon className="ml-2 h-5 w-5" />
                       {!collapsed && <span className="flex-1">{item.title}</span>}
@@ -85,14 +89,14 @@ export function OrganizerAppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
+            <SidebarMenuButton onClick={() => { setTheme(resolvedTheme === 'dark' ? 'light' : 'dark'); handleNavClick(); }}>
               {resolvedTheme === 'dark' ? <Sun className="ml-2 h-5 w-5" /> : <Moon className="ml-2 h-5 w-5" />}
               {!collapsed && <span>{resolvedTheme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
           <Separator />
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleSignOut} className="text-destructive hover:text-destructive">
+            <SidebarMenuButton onClick={() => { handleSignOut(); handleNavClick(); }} className="text-destructive hover:text-destructive">
               <LogOut className="ml-2 h-5 w-5" />
               {!collapsed && <span>تسجيل الخروج</span>}
             </SidebarMenuButton>
