@@ -74,8 +74,8 @@ export default function TournamentDetails() {
     }
   };
 
-  const handleUpdateMatch = async (matchId: string, homeScore: number, awayScore: number) => {
-    const result = await updateMatchResult(matchId, homeScore, awayScore);
+  const handleUpdateMatch = async (matchId: string, homeScore: number, awayScore: number, manOfMatch?: string) => {
+    const result = await updateMatchResult(matchId, homeScore, awayScore, manOfMatch);
     if (result) fetchTournamentDetails();
     return result;
   };
@@ -533,7 +533,7 @@ export default function TournamentDetails() {
         )}
       </div>
 
-      <UpdateMatchDialog match={selectedMatch} open={matchDialogOpen} onOpenChange={setMatchDialogOpen} onUpdate={handleUpdateMatch} />
+      <UpdateMatchDialog match={selectedMatch} open={matchDialogOpen} onOpenChange={setMatchDialogOpen} onUpdate={handleUpdateMatch} tournamentType={tournament?.type} />
       
       {editTeam && (
         <EditTeamDialog
