@@ -70,6 +70,7 @@ export type Database = {
           home_score: number | null
           home_team_id: string | null
           id: string
+          man_of_match_name: string | null
           match_date: string | null
           match_order: number
           match_time: string | null
@@ -88,6 +89,7 @@ export type Database = {
           home_score?: number | null
           home_team_id?: string | null
           id?: string
+          man_of_match_name?: string | null
           match_date?: string | null
           match_order?: number
           match_time?: string | null
@@ -106,6 +108,7 @@ export type Database = {
           home_score?: number | null
           home_team_id?: string | null
           id?: string
+          man_of_match_name?: string | null
           match_date?: string | null
           match_order?: number
           match_time?: string | null
@@ -202,6 +205,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_captain: boolean
           name: string
           number: number
           photo_url: string | null
@@ -211,6 +215,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_captain?: boolean
           name: string
           number?: number
           photo_url?: string | null
@@ -220,6 +225,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_captain?: boolean
           name?: string
           number?: number
           photo_url?: string | null
