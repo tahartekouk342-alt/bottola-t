@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { Calendar, Clock, MapPin } from 'lucide-react';
+import { Calendar, Clock, MapPin, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { MatchWithTeams } from '@/hooks/useTournamentDetails';
 
@@ -164,6 +164,16 @@ function MatchCardInline({ match, onClick, showDate, venueName, stadiumImageUrl 
           <div className="mt-3 pt-2 border-t border-dashed border-border flex justify-center">
             <span className="flex items-center gap-1.5 text-muted-foreground text-[10px] font-bold">
               <Clock className="w-3 h-3" />{match.match_time}
+            </span>
+          </div>
+        )}
+
+        {/* Man of the Match */}
+        {isCompleted && (match as any).man_of_match_name && (
+          <div className="mt-3 pt-2 border-t border-dashed border-border flex justify-center">
+            <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-400 text-[11px] font-bold">
+              <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
+              رجل المباراة: {(match as any).man_of_match_name}
             </span>
           </div>
         )}
