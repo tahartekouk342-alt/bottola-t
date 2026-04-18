@@ -26,6 +26,7 @@ import OrganizerTournamentsList from "./pages/OrganizerTournamentsList";
 import OrganizerFollowers from "./pages/OrganizerFollowers";
 import OrganizerSettings from "./pages/OrganizerSettings";
 import TournamentDetails from "./pages/TournamentDetails";
+import News from "./pages/News";
 import { OrganizerLayout } from "./components/organizer/OrganizerLayout";
 
 import NotFound from "./pages/NotFound";
@@ -61,6 +62,7 @@ const App = () => (
             <Route path={`${ORGANIZER_BASE}/followers`} element={<OrganizerLayout><OrganizerFollowers /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/settings`} element={<OrganizerLayout><OrganizerSettings /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/tournament/:id`} element={<OrganizerLayout><TournamentDetails /></OrganizerLayout>} />
+            <Route path={`${ORGANIZER_BASE}/news`} element={<OrganizerLayout><News /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/notifications`} element={<OrganizerLayout><Notifications /></OrganizerLayout>} />
 
             <Route path="*" element={<NotFound />} />

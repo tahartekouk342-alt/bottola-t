@@ -279,6 +279,39 @@ export default function OrganizerSettings() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Language */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Languages className="w-5 h-5" />{t('settings.language')}</CardTitle>
+            <CardDescription>{t('settings.languageDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-3">
+            <Button variant={i18n.language === 'ar' ? 'default' : 'outline'} onClick={() => setLanguage('ar')} className={i18n.language === 'ar' ? 'gradient-primary text-primary-foreground' : ''}>
+              🇸🇦 العربية
+            </Button>
+            <Button variant={i18n.language === 'fr' ? 'default' : 'outline'} onClick={() => setLanguage('fr')} className={i18n.language === 'fr' ? 'gradient-primary text-primary-foreground' : ''}>
+              🇫🇷 Français
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Appearance */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {resolvedTheme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              {t('settings.appearance')}
+            </CardTitle>
+            <CardDescription>{t('settings.appearanceDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')} className="w-full">
+              {resolvedTheme === 'dark' ? <Sun className="w-5 h-5 me-2" /> : <Moon className="w-5 h-5 me-2" />}
+              {resolvedTheme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
