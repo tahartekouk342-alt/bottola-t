@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { BracketView } from '@/components/tournament/BracketView';
 import { MatchesList } from '@/components/tournament/MatchesList';
 import { UpdateMatchDialog } from '@/components/tournament/UpdateMatchDialog';
@@ -24,28 +25,27 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-const statusMap = {
-  draft: { label: 'مسودة', variant: 'secondary' as const },
-  upcoming: { label: 'قريباً', variant: 'default' as const },
-  live: { label: 'جارية', variant: 'destructive' as const },
-  completed: { label: 'منتهية', variant: 'outline' as const },
-};
-
-const typeMap: Record<string, string> = {
-  knockout: 'إقصاء مباشر',
-  league: 'دوري',
-  groups: 'مجموعات + إقصاء',
-};
-
-const tabs = [
-  { id: 'matches', label: 'المباريات', icon: Calendar },
-  { id: 'bracket', label: 'شجرة الإقصاء', icon: GitBranch },
-  { id: 'teams', label: 'الفرق', icon: Users },
-  { id: 'standings', label: 'الترتيب', icon: TableIcon },
-  { id: 'requests', label: 'طلبات الانضمام', icon: UserPlus },
-];
-
 export default function TournamentDetails() {
+  const { t } = useTranslation();
+  const statusMap: Record<string, { label: string; variant: any }> = {
+    draft: { label: t('tournament.draft'), variant: 'secondary' },
+    upcoming: { label: t('tournament.upcoming'), variant: 'default' },
+    live: { label: t('tournament.live').replace('🔴 ', ''), variant: 'destructive' },
+    completed: { label: t('tournament.completed'), variant: 'outline' },
+  };
+  const typeMap: Record<string, string> = {
+    knockout: t('tournament.knockout'),
+    league: t('tournament.league'),
+    groups: t('tournament.groupsKnockout'),
+  };
+  const tabs = [
+    { id: 'matches', label: t('tournament.tabMatches'), icon: Calendar },
+    { id: 'bracket', label: t('tournament.tabBracket'), icon: GitBranch },
+    { id: 'teams', label: t('tournament.tabTeams'), icon: Users },
+    { id: 'standings', label: t('tournament.tabStandings'), icon: TableIcon },
+    { id: 'requests', label: t('tournament.tabRequests'), icon: UserPlus },
+  ];
+
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -82,7 +82,7 @@ export default function TournamentDetails() {
 
   const handleDelete = async () => {
     if (!id) return;
-    if (confirm('هل أنت متأكد من حذف هذه البطولة؟')) {
+    if (confirm(t('tournament.deleteConfirm'))) {
       const success = await deleteTournament(id);
       if (success) navigate(`${ORGANIZER_BASE}/dashboard`);
     }
@@ -98,11 +98,11 @@ export default function TournamentDetails() {
       } else {
         // Knockout and league: just set status to live
         await supabase.from('tournaments').update({ status: 'live' }).eq('id', id);
-        toast({ title: 'تم بدء البطولة 🔴' });
+        toast({ title: t('tournament.started') });
         fetchTournamentDetails();
       }
     } catch {
-      toast({ title: 'خطأ', variant: 'destructive' });
+      toast({ title: t('common.error'), variant: 'destructive' });
     }
   };
 
