@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { BracketView } from '@/components/tournament/BracketView';
 import { MatchesList } from '@/components/tournament/MatchesList';
 import { UpdateMatchDialog } from '@/components/tournament/UpdateMatchDialog';
@@ -24,28 +25,27 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-const statusMap = {
-  draft: { label: 'مسودة', variant: 'secondary' as const },
-  upcoming: { label: 'قريباً', variant: 'default' as const },
-  live: { label: 'جارية', variant: 'destructive' as const },
-  completed: { label: 'منتهية', variant: 'outline' as const },
-};
-
-const typeMap: Record<string, string> = {
-  knockout: 'إقصاء مباشر',
-  league: 'دوري',
-  groups: 'مجموعات + إقصاء',
-};
-
-const tabs = [
-  { id: 'matches', label: 'المباريات', icon: Calendar },
-  { id: 'bracket', label: 'شجرة الإقصاء', icon: GitBranch },
-  { id: 'teams', label: 'الفرق', icon: Users },
-  { id: 'standings', label: 'الترتيب', icon: TableIcon },
-  { id: 'requests', label: 'طلبات الانضمام', icon: UserPlus },
-];
-
 export default function TournamentDetails() {
+  const { t } = useTranslation();
+  const statusMap: Record<string, { label: string; variant: any }> = {
+    draft: { label: t('tournament.draft'), variant: 'secondary' },
+    upcoming: { label: t('tournament.upcoming'), variant: 'default' },
+    live: { label: t('tournament.live').replace('🔴 ', ''), variant: 'destructive' },
+    completed: { label: t('tournament.completed'), variant: 'outline' },
+  };
+  const typeMap: Record<string, string> = {
+    knockout: t('tournament.knockout'),
+    league: t('tournament.league'),
+    groups: t('tournament.groupsKnockout'),
+  };
+  const tabs = [
+    { id: 'matches', label: t('tournament.tabMatches'), icon: Calendar },
+    { id: 'bracket', label: t('tournament.tabBracket'), icon: GitBranch },
+    { id: 'teams', label: t('tournament.tabTeams'), icon: Users },
+    { id: 'standings', label: t('tournament.tabStandings'), icon: TableIcon },
+    { id: 'requests', label: t('tournament.tabRequests'), icon: UserPlus },
+  ];
+
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -82,7 +82,7 @@ export default function TournamentDetails() {
 
   const handleDelete = async () => {
     if (!id) return;
-    if (confirm('هل أنت متأكد من حذف هذه البطولة؟')) {
+    if (confirm(t('tournament.deleteConfirm'))) {
       const success = await deleteTournament(id);
       if (success) navigate(`${ORGANIZER_BASE}/dashboard`);
     }
@@ -98,11 +98,11 @@ export default function TournamentDetails() {
       } else {
         // Knockout and league: just set status to live
         await supabase.from('tournaments').update({ status: 'live' }).eq('id', id);
-        toast({ title: 'تم بدء البطولة 🔴' });
+        toast({ title: t('tournament.started') });
         fetchTournamentDetails();
       }
     } catch {
-      toast({ title: 'خطأ', variant: 'destructive' });
+      toast({ title: t('common.error'), variant: 'destructive' });
     }
   };
 
@@ -142,12 +142,12 @@ export default function TournamentDetails() {
           }
         }
       }
-      toast({ title: 'تم إضافة الفرق ✅' });
+      toast({ title: t('common.success') + ' ✅' });
       setTeamsList([]);
       setShowAddTeams(false);
       fetchTournamentDetails();
     } catch {
-      toast({ title: 'خطأ في إضافة الفرق', variant: 'destructive' });
+      toast({ title: t('common.error'), variant: 'destructive' });
     } finally {
       setAddingTeams(false);
     }
@@ -190,10 +190,10 @@ export default function TournamentDetails() {
 
   if (!tournament) {
     return (
-      <div className="p-8 text-center" dir="rtl">
-        <h1 className="text-2xl font-bold mb-4">البطولة غير موجودة</h1>
+      <div className="p-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">{t('tournament.tournamentNotFound')}</h1>
         <Button onClick={() => navigate(`${ORGANIZER_BASE}/dashboard`)}>
-          <ArrowRight className="w-4 h-4 ml-2" />العودة للبطولات
+          <ArrowRight className="w-4 h-4 ml-2" />{t('tournament.backToTournaments')}
         </Button>
       </div>
     );
@@ -231,7 +231,7 @@ export default function TournamentDetails() {
 
           <Button variant="ghost" size="sm" onClick={() => navigate(`${ORGANIZER_BASE}/dashboard`)}
             className="absolute top-3 right-3 z-20 bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm rounded-xl">
-            <ArrowRight className="w-4 h-4 ml-1" />رجوع
+            <ArrowRight className="w-4 h-4 ml-1" />{t('common.back')}
           </Button>
 
           <div className="absolute bottom-3 right-3 left-3 z-10 flex items-end justify-between">
@@ -249,24 +249,24 @@ export default function TournamentDetails() {
                   <Badge variant={statusMap[tournament.status]?.variant || 'secondary'} className="text-xs">
                     {statusMap[tournament.status]?.label}
                   </Badge>
-                  <span className="text-xs text-white/80 drop-shadow">{sportEmoji} {teams.length} فريق · {matches.length} مباراة · {typeMap[tournament.type]}</span>
+                  <span className="text-xs text-white/80 drop-shadow">{sportEmoji} {teams.length} {t('tournament.teams')} · {matches.length} {t('tournament.matches')} · {typeMap[tournament.type]}</span>
                 </div>
               </div>
             </div>
             <div className="flex gap-1.5 shrink-0">
               {canGenerateNextRound && (
                 <Button onClick={handleNextRound} size="sm" className="bg-white/20 text-white border-white/30 hover:bg-white/30 backdrop-blur-sm text-xs">
-                  <SkipForward className="w-3.5 h-3.5 ml-1" />التالية
+                  <SkipForward className="w-3.5 h-3.5 ml-1" />{t('tournament.nextRound')}
                 </Button>
               )}
               {canStartKnockout && (
                 <Button onClick={handleStartTournament} className="gradient-primary text-primary-foreground text-xs" size="sm">
-                  <Play className="w-3.5 h-3.5 ml-1" />بدء الإقصاء
+                  <Play className="w-3.5 h-3.5 ml-1" />{t('tournament.startKnockout')}
                 </Button>
               )}
               {canStart && (
                 <Button onClick={handleStartTournament} className="gradient-primary text-primary-foreground text-xs" size="sm">
-                  <Play className="w-3.5 h-3.5 ml-1" />بدء
+                  <Play className="w-3.5 h-3.5 ml-1" />{t('tournament.start')}
                 </Button>
               )}
               <Button variant="destructive" onClick={handleDelete} size="sm"><Trash2 className="w-3.5 h-3.5" /></Button>
@@ -306,12 +306,12 @@ export default function TournamentDetails() {
                 ) : (
                   <Trophy className="w-14 h-14 mx-auto mb-3 text-yellow-500 drop-shadow-lg" />
                 )}
-                <h2 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">🏆 البطل 🏆</h2>
+                <h2 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">🏆 {t('tournament.champion')} 🏆</h2>
                 <p className="text-2xl font-display font-black">{winner.name}</p>
                 {manOfMatch && (
                   <div className="mt-3 pt-3 border-t border-yellow-400/20 inline-flex items-center gap-2 text-sm">
                     <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                    <span className="text-muted-foreground">رجل المباراة النهائية:</span>
+                    <span className="text-muted-foreground">{t('tournament.manOfMatchFinal')}:</span>
                     <span className="font-bold">{manOfMatch}</span>
                   </div>
                 )}
@@ -330,17 +330,17 @@ export default function TournamentDetails() {
                   <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
                     <Users className="w-10 h-10 text-primary" />
                   </div>
-                  <h3 className="text-lg font-bold mb-2">لا توجد فرق بعد</h3>
-                  <p className="text-muted-foreground mb-4">أضف الفرق المشاركة لبدء البطولة</p>
+                  <h3 className="text-lg font-bold mb-2">{t('tournament.noTeamsYet')}</h3>
+                  <p className="text-muted-foreground mb-4">{t('tournament.addTeamsHint')}</p>
                   <Button onClick={() => setShowAddTeams(true)} className="gradient-primary text-primary-foreground">
-                    <Plus className="w-4 h-4 ml-2" />إضافة فرق
+                    <Plus className="w-4 h-4 ml-2" />{t('tournament.addTeams')}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-bold">إضافة الفرق</h3>
+                  <h3 className="text-lg font-bold">{t('tournament.addTeams')}</h3>
                   <div className="flex gap-2">
-                    <Input placeholder="اسم الفريق" value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTeam()} className="flex-1" />
+                    <Input placeholder={t('tournament.teamName')} value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTeam()} className="flex-1" />
                     <Button onClick={handleAddTeam} variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
                   </div>
                   {teamsList.length > 0 && (

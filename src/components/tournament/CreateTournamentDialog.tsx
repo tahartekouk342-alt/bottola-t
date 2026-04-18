@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -24,21 +25,22 @@ interface CreateTournamentDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const tournamentTypes = [
-  { value: 'knockout' as TournamentType, label: 'إقصاء مباشر', icon: Swords, desc: 'من يخسر يخرج مباشرة', bg: 'from-red-500/20 to-orange-500/20', available: true },
-  { value: 'league' as TournamentType, label: 'دوري', icon: Trophy, desc: 'كل فريق يلعب ضد الجميع', bg: 'from-blue-500/20 to-cyan-500/20', available: false },
-  { value: 'groups' as TournamentType, label: 'مجموعات + إقصاء', icon: Layers, desc: 'مجموعات ثم مرحلة إقصاء', bg: 'from-purple-500/20 to-pink-500/20', available: false },
-];
-
-const sportTypes = [
-  { value: 'football', label: 'كرة القدم', icon: '⚽' },
-  { value: 'basketball', label: 'كرة السلة', icon: '🏀' },
-];
-
 export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentDialogProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { createTournament, addTeams, performAIDraw, generateKnockoutMatches } = useTournaments();
   const { toast } = useToast();
+
+  const tournamentTypes = [
+    { value: 'knockout' as TournamentType, label: t('tournament.knockout'), icon: Swords, desc: t('tournament.knockoutDesc'), bg: 'from-red-500/20 to-orange-500/20', available: true },
+    { value: 'league' as TournamentType, label: t('tournament.league'), icon: Trophy, desc: t('tournament.leagueDesc'), bg: 'from-blue-500/20 to-cyan-500/20', available: false },
+    { value: 'groups' as TournamentType, label: t('tournament.groupsKnockout'), icon: Layers, desc: t('tournament.groupsKnockoutDesc'), bg: 'from-purple-500/20 to-pink-500/20', available: false },
+  ];
+
+  const sportTypes = [
+    { value: 'football', label: t('tournament.football'), icon: '⚽' },
+    { value: 'basketball', label: t('tournament.basketball'), icon: '🏀' },
+  ];
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -171,7 +173,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
     }
   };
 
-  const stepLabels = ['معلومات البطولة', 'الفرق المشاركة', 'نتيجة القرعة'];
+  const stepLabels = [t('tournament.stepInfo'), t('tournament.stepTeams'), t('tournament.stepDraw')];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -179,7 +181,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Trophy className="w-6 h-6 text-primary" />
-            إنشاء بطولة جديدة
+            {t('tournament.createNew')}
           </DialogTitle>
           <DialogDescription>{stepLabels[step - 1]}</DialogDescription>
         </DialogHeader>
@@ -203,22 +205,22 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
             <div className="flex flex-col items-center gap-3">
               <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden">
                 {logoPreview ? (
-                  <img src={logoPreview} alt="شعار" className="w-full h-full object-cover" />
+                  <img src={logoPreview} alt="logo" className="w-full h-full object-cover" />
                 ) : (
-                  <><Camera className="w-6 h-6 text-muted-foreground mb-1" /><span className="text-xs text-muted-foreground">شعار البطولة</span></>
+                  <><Camera className="w-6 h-6 text-muted-foreground mb-1" /><span className="text-xs text-muted-foreground">{t('tournament.logo')}</span></>
                 )}
                 <input type="file" accept="image/*" onChange={handleLogoSelect} className="sr-only" />
               </label>
             </div>
 
             <div className="space-y-2">
-              <Label>اسم البطولة</Label>
-              <Input placeholder="مثال: بطولة الأبطال 2025" value={name} onChange={(e) => setName(e.target.value)} />
+              <Label>{t('tournament.name')}</Label>
+              <Input placeholder={t('tournament.namePlaceholder')} value={name} onChange={(e) => setName(e.target.value)} />
             </div>
 
             {/* Sport Type */}
             <div className="space-y-2">
-              <Label>نوع الرياضة</Label>
+              <Label>{t('tournament.sportLabel')}</Label>
               <div className="grid grid-cols-2 gap-3">
                 {sportTypes.map((s) => (
                   <Card key={s.value} className={cn('cursor-pointer transition-all hover:scale-[1.02]',
@@ -235,24 +237,24 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
 
             {/* Tournament Type */}
             <div className="space-y-2">
-              <Label>نظام البطولة</Label>
+              <Label>{t('tournament.typeLabel')}</Label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {tournamentTypes.map((t) => (
-                  <Card key={t.value}
+                {tournamentTypes.map((tt) => (
+                  <Card key={tt.value}
                     className={cn('transition-all relative',
-                      t.available ? 'cursor-pointer hover:scale-[1.02]' : 'opacity-60 cursor-not-allowed',
-                      type === t.value && t.available ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'
+                      tt.available ? 'cursor-pointer hover:scale-[1.02]' : 'opacity-60 cursor-not-allowed',
+                      type === tt.value && tt.available ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'
                     )}
-                    onClick={() => { if (t.available) setType(t.value); }}>
-                    <CardContent className={cn('p-4 bg-gradient-to-br rounded-lg', t.bg)}>
-                      {!t.available && (
+                    onClick={() => { if (tt.available) setType(tt.value); }}>
+                    <CardContent className={cn('p-4 bg-gradient-to-br rounded-lg', tt.bg)}>
+                      {!tt.available && (
                         <Badge className="absolute top-2 left-2 bg-yellow-500/90 text-white border-0 text-[10px] gap-1">
-                          <Clock className="w-3 h-3" /> قريباً
+                          <Clock className="w-3 h-3" /> {t('common.comingSoon')}
                         </Badge>
                       )}
-                      <t.icon className={cn('w-8 h-8 mb-2', type === t.value && t.available ? 'text-primary' : 'text-muted-foreground')} />
-                      <h4 className="font-bold text-sm">{t.label}</h4>
-                      <p className="text-xs text-muted-foreground mt-1">{t.desc}</p>
+                      <tt.icon className={cn('w-8 h-8 mb-2', type === tt.value && tt.available ? 'text-primary' : 'text-muted-foreground')} />
+                      <h4 className="font-bold text-sm">{tt.label}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">{tt.desc}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -260,7 +262,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
             </div>
 
             <div className="space-y-2">
-              <Label>تاريخ البداية</Label>
+              <Label>{t('tournament.startDate')}</Label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             </div>
 
@@ -268,47 +270,47 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
             <Card>
               <CardContent className="p-4 space-y-4">
                 <h3 className="font-semibold flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-primary" />تفاصيل الملعب
+                  <MapPin className="w-5 h-5 text-primary" />{t('tournament.venueDetails')}
                 </h3>
                 <label className="w-full h-32 rounded-2xl border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden">
                   {stadiumImagePreview ? (
-                    <img src={stadiumImagePreview} alt="ملعب" className="w-full h-full object-cover" />
+                    <img src={stadiumImagePreview} alt="stadium" className="w-full h-full object-cover" />
                   ) : (
-                    <><Image className="w-8 h-8 text-muted-foreground mb-2" /><span className="text-xs text-muted-foreground">صورة الملعب</span></>
+                    <><Image className="w-8 h-8 text-muted-foreground mb-2" /><span className="text-xs text-muted-foreground">{t('tournament.venueImage')}</span></>
                   )}
                   <input type="file" accept="image/*" onChange={handleStadiumImageSelect} className="sr-only" />
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">اسم الملعب</Label>
-                    <Input placeholder="ملعب المدينة" value={venueName} onChange={(e) => setVenueName(e.target.value)} />
+                    <Label className="text-xs">{t('tournament.venueName')}</Label>
+                    <Input placeholder={t('tournament.venuePlaceholder')} value={venueName} onChange={(e) => setVenueName(e.target.value)} />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">العنوان</Label>
-                    <Input placeholder="المدينة، الحي" value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)} />
+                    <Label className="text-xs">{t('tournament.venueAddress')}</Label>
+                    <Input placeholder={t('tournament.addressPlaceholder')} value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)} />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <div className="space-y-2">
-              <Label className="flex items-center gap-2"><Gavel className="w-4 h-4 text-primary" /> اسم الحكم (اختياري)</Label>
-              <Input placeholder="اسم الحكم" value={refereeName} onChange={(e) => setRefereeName(e.target.value)} />
+              <Label className="flex items-center gap-2"><Gavel className="w-4 h-4 text-primary" /> {t('tournament.refereeOptional')}</Label>
+              <Input placeholder={t('tournament.refereePlaceholder')} value={refereeName} onChange={(e) => setRefereeName(e.target.value)} />
             </div>
 
             <Card>
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-sm font-medium flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> استقبال طلبات الانضمام</Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">السماح للفرق بإرسال طلبات</p>
+                    <Label className="text-sm font-medium flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> {t('tournament.acceptJoinRequests')}</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t('tournament.acceptJoinRequestsDesc')}</p>
                   </div>
                   <Switch checked={acceptJoinRequests} onCheckedChange={setAcceptJoinRequests} />
                 </div>
                 {acceptJoinRequests && (
                   <div className="space-y-1">
-                    <Label className="text-xs">الحد الأقصى للفرق (اختياري)</Label>
-                    <Input type="number" min={2} placeholder="بلا حد" value={maxTeams} onChange={(e) => setMaxTeams(e.target.value ? parseInt(e.target.value) : '')} />
+                    <Label className="text-xs">{t('tournament.maxTeams')}</Label>
+                    <Input type="number" min={2} placeholder={t('tournament.maxTeamsPlaceholder')} value={maxTeams} onChange={(e) => setMaxTeams(e.target.value ? parseInt(e.target.value) : '')} />
                   </div>
                 )}
               </CardContent>
@@ -320,7 +322,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         {step === 2 && (
           <div className="space-y-4">
             <div className="flex gap-2">
-              <Input placeholder="اسم الفريق" value={newTeamName}
+              <Input placeholder={t('tournament.teamName')} value={newTeamName}
                 onChange={(e) => setNewTeamName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddTeam()}
                 className="flex-1" />
@@ -342,7 +344,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
               </div>
             )}
             <p className="text-sm text-muted-foreground text-center">
-              عدد الفرق: <span className="font-bold text-foreground">{teamsList.length}</span>
+              {t('tournament.teamsCount')}: <span className="font-bold text-foreground">{teamsList.length}</span>
             </p>
           </div>
         )}
@@ -354,7 +356,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="w-5 h-5 text-primary" />
-                  <span className="font-bold text-primary">نتيجة القرعة</span>
+                  <span className="font-bold text-primary">{t('tournament.drawResult')}</span>
                 </div>
                 {drawResult.draw && (
                   <div className="space-y-2">
@@ -364,7 +366,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                         acc.push(
                           <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-background/80 animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
                             <span className="font-medium">{team}</span>
-                            <span className="text-xs font-bold text-muted-foreground px-2 py-1 rounded bg-muted">VS</span>
+                            <span className="text-xs font-bold text-muted-foreground px-2 py-1 rounded bg-muted">{t('common.vs')}</span>
                             <span className="font-medium">{opponent || 'BYE'}</span>
                           </div>
                         );
@@ -380,18 +382,18 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
 
         {/* Actions */}
         <div className="flex gap-2 mt-4">
-          {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}>السابق</Button>}
+          {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}>{t('common.back')}</Button>}
           <div className="flex-1" />
           {step < 3 ? (
             <Button onClick={handleNext} disabled={aiLoading}>
-              {aiLoading ? <><Loader2 className="w-4 h-4 ml-2 animate-spin" />جاري القرعة...</>
-                : step === 2 ? <><Sparkles className="w-4 h-4 ml-2" />إجراء القرعة</>
-                : 'التالي'}
+              {aiLoading ? <><Loader2 className="w-4 h-4 ml-2 animate-spin" />{t('common.loading')}</>
+                : step === 2 ? <><Sparkles className="w-4 h-4 ml-2" />{t('tournament.drawResult')}</>
+                : t('common.next')}
             </Button>
           ) : (
             <Button onClick={handleCreate} disabled={loading}>
-              {loading ? <><Loader2 className="w-4 h-4 ml-2 animate-spin" />جاري الإنشاء...</>
-                : <><Trophy className="w-4 h-4 ml-2" />إنشاء البطولة</>}
+              {loading ? <><Loader2 className="w-4 h-4 ml-2 animate-spin" />{t('common.loading')}</>
+                : <><Trophy className="w-4 h-4 ml-2" />{t('tournament.createNew')}</>}
             </Button>
           )}
         </div>

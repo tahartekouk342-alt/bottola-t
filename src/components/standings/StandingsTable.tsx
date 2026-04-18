@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 import {
   Table,
   TableBody,
@@ -31,6 +32,7 @@ interface StandingsTableProps {
 }
 
 export function StandingsTable({ standings, highlightPositions }: StandingsTableProps) {
+  const { t } = useTranslation();
   const getPositionStyle = (position: number) => {
     if (highlightPositions?.promotion?.includes(position)) {
       return 'border-r-4 border-r-primary bg-primary/5';
@@ -47,7 +49,7 @@ export function StandingsTable({ standings, highlightPositions }: StandingsTable
       D: 'bg-muted text-muted-foreground border-muted',
       L: 'bg-destructive/10 text-destructive border-destructive/20',
     };
-    const labels = { W: 'ف', D: 'ت', L: 'خ' };
+    const labels = { W: t('standings.wonShort'), D: t('standings.drawnShort'), L: t('standings.lostShort') };
     
     return (
       <span className={cn(
@@ -64,14 +66,14 @@ export function StandingsTable({ standings, highlightPositions }: StandingsTable
       <TableHeader>
         <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
           <TableHead className="w-14 text-center font-bold">#</TableHead>
-          <TableHead className="font-bold">الفريق</TableHead>
-          <TableHead className="text-center w-12 font-bold">لعب</TableHead>
-          <TableHead className="text-center w-12 hidden sm:table-cell font-bold">ف</TableHead>
-          <TableHead className="text-center w-12 hidden sm:table-cell font-bold">ت</TableHead>
-          <TableHead className="text-center w-12 hidden sm:table-cell font-bold">خ</TableHead>
-          <TableHead className="text-center w-16 hidden md:table-cell font-bold">+/-</TableHead>
-          <TableHead className="text-center w-14 font-bold text-primary">نقاط</TableHead>
-          <TableHead className="text-center hidden lg:table-cell font-bold">آخر 5</TableHead>
+          <TableHead className="font-bold">{t('standings.team')}</TableHead>
+          <TableHead className="text-center w-12 font-bold">{t('standings.played')}</TableHead>
+          <TableHead className="text-center w-12 hidden sm:table-cell font-bold">{t('standings.won')}</TableHead>
+          <TableHead className="text-center w-12 hidden sm:table-cell font-bold">{t('standings.drawn')}</TableHead>
+          <TableHead className="text-center w-12 hidden sm:table-cell font-bold">{t('standings.lost')}</TableHead>
+          <TableHead className="text-center w-16 hidden md:table-cell font-bold">{t('standings.goalDiff')}</TableHead>
+          <TableHead className="text-center w-14 font-bold text-primary">{t('standings.points')}</TableHead>
+          <TableHead className="text-center hidden lg:table-cell font-bold">{t('standings.form')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

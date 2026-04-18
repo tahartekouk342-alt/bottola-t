@@ -96,19 +96,27 @@ export default function News() {
 
     const postIds = postsData.map(p => p.id);
     const [{ data: reactions }, { data: comments }, { data: shares }] = await Promise.all([
-      supabase.from('post_reactions').select('post_id, user_id').in('post_id', postIds),
+      supabase.from('post_reactions').select('post_id, user_id, reaction').in('post_id', postIds),
       supabase.from('post_comments').select('post_id').in('post_id', postIds),
       supabase.from('post_shares').select('post_id').in('post_id', postIds),
     ]);
 
-    const enriched: Post[] = postsData.map(p => ({
-      ...p,
-      author: profiles?.find(pr => pr.user_id === p.author_id),
-      likes_count: reactions?.filter(r => r.post_id === p.id).length || 0,
-      comments_count: comments?.filter(c => c.post_id === p.id).length || 0,
-      shares_count: shares?.filter(s => s.post_id === p.id).length || 0,
-      liked_by_me: !!reactions?.find(r => r.post_id === p.id && r.user_id === user.id),
-    }));
+    const enriched: Post[] = postsData.map(p => {
+      const postReactions = reactions?.filter(r => r.post_id === p.id) || [];
+      const myReaction = postReactions.find(r => r.user_id === user.id);
+      const counts: Record<string, number> = {};
+      for (const r of postReactions) counts[r.reaction] = (counts[r.reaction] || 0) + 1;
+      return {
+        ...p,
+        author: profiles?.find(pr => pr.user_id === p.author_id),
+        likes_count: postReactions.length,
+        comments_count: comments?.filter(c => c.post_id === p.id).length || 0,
+        shares_count: shares?.filter(s => s.post_id === p.id).length || 0,
+        liked_by_me: !!myReaction,
+        my_reaction: myReaction?.reaction || null,
+        reaction_counts: counts,
+      } as any;
+    });
 
     setPosts(enriched);
     setLoading(false);
@@ -155,14 +163,26 @@ export default function News() {
     }
   };
 
-  const toggleLike = async (post: Post) => {
+  const reactionTypes = [
+    { type: 'like', emoji: '👍', label: t('news.reactions.like') },
+    { type: 'love', emoji: '❤️', label: t('news.reactions.love') },
+    { type: 'haha', emoji: '😂', label: t('news.reactions.haha') },
+    { type: 'wow', emoji: '😮', label: t('news.reactions.wow') },
+    { type: 'sad', emoji: '😢', label: t('news.reactions.sad') },
+  ];
+
+  const setReaction = async (post: Post, reaction: string) => {
     if (!user) return;
-    if (post.liked_by_me) {
-      await supabase.from('post_reactions').delete().eq('post_id', post.id).eq('user_id', user.id);
-    } else {
-      await supabase.from('post_reactions').insert({ post_id: post.id, user_id: user.id });
+    // Remove any existing reaction first
+    await supabase.from('post_reactions').delete().eq('post_id', post.id).eq('user_id', user.id);
+    if (!post.liked_by_me || (post as any).my_reaction !== reaction) {
+      await supabase.from('post_reactions').insert({ post_id: post.id, user_id: user.id, reaction });
     }
     loadPosts();
+  };
+
+  const toggleLike = async (post: Post) => {
+    await setReaction(post, (post as any).my_reaction || 'like');
   };
 
   const toggleComments = async (postId: string) => {
