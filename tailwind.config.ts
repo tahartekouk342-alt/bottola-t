@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['Oswald', 'sans-serif'],
-        sans: ['Cairo', 'sans-serif'],
+        display: ['Inter', 'Tajawal', 'sans-serif'],
+        sans: ['Inter', 'Tajawal', 'sans-serif'],
+        arabic: ['Tajawal', 'Inter', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
