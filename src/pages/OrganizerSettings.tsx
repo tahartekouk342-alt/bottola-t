@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, User, Lock, Camera, Save, Loader2, ShieldOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { ArrowRight, User, Lock, Camera, Save, Loader2, ShieldOff, Languages, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,8 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/components/theme/ThemeProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { ORGANIZER_BASE } from '@/lib/constants';
+import { setLanguage } from '@/i18n';
 
 export default function OrganizerSettings() {
   const navigate = useNavigate();
