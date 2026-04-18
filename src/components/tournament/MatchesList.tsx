@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Calendar, Clock, MapPin, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
 import type { MatchWithTeams } from '@/hooks/useTournamentDetails';
 
 interface MatchesListProps {
@@ -13,15 +14,10 @@ interface MatchesListProps {
   stadiumImageUrl?: string;
 }
 
-const statusMap = {
-  scheduled: { label: 'مجدولة', variant: 'secondary' as const },
-  live: { label: '🔴 مباشر', variant: 'destructive' as const },
-  completed: { label: 'انتهت', variant: 'outline' as const },
-};
-
 export function MatchesList({ matches, onMatchClick, getRoundName, showDate = true, compact = false, venueName, stadiumImageUrl }: MatchesListProps) {
+  const { t, i18n } = useTranslation();
   if (matches.length === 0) {
-    return <div className="text-center py-8 text-muted-foreground">لا توجد مباريات</div>;
+    return <div className="text-center py-8 text-muted-foreground">{t('tournament.noMatches')}</div>;
   }
 
   const matchesByRound = matches.reduce((acc, match) => {
@@ -40,7 +36,7 @@ export function MatchesList({ matches, onMatchClick, getRoundName, showDate = tr
         .map(([round, roundMatches]) => (
           <div key={round}>
             <h3 className="font-bold text-lg mb-3 text-primary">
-              {getRoundName ? getRoundName(Number(round), totalRounds) : `الجولة ${round}`}
+              {getRoundName ? getRoundName(Number(round), totalRounds) : `${t('tournament.round')} ${round}`}
             </h3>
             <div className={cn('grid grid-cols-1 sm:grid-cols-2 gap-3', compact && 'gap-2')}>
               {roundMatches.map((match) => (
@@ -51,6 +47,7 @@ export function MatchesList({ matches, onMatchClick, getRoundName, showDate = tr
                   showDate={showDate}
                   venueName={venueName}
                   stadiumImageUrl={stadiumImageUrl}
+                  lang={i18n.language}
                 />
               ))}
             </div>
@@ -66,12 +63,15 @@ interface MatchCardInlineProps {
   showDate?: boolean;
   venueName?: string;
   stadiumImageUrl?: string;
+  lang?: string;
 }
 
-function MatchCardInline({ match, onClick, showDate, venueName, stadiumImageUrl }: MatchCardInlineProps) {
+function MatchCardInline({ match, onClick, showDate, venueName, stadiumImageUrl, lang = 'ar' }: MatchCardInlineProps) {
+  const { t } = useTranslation();
   const isCompleted = match.status === 'completed';
   const isLive = match.status === 'live';
   const imgSrc = stadiumImageUrl || '/images/sport-stadium.jpg';
+  const localeStr = lang === 'fr' ? 'fr-FR' : 'ar-SA';
 
   return (
     <div
@@ -101,18 +101,18 @@ function MatchCardInline({ match, onClick, showDate, venueName, stadiumImageUrl 
         {/* Status Row */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-[10px] font-black text-primary uppercase tracking-widest">
-            {match.group_name ? `المجموعة ${match.group_name}` : 'مباراة'}
+            {match.group_name ? `${t('tournament.groupLabel')} ${match.group_name}` : t('tournament.match')}
           </span>
           {isLive && (
             <div className="flex items-center gap-1.5 bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full text-[10px] font-bold animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-destructive-foreground" />مباشر
+              <span className="w-1.5 h-1.5 rounded-full bg-destructive-foreground" />{t('tournament.live').replace('🔴 ', '')}
             </div>
           )}
-          {isCompleted && <Badge variant="outline" className="text-[10px] font-bold border-muted text-muted-foreground">انتهت</Badge>}
+          {isCompleted && <Badge variant="outline" className="text-[10px] font-bold border-muted text-muted-foreground">{t('tournament.finished')}</Badge>}
           {!isLive && !isCompleted && showDate && match.match_date && (
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Calendar className="w-3 h-3" />
-              {new Date(match.match_date).toLocaleDateString('ar-SA')}
+              {new Date(match.match_date).toLocaleDateString(localeStr)}
             </span>
           )}
         </div>
@@ -141,7 +141,7 @@ function MatchCardInline({ match, onClick, showDate, venueName, stadiumImageUrl 
               </div>
             ) : (
               <div className="bg-muted/50 px-3 py-1 rounded-full">
-                <span className="text-[10px] font-black text-muted-foreground">{match.match_time || 'VS'}</span>
+                <span className="text-[10px] font-black text-muted-foreground">{match.match_time || t('common.vs')}</span>
               </div>
             )}
           </div>
@@ -173,7 +173,7 @@ function MatchCardInline({ match, onClick, showDate, venueName, stadiumImageUrl 
           <div className="mt-3 pt-2 border-t border-dashed border-border flex justify-center">
             <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-400 text-[11px] font-bold">
               <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
-              رجل المباراة: {(match as any).man_of_match_name}
+              {t('tournament.manOfMatch')}: {(match as any).man_of_match_name}
             </span>
           </div>
         )}
