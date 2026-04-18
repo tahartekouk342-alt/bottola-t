@@ -1,5 +1,6 @@
 import { Trophy, Users, Bell, LogOut, Moon, Sun, User, Settings, LogIn, Home } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { NavLink } from '@/components/NavLink';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -15,6 +16,7 @@ import { useTheme } from '@/components/theme/ThemeProvider';
 import { supabase } from '@/integrations/supabase/client';
 
 export function ViewerAppSidebar() {
+  const { t } = useTranslation();
   const { state, toggleSidebar, isMobile } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
@@ -30,25 +32,23 @@ export function ViewerAppSidebar() {
     navigate('/');
   };
 
-  const handleNavClick = () => {
-    if (isMobile) toggleSidebar();
-  };
+  const handleNavClick = () => { if (isMobile) toggleSidebar(); };
 
   const publicItems = [
-    { title: 'الرئيسية', url: '/home', icon: Home },
-    { title: 'البطولات', url: '/tournaments-feed', icon: Trophy },
+    { title: t('nav.home'), url: '/home', icon: Home },
+    { title: t('nav.tournaments'), url: '/tournaments-feed', icon: Trophy },
   ];
 
   const authItems = [
-    { title: 'المتابعات', url: '/following', icon: Users },
-    { title: 'الإشعارات', url: '/notifications', icon: Bell },
-    { title: 'الإعدادات', url: '/settings', icon: Settings },
+    { title: t('nav.following'), url: '/following', icon: Users },
+    { title: t('nav.notifications'), url: '/notifications', icon: Bell },
+    { title: t('nav.settings'), url: '/settings', icon: Settings },
   ];
 
   const navItems = user ? [...publicItems, ...authItems] : publicItems;
 
   return (
-    <Sidebar collapsible="icon" side="right">
+    <Sidebar collapsible="icon" side={document.documentElement.dir === 'rtl' ? 'right' : 'left'}>
       <SidebarContent>
         {!collapsed && (
           <div className="p-4 border-b border-sidebar-border">
@@ -62,13 +62,13 @@ export function ViewerAppSidebar() {
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate">{profile?.display_name || user?.email}</p>
-                  <p className="text-xs text-muted-foreground">مشاهد</p>
+                  <p className="text-xs text-muted-foreground">{t('roles.viewer')}</p>
                 </div>
               </div>
             ) : (
               <Button onClick={() => { navigate('/auth?role=viewer'); handleNavClick(); }}
-                className="w-full gradient-primary text-primary-foreground rounded-xl gap-2">
-                <LogIn className="w-4 h-4" /> ابدأ الآن
+                className="w-full gradient-primary text-primary-foreground rounded-lg gap-2">
+                <LogIn className="w-4 h-4" /> {t('nav.startNow')}
               </Button>
             )}
           </div>
@@ -83,14 +83,14 @@ export function ViewerAppSidebar() {
         )}
 
         <SidebarGroup>
-          <SidebarGroupLabel>القائمة</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('nav.menu')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} onClick={handleNavClick}>
                     <NavLink to={item.url} end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
-                      <item.icon className="ml-2 h-5 w-5" />
+                      <item.icon className="ms-2 h-5 w-5" />
                       {!collapsed && <span className="flex-1">{item.title}</span>}
                       {!collapsed && item.url === '/notifications' && unreadCount > 0 && (
                         <Badge className="gradient-primary text-primary-foreground border-0 h-5 min-w-[20px] flex items-center justify-center text-xs">
@@ -110,8 +110,8 @@ export function ViewerAppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={() => { setTheme(resolvedTheme === 'dark' ? 'light' : 'dark'); handleNavClick(); }}>
-              {resolvedTheme === 'dark' ? <Sun className="ml-2 h-5 w-5" /> : <Moon className="ml-2 h-5 w-5" />}
-              {!collapsed && <span>{resolvedTheme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}</span>}
+              {resolvedTheme === 'dark' ? <Sun className="ms-2 h-5 w-5" /> : <Moon className="ms-2 h-5 w-5" />}
+              {!collapsed && <span>{resolvedTheme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
           {user && (
@@ -119,8 +119,8 @@ export function ViewerAppSidebar() {
               <Separator />
               <SidebarMenuItem>
                 <SidebarMenuButton onClick={() => { handleSignOut(); handleNavClick(); }} className="text-destructive hover:text-destructive">
-                  <LogOut className="ml-2 h-5 w-5" />
-                  {!collapsed && <span>تسجيل الخروج</span>}
+                  <LogOut className="ms-2 h-5 w-5" />
+                  {!collapsed && <span>{t('nav.logout')}</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </>

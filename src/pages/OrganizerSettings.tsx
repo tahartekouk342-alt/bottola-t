@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, User, Lock, Camera, Save, Loader2, ShieldOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { ArrowRight, User, Lock, Camera, Save, Loader2, ShieldOff, Languages, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,13 +10,17 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/components/theme/ThemeProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { ORGANIZER_BASE } from '@/lib/constants';
+import { setLanguage } from '@/i18n';
 
 export default function OrganizerSettings() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const { user, profile, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { resolvedTheme, setTheme } = useTheme();
 
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
@@ -272,6 +277,39 @@ export default function OrganizerSettings() {
                 </Button>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Language */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Languages className="w-5 h-5" />{t('settings.language')}</CardTitle>
+            <CardDescription>{t('settings.languageDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-3">
+            <Button variant={i18n.language === 'ar' ? 'default' : 'outline'} onClick={() => setLanguage('ar')} className={i18n.language === 'ar' ? 'gradient-primary text-primary-foreground' : ''}>
+              🇸🇦 العربية
+            </Button>
+            <Button variant={i18n.language === 'fr' ? 'default' : 'outline'} onClick={() => setLanguage('fr')} className={i18n.language === 'fr' ? 'gradient-primary text-primary-foreground' : ''}>
+              🇫🇷 Français
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Appearance */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {resolvedTheme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              {t('settings.appearance')}
+            </CardTitle>
+            <CardDescription>{t('settings.appearanceDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')} className="w-full">
+              {resolvedTheme === 'dark' ? <Sun className="w-5 h-5 me-2" /> : <Moon className="w-5 h-5 me-2" />}
+              {resolvedTheme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}
+            </Button>
           </CardContent>
         </Card>
       </div>
