@@ -142,12 +142,12 @@ export default function TournamentDetails() {
           }
         }
       }
-      toast({ title: 'تم إضافة الفرق ✅' });
+      toast({ title: t('common.success') + ' ✅' });
       setTeamsList([]);
       setShowAddTeams(false);
       fetchTournamentDetails();
     } catch {
-      toast({ title: 'خطأ في إضافة الفرق', variant: 'destructive' });
+      toast({ title: t('common.error'), variant: 'destructive' });
     } finally {
       setAddingTeams(false);
     }
@@ -190,10 +190,10 @@ export default function TournamentDetails() {
 
   if (!tournament) {
     return (
-      <div className="p-8 text-center" dir="rtl">
-        <h1 className="text-2xl font-bold mb-4">البطولة غير موجودة</h1>
+      <div className="p-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">{t('tournament.tournamentNotFound')}</h1>
         <Button onClick={() => navigate(`${ORGANIZER_BASE}/dashboard`)}>
-          <ArrowRight className="w-4 h-4 ml-2" />العودة للبطولات
+          <ArrowRight className="w-4 h-4 ml-2" />{t('tournament.backToTournaments')}
         </Button>
       </div>
     );
