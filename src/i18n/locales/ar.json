@@ -1,7 +1,9 @@
 {
   "app": {
     "name": "بطولة",
-    "tagline": "أفضل منصة لإدارة البطولات الرياضية"
+    "tagline": "أفضل منصة لإدارة البطولات الرياضية",
+    "viewerSubtitle": "تابع البطولات لحظة بلحظة",
+    "organizer": "منظم"
   },
   "common": {
     "loading": "جاري التحميل...",
@@ -24,6 +26,7 @@
     "comment": "تعليق",
     "like": "إعجاب",
     "post": "نشر",
+    "send": "إرسال",
     "writeComment": "اكتب تعليقاً...",
     "writePost": "ماذا يدور في ذهنك؟",
     "addPhoto": "إضافة صورة",
@@ -32,7 +35,10 @@
     "noData": "لا توجد بيانات",
     "error": "خطأ",
     "success": "تم بنجاح",
-    "vs": "ضد"
+    "vs": "ضد",
+    "view": "عرض",
+    "guest": "ضيف",
+    "loginRequired": "يجب تسجيل الدخول"
   },
   "nav": {
     "home": "الرئيسية",
@@ -56,6 +62,22 @@
   "roles": {
     "viewer": "مشاهد",
     "organizer": "منظم بطولات"
+  },
+  "welcome": {
+    "viewerHi": "مرحباً بك أيها",
+    "viewerLabel": "المشاهد",
+    "viewerDesc": "تابع المنظمين المفضلين، شاهد البطولات والمباريات، واحصل على إشعارات فورية",
+    "createFreeAccount": "إنشاء حساب مجاني",
+    "browseAsGuest": "تصفح كزائر",
+    "feature1Title": "متابعة البطولات",
+    "feature1Desc": "تابع أحدث البطولات والمباريات لحظة بلحظة",
+    "feature2Title": "المباريات",
+    "feature2Desc": "شاهد نتائج المباريات والجداول مباشرة",
+    "feature3Title": "ترتيب الفرق",
+    "feature3Desc": "استعرض ترتيب الفرق والإحصائيات المفصلة",
+    "feature4Title": "إشعارات فورية",
+    "feature4Desc": "احصل على تنبيهات لحظية بنتائج المباريات",
+    "rights": "© 2025 Bottola. جميع الحقوق محفوظة."
   },
   "settings": {
     "title": "الإعدادات",
@@ -85,10 +107,12 @@
   "news": {
     "title": "الأخبار",
     "subtitle": "تواصل وشارك أخبارك مع المنظمين الآخرين",
+    "viewerSubtitle": "تابع آخر أخبار المنظمين",
     "createPost": "إنشاء منشور",
     "publish": "نشر",
     "publishing": "جاري النشر...",
     "noPosts": "لا توجد منشورات بعد. كن أول من ينشر!",
+    "noPostsViewer": "لا توجد منشورات حالياً",
     "likes": "إعجاب",
     "comments": "تعليق",
     "shares": "مشاركة",
@@ -99,6 +123,7 @@
     "deleteConfirm": "هل أنت متأكد من حذف هذا المنشور؟",
     "edited": "تم التعديل",
     "uploading": "جاري رفع الملفات...",
+    "loginToInteract": "سجل الدخول كمنظم للتفاعل والتعليق",
     "reactions": {
       "like": "إعجاب",
       "love": "أحببته",
@@ -126,7 +151,9 @@
     "groupsKnockout": "مجموعات + إقصاء",
     "groupsKnockoutDesc": "مجموعات ثم مرحلة إقصاء",
     "teams": "الفرق",
+    "team": "فريق",
     "matches": "المباريات",
+    "match": "مباراة",
     "standings": "الترتيب",
     "champion": "البطل",
     "manOfMatch": "رجل المباراة",
@@ -168,6 +195,7 @@
     "tabTeams": "الفرق",
     "tabStandings": "الترتيب",
     "tabRequests": "طلبات الانضمام",
+    "tabJoin": "طلب انضمام",
     "nextRound": "التالية",
     "startKnockout": "بدء الإقصاء",
     "start": "بدء",
@@ -175,14 +203,35 @@
     "knockoutStage": "مرحلة الإقصاء",
     "round": "الجولة",
     "groupLabel": "المجموعة",
-    "match": "مباراة",
     "noMatches": "لا توجد مباريات",
     "scheduled": "مجدولة",
     "live": "🔴 مباشر",
+    "liveShort": "مباشر",
     "finished": "انتهت",
     "draft": "مسودة",
     "upcoming": "قريباً",
-    "completed": "منتهية"
+    "completed": "منتهية",
+    "ongoing": "جارية",
+    "noTournaments": "لا توجد بطولات",
+    "noTournamentsDesc": "لم يتم إنشاء أي بطولات بعد",
+    "browseAll": "جميع البطولات المتاحة",
+    "searchPlaceholder": "ابحث عن بطولة أو منظم...",
+    "noDate": "غير محدد",
+    "rounds": {
+      "final": "النهائي",
+      "semifinal": "نصف النهائي",
+      "quarterfinal": "ربع النهائي",
+      "round16": "دور الـ16",
+      "round32": "دور الـ32"
+    },
+    "joinRequest": "طلب انضمام",
+    "joinDesc": "أدخل بيانات فريقك للمشاركة",
+    "playerName": "اسم اللاعب",
+    "players": "اللاعبون",
+    "submitRequest": "إرسال الطلب",
+    "requestSent": "تم إرسال الطلب بنجاح ✅",
+    "enterTeamName": "أدخل اسم الفريق",
+    "minTwoTeams": "أدخل فريقين على الأقل"
   },
   "standings": {
     "team": "الفريق",
@@ -196,5 +245,62 @@
     "wonShort": "ف",
     "drawnShort": "ت",
     "lostShort": "خ"
+  },
+  "following": {
+    "title": "المتابعات",
+    "subtitle": "اكتشف وتابع منظمي البطولات",
+    "discover": "اكتشاف المنظمين",
+    "myFollowing": "متابعاتي",
+    "searchOrganizer": "ابحث عن منظم...",
+    "noOrganizers": "لا يوجد منظمين",
+    "noResults": "لم يتم العثور على نتائج",
+    "noFollowing": "لا توجد متابعات",
+    "startFollowing": "ابدأ بمتابعة المنظمين لمشاهدة بطولاتهم",
+    "viewTournaments": "عرض البطولات",
+    "tournamentCount": "بطولة",
+    "followerCount": "متابع",
+    "loginToFollow": "سجل دخولك لمتابعة المنظمين",
+    "loginToFollowDesc": "يمكنك تصفح المنظمين، لكن المتابعة تتطلب حساباً",
+    "organizerOf": "منظم بطولات رياضية",
+    "backToFollowing": "العودة للمتابعات"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "loginRequired": "سجل دخولك لتلقي إشعارات البطولات والمباريات",
+    "noNotifications": "لا توجد إشعارات",
+    "noNotificationsDesc": "ستظهر هنا الإشعارات الخاصة بالمنظمين الذين تتابعهم",
+    "unreadCount": "{{count}} إشعار غير مقروء",
+    "noNew": "لا توجد إشعارات جديدة",
+    "markAllRead": "تحديد الكل كمقروء"
+  },
+  "toasts": {
+    "fetchTournamentsFailed": "فشل في جلب البطولات",
+    "tournamentCreated": "تم إنشاء البطولة بنجاح",
+    "createTournamentFailed": "فشل في إنشاء البطولة",
+    "tournamentDeleted": "تم حذف البطولة ✅",
+    "deleteTournamentFailed": "فشل في حذف البطولة",
+    "addTeamsFailed": "فشل في إضافة الفرق",
+    "minTwoTeams": "يجب أن يكون هناك فريقين على الأقل",
+    "knockoutCreated": "تم إنشاء مباريات الإقصاء المباشر",
+    "createMatchesFailed": "فشل في إنشاء المباريات",
+    "groupsCreated": "تم إنشاء المجموعات ✅",
+    "groupsCreatedDesc": "تم إنشاء {{count}} مباراة في مرحلة المجموعات",
+    "createGroupsFailed": "فشل في إنشاء المجموعات",
+    "incompleteGroupMatches": "لم تكتمل {{count}} مباراة في المجموعات بعد",
+    "warning": "تنبيه ⚠️",
+    "knockoutStarted": "تم بدء مرحلة الإقصاء 🏆",
+    "knockoutStartedDesc": "{{count}} مباراة في مرحلة الإقصاء",
+    "startKnockoutFailed": "فشل في بدء مرحلة الإقصاء",
+    "nextRoundCreated": "تم إنشاء الجولة التالية تلقائياً ⚡",
+    "nextRoundCreatedDesc": "{{count}} مباراة جديدة",
+    "tournamentEnded": "🏆 البطولة انتهت!",
+    "tournamentEndedDesc": "تم تحديد البطل",
+    "resultUpdated": "تم تحديث النتيجة",
+    "updateResultFailed": "فشل في تحديث النتيجة",
+    "noMatches": "لا توجد مباريات",
+    "incompleteRound": "لم تكتمل جميع مباريات الجولة الحالية",
+    "nextRoundManual": "تم إنشاء الجولة التالية",
+    "nextRoundFailed": "فشل في إنشاء الجولة التالية",
+    "fetchDetailsFailed": "فشل في جلب تفاصيل البطولة"
   }
 }
