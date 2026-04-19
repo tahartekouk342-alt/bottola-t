@@ -51,6 +51,7 @@
     "notifications": "Notifications",
     "settings": "Paramètres",
     "news": "Actualités",
+    "newsFeed": "Fil d'actualité",
     "menu": "Menu",
     "logout": "Déconnexion",
     "login": "Connexion",
@@ -123,7 +124,7 @@
     "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ?",
     "edited": "Modifié",
     "uploading": "Téléchargement des fichiers...",
-    "loginToInteract": "Connectez-vous comme organisateur pour interagir et commenter",
+    "loginToInteract": "Connectez-vous pour interagir et commenter",
     "reactions": {
       "like": "J'aime",
       "love": "J'adore",
@@ -231,7 +232,9 @@
     "submitRequest": "Envoyer la demande",
     "requestSent": "Demande envoyée avec succès ✅",
     "enterTeamName": "Entrez le nom de l'équipe",
-    "minTwoTeams": "Ajoutez au moins deux équipes"
+    "minTwoTeams": "Ajoutez au moins deux équipes",
+    "groupStageLabel": "Phase de groupes",
+    "knockoutStageLabel": "Phase d'élimination"
   },
   "standings": {
     "team": "Équipe",
@@ -262,7 +265,9 @@
     "loginToFollow": "Connectez-vous pour suivre",
     "loginToFollowDesc": "Vous pouvez parcourir les organisateurs, mais le suivi nécessite un compte",
     "organizerOf": "Organisateur de tournois sportifs",
-    "backToFollowing": "Retour aux abonnements"
+    "backToFollowing": "Retour aux abonnements",
+    "noTournamentsByOrganizer": "Cet organisateur n'a encore créé aucun tournoi",
+    "tournamentsTitle": "Tournois"
   },
   "notifications": {
     "title": "Notifications",
@@ -301,6 +306,7 @@
     "incompleteRound": "Tous les matchs du tour ne sont pas terminés",
     "nextRoundManual": "Tour suivant créé",
     "nextRoundFailed": "Échec de création du tour suivant",
-    "fetchDetailsFailed": "Échec du chargement des détails"
+    "fetchDetailsFailed": "Échec du chargement des détails",
+    "loginToReact": "Connectez-vous pour réagir"
   }
 }
