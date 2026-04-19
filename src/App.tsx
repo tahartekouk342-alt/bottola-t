@@ -50,6 +50,7 @@ const App = () => (
             <Route path="/tournaments-feed" element={<ViewerLayout><ViewerTournamentsFeed /></ViewerLayout>} />
             <Route path="/following" element={<ViewerLayout><Following /></ViewerLayout>} />
             <Route path="/notifications" element={<ViewerLayout><Notifications /></ViewerLayout>} />
+            <Route path="/news-feed" element={<ViewerLayout><News readOnlyComposer /></ViewerLayout>} />
             <Route path="/settings" element={<ViewerLayout><ViewerSettings /></ViewerLayout>} />
             <Route path="/viewer/organizer/:organizerId" element={<ViewerLayout><OrganizerTournaments /></ViewerLayout>} />
             <Route path="/viewer/tournament/:tournamentId" element={<ViewerLayout><ViewerTournamentDetails /></ViewerLayout>} />
