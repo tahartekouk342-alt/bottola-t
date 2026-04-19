@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Users, Trophy, UserPlus, UserMinus, Loader2, Search, LogIn } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useFollowing } from '@/hooks/useFollowing';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Following() {
+  const { t, i18n } = useTranslation();
+  const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -25,20 +27,15 @@ export default function Following() {
 
   const handleFollow = (organizerId: string) => {
     if (!user) {
-      toast({ title: 'يجب تسجيل الدخول أولاً', description: 'سجل دخولك لمتابعة المنظمين', variant: 'destructive' });
+      toast({ title: t('common.loginRequired'), description: t('following.loginToFollowDesc'), variant: 'destructive' });
       navigate('/auth?role=viewer');
       return;
     }
     follow(organizerId);
   };
 
-  const handleUnfollow = (organizerId: string) => {
-    if (!user) return;
-    unfollow(organizerId);
-  };
-
   return (
-    <div className="container mx-auto px-4 py-8" dir="rtl">
+    <div className="container mx-auto px-4 py-8" dir={dir}>
       <div className="relative overflow-hidden rounded-2xl mb-8">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'url(/images/sport-basketball.jpg)', backgroundSize: 'cover' }} />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent" />
@@ -47,9 +44,9 @@ export default function Following() {
             <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
               <Users className="w-6 h-6 text-primary" />
             </div>
-            المتابعات
+            {t('following.title')}
           </h1>
-          <p className="text-muted-foreground mr-15">اكتشف وتابع منظمي البطولات</p>
+          <p className="text-muted-foreground ms-15">{t('following.subtitle')}</p>
         </div>
       </div>
 
@@ -58,11 +55,11 @@ export default function Following() {
           <CardContent className="p-4 flex items-center gap-4">
             <LogIn className="w-8 h-8 text-primary shrink-0" />
             <div className="flex-1">
-              <p className="font-bold text-sm">سجل دخولك لمتابعة المنظمين</p>
-              <p className="text-xs text-muted-foreground">يمكنك تصفح المنظمين، لكن المتابعة تتطلب حساباً</p>
+              <p className="font-bold text-sm">{t('following.loginToFollow')}</p>
+              <p className="text-xs text-muted-foreground">{t('following.loginToFollowDesc')}</p>
             </div>
             <Button size="sm" onClick={() => navigate('/auth?role=viewer')} className="gradient-primary text-primary-foreground rounded-xl">
-              تسجيل الدخول
+              {t('nav.login')}
             </Button>
           </CardContent>
         </Card>
@@ -71,17 +68,17 @@ export default function Following() {
       <Tabs defaultValue="discover" className="space-y-6">
         <TabsList className="grid w-full max-w-md grid-cols-2 rounded-2xl bg-secondary/50 p-1">
           <TabsTrigger value="discover" className="flex items-center gap-2 rounded-xl">
-            <Users className="w-4 h-4" />اكتشاف المنظمين
+            <Users className="w-4 h-4" />{t('following.discover')}
           </TabsTrigger>
           <TabsTrigger value="following" className="flex items-center gap-2 rounded-xl" disabled={!user}>
-            <UserPlus className="w-4 h-4" />متابعاتي ({following?.length || 0})
+            <UserPlus className="w-4 h-4" />{t('following.myFollowing')} ({following?.length || 0})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="discover">
           <div className="relative mb-6 max-w-md">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input placeholder="ابحث عن منظم..." className="pr-12 rounded-2xl bg-secondary/40 border-border" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <Search className="absolute end-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input placeholder={t('following.searchOrganizer')} className="pe-12 rounded-2xl bg-secondary/40 border-border" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
 
           {loadingOrganizers ? (
@@ -89,11 +86,12 @@ export default function Following() {
           ) : filteredOrganizers && filteredOrganizers.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredOrganizers.map((organizer) => (
-                <OrganizerCard key={organizer.id} organizer={organizer}
+                <OrganizerCard
+                  key={organizer.id}
+                  organizer={organizer}
                   onFollow={() => handleFollow(organizer.user_id)}
-                  onUnfollow={() => handleUnfollow(organizer.user_id)}
+                  onUnfollow={() => user && unfollow(organizer.user_id)}
                   onViewTournaments={() => navigate(`/viewer/organizer/${organizer.user_id}`)}
-                  isGuest={!user}
                 />
               ))}
             </div>
@@ -104,7 +102,7 @@ export default function Following() {
                   <Users className="w-10 h-10 text-muted-foreground" />
                 </div>
                 <h3 className="text-2xl font-display font-bold mb-2">
-                  {searchQuery ? 'لم يتم العثور على نتائج' : 'لا يوجد منظمين'}
+                  {searchQuery ? t('following.noResults') : t('following.noOrganizers')}
                 </h3>
               </CardContent>
             </Card>
@@ -126,7 +124,7 @@ export default function Following() {
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-lg truncate">{profile.display_name}</h3>
-                        <p className="text-sm text-muted-foreground truncate">{profile.bio || 'منظم بطولات'}</p>
+                        <p className="text-sm text-muted-foreground truncate">{profile.bio || t('following.organizerOf')}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -139,8 +137,8 @@ export default function Following() {
                 <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mb-4">
                   <UserPlus className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-2xl font-display font-bold mb-2">لا توجد متابعات</h3>
-                <p className="text-muted-foreground">ابدأ بمتابعة المنظمين لمشاهدة بطولاتهم</p>
+                <h3 className="text-2xl font-display font-bold mb-2">{t('following.noFollowing')}</h3>
+                <p className="text-muted-foreground">{t('following.startFollowing')}</p>
               </CardContent>
             </Card>
           )}
@@ -158,10 +156,10 @@ interface OrganizerCardProps {
   onFollow: () => void;
   onUnfollow: () => void;
   onViewTournaments: () => void;
-  isGuest?: boolean;
 }
 
-function OrganizerCard({ organizer, onFollow, onUnfollow, onViewTournaments, isGuest }: OrganizerCardProps) {
+function OrganizerCard({ organizer, onFollow, onUnfollow, onViewTournaments }: OrganizerCardProps) {
+  const { t } = useTranslation();
   return (
     <Card className="overflow-hidden hover:border-primary/50 transition-all group">
       <div className="h-16 relative overflow-hidden">
@@ -176,7 +174,7 @@ function OrganizerCard({ organizer, onFollow, onUnfollow, onViewTournaments, isG
           </Avatar>
           <div className="flex-1 min-w-0 mt-4">
             <h3 className="font-bold text-lg truncate">{organizer.display_name}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{organizer.bio || 'منظم بطولات رياضية'}</p>
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{organizer.bio || t('following.organizerOf')}</p>
           </div>
         </div>
 
@@ -184,17 +182,17 @@ function OrganizerCard({ organizer, onFollow, onUnfollow, onViewTournaments, isG
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-primary" />
             <span className="font-bold">{organizer.tournament_count || 0}</span>
-            <span className="text-muted-foreground">بطولة</span>
+            <span className="text-muted-foreground">{t('following.tournamentCount')}</span>
           </div>
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" />
             <span className="font-bold">{organizer.follower_count || 0}</span>
-            <span className="text-muted-foreground">متابع</span>
+            <span className="text-muted-foreground">{t('following.followerCount')}</span>
           </div>
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1 rounded-xl" onClick={(e) => { e.stopPropagation(); onViewTournaments(); }}>عرض البطولات</Button>
+          <Button variant="outline" className="flex-1 rounded-xl" onClick={(e) => { e.stopPropagation(); onViewTournaments(); }}>{t('following.viewTournaments')}</Button>
           {organizer.is_following ? (
             <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onUnfollow(); }} className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl">
               <UserMinus className="w-5 h-5" />

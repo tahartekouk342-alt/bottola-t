@@ -1,4 +1,4 @@
-import { Trophy, Users, Bell, LogOut, Moon, Sun, User, Settings, LogIn, Home } from 'lucide-react';
+import { Trophy, Users, Bell, LogOut, Moon, Sun, User, Settings, LogIn, Home, Newspaper } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from '@/components/NavLink';
@@ -37,6 +37,7 @@ export function ViewerAppSidebar() {
   const publicItems = [
     { title: t('nav.home'), url: '/home', icon: Home },
     { title: t('nav.tournaments'), url: '/tournaments-feed', icon: Trophy },
+    { title: t('nav.newsFeed'), url: '/news-feed', icon: Newspaper },
   ];
 
   const authItems = [

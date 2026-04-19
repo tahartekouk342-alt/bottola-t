@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, Trophy, Calendar, Users, Loader2, GitBranch, TableIcon, UserPlus, Swords, Plus, X, Send } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { ArrowRight, ArrowLeft, Trophy, Users, Loader2, GitBranch, TableIcon, UserPlus, Swords, Plus, X, Send, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useTournamentDetails } from '@/hooks/useTournamentDetails';
 import { BracketView } from '@/components/tournament/BracketView';
 import { MatchesList } from '@/components/tournament/MatchesList';
+import { VictoryConfetti } from '@/components/effects/VictoryConfetti';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -16,20 +18,42 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-const tabs = [
-  { id: 'matches', label: 'المباريات', icon: Swords },
-  { id: 'teams', label: 'الفرق', icon: Users },
-  { id: 'bracket', label: 'شجرة الإقصاء', icon: GitBranch },
-  { id: 'standings', label: 'الترتيب', icon: TableIcon },
-  { id: 'join', label: 'طلب انضمام', icon: UserPlus },
-];
-
 export default function ViewerTournamentDetails() {
+  const { t, i18n } = useTranslation();
+  const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+  const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
   const { tournamentId } = useParams<{ tournamentId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('matches');
+  const [showVictory, setShowVictory] = useState(false);
 
   const { tournament, teams, matches, standings, loading, getRoundName } = useTournamentDetails(tournamentId || '');
+
+  const tabs = [
+    { id: 'matches', label: t('tournament.tabMatches'), icon: Swords },
+    { id: 'teams', label: t('tournament.tabTeams'), icon: Users },
+    { id: 'bracket', label: t('tournament.tabBracket'), icon: GitBranch },
+    { id: 'standings', label: t('tournament.tabStandings'), icon: TableIcon },
+    { id: 'join', label: t('tournament.tabJoin'), icon: UserPlus },
+  ];
+
+  const knockoutMatches = matches.filter(m => !m.group_name);
+  const groupMatches = matches.filter(m => m.group_name);
+  const currentMaxRound = knockoutMatches.length > 0 ? Math.max(...knockoutMatches.map(m => m.round)) : 0;
+  const winnerTeam = tournament?.status === 'completed' && knockoutMatches.length > 0
+    ? knockoutMatches.find(m => m.round === currentMaxRound && m.status === 'completed')?.winner : null;
+  const leagueWinner = tournament?.status === 'completed' && tournament?.type === 'league' && standings.length > 0
+    ? teams.find(t => t.id === [...standings].sort((a, b) => (b.points || 0) - (a.points || 0))[0]?.team_id) : null;
+  const winner = winnerTeam || leagueWinner || null;
+  const finalMatch = knockoutMatches.find(m => m.round === currentMaxRound && m.status === 'completed');
+  const manOfMatch = (finalMatch as any)?.man_of_match_name;
+
+  useEffect(() => {
+    if (winner) {
+      const timer = setTimeout(() => setShowVictory(true), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [winner?.id]);
 
   if (loading) {
     return <div className="flex items-center justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -41,8 +65,8 @@ export default function ViewerTournamentDetails() {
         <Card className="max-w-md">
           <CardContent className="p-8 text-center">
             <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-2">البطولة غير موجودة</h2>
-            <Button onClick={() => navigate('/home')}>العودة</Button>
+            <h2 className="text-xl font-bold mb-2">{t('tournament.tournamentNotFound')}</h2>
+            <Button onClick={() => navigate('/home')}>{t('common.back')}</Button>
           </CardContent>
         </Card>
       </div>
@@ -51,8 +75,7 @@ export default function ViewerTournamentDetails() {
 
   const showStandings = tournament.type === 'league' || tournament.type === 'groups';
   const showJoin = tournament.accept_join_requests;
-  const knockoutMatches = matches.filter(m => !m.group_name);
-  const groupMatches = matches.filter(m => m.group_name);
+  const sportType = (tournament as any).sport_type || 'football';
 
   const visibleTabs = tabs.filter(tab => {
     if (tab.id === 'standings' && !showStandings) return false;
@@ -64,19 +87,26 @@ export default function ViewerTournamentDetails() {
   const totalRounds = Math.ceil(Math.log2(Math.max(teams.length, 2)));
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
-      {/* Hero Header */}
+    <div className="min-h-screen bg-background" dir={dir}>
+      <VictoryConfetti
+        trigger={showVictory}
+        teamName={winner?.name}
+        teamLogo={winner?.logo_url}
+        sportType={sportType}
+        onComplete={() => setShowVictory(false)}
+      />
+
       <div className="relative">
         <div className="relative h-56 md:h-72">
-          <img src={tournament.venue_photos?.[0] || '/images/sport-stadium.jpg'} alt={tournament.venue_name || 'ملعب'} className="w-full h-full object-cover" />
+          <img src={tournament.venue_photos?.[0] || '/images/sport-stadium.jpg'} alt={tournament.venue_name || 'stadium'} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-background" />
 
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}
-            className="absolute top-4 right-4 z-20 bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm rounded-xl">
-            <ArrowRight className="w-4 h-4 ml-1" />رجوع
+            className="absolute top-4 end-4 z-20 bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm rounded-xl">
+            <BackIcon className="w-4 h-4 me-1" />{t('common.back')}
           </Button>
 
-          <div className="absolute bottom-4 right-4 left-4 z-10 flex items-end gap-3">
+          <div className="absolute bottom-4 end-4 start-4 z-10 flex items-end gap-3">
             {tournament.logo_url ? (
               <img src={tournament.logo_url} alt={tournament.name} className="w-14 h-14 rounded-xl object-cover border-2 border-white/80 shadow-lg" />
             ) : (
@@ -86,12 +116,11 @@ export default function ViewerTournamentDetails() {
             )}
             <div>
               <h1 className="font-display text-xl md:text-2xl font-bold text-white drop-shadow-lg">{tournament.name}</h1>
-              <p className="text-sm text-white/80 drop-shadow">{teams.length} فريق · {matches.length} مباراة</p>
+              <p className="text-sm text-white/80 drop-shadow">{teams.length} {t('tournament.teams')} · {matches.length} {t('tournament.matches')}</p>
             </div>
           </div>
         </div>
 
-        {/* Sticky Tab Bar */}
         <div className="sticky top-0 z-40 bg-card/95 backdrop-blur border-b border-border">
           <div className="overflow-x-auto">
             <div className="flex min-w-max">
@@ -109,8 +138,30 @@ export default function ViewerTournamentDetails() {
         </div>
       </div>
 
-      {/* Tab Content */}
       <div className="p-4">
+        {/* Champion banner */}
+        {winner && (
+          <div className="mb-6 relative overflow-hidden rounded-2xl border-2 border-yellow-400/30 animate-fade-in">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 via-primary/10 to-yellow-400/10" />
+            <div className="relative p-6 text-center">
+              {winner.logo_url ? (
+                <img src={winner.logo_url} alt={winner.name} className="w-16 h-16 rounded-full mx-auto mb-3 object-cover border-4 border-yellow-400/50 shadow-xl" />
+              ) : (
+                <Trophy className="w-14 h-14 mx-auto mb-3 text-yellow-500 drop-shadow-lg" />
+              )}
+              <h2 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-1">🏆 {t('tournament.champion')} 🏆</h2>
+              <p className="text-2xl font-display font-black">{winner.name}</p>
+              {manOfMatch && (
+                <div className="mt-3 pt-3 border-t border-yellow-400/20 inline-flex items-center gap-2 text-sm">
+                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  <span className="text-muted-foreground">{t('tournament.manOfMatchFinal')}:</span>
+                  <span className="font-bold">{manOfMatch}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'matches' && (
           <div className="space-y-4">
             {groupMatches.length > 0 && (
@@ -119,7 +170,7 @@ export default function ViewerTournamentDetails() {
                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Users className="w-4 h-4 text-primary" />
                   </div>
-                  مرحلة المجموعات
+                  {t('tournament.groupStageLabel')}
                 </h3>
                 <MatchesList matches={groupMatches} getRoundName={getRoundName} venueName={tournament.venue_name || undefined} stadiumImageUrl={tournament.venue_photos?.[0] || undefined} />
               </div>
@@ -130,7 +181,7 @@ export default function ViewerTournamentDetails() {
                   <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
                     <GitBranch className="w-4 h-4 text-destructive" />
                   </div>
-                  مرحلة الإقصاء
+                  {t('tournament.knockoutStageLabel')}
                 </h3>
                 <MatchesList matches={knockoutMatches} getRoundName={getRoundName} venueName={tournament.venue_name || undefined} stadiumImageUrl={tournament.venue_photos?.[0] || undefined} />
               </div>
@@ -155,7 +206,7 @@ export default function ViewerTournamentDetails() {
                   )}
                   <div className="min-w-0">
                     <span className="font-bold text-sm truncate block">{team.name}</span>
-                    {team.group_name && <span className="text-xs text-muted-foreground">المجموعة {team.group_name}</span>}
+                    {team.group_name && <span className="text-xs text-muted-foreground">{t('tournament.groupLabel')} {team.group_name}</span>}
                   </div>
                 </CardContent>
               </Card>
@@ -175,7 +226,7 @@ export default function ViewerTournamentDetails() {
           <div className="space-y-6">
             {(() => {
               const grouped = standings.reduce((acc, s) => {
-                const key = s.group_name || 'عام';
+                const key = s.group_name || 'all';
                 if (!acc[key]) acc[key] = [];
                 acc[key].push(s);
                 return acc;
@@ -188,20 +239,20 @@ export default function ViewerTournamentDetails() {
                       <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
                         <span className="text-xs font-bold text-primary">{groupName}</span>
                       </div>
-                      <span className="font-bold text-primary">المجموعة {groupName}</span>
+                      <span className="font-bold text-primary">{t('tournament.groupLabel')} {groupName}</span>
                     </div>
                   )}
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/30">
-                        <TableHead className="text-right w-12">#</TableHead>
-                        <TableHead className="text-right">الفريق</TableHead>
-                        <TableHead className="text-center">لعب</TableHead>
-                        <TableHead className="text-center">فوز</TableHead>
-                        <TableHead className="text-center">ت</TableHead>
-                        <TableHead className="text-center">خ</TableHead>
-                        <TableHead className="text-center">+/-</TableHead>
-                        <TableHead className="text-center font-bold text-primary">نقاط</TableHead>
+                        <TableHead className="w-12">#</TableHead>
+                        <TableHead>{t('standings.team')}</TableHead>
+                        <TableHead className="text-center">{t('standings.played')}</TableHead>
+                        <TableHead className="text-center">{t('standings.won')}</TableHead>
+                        <TableHead className="text-center">{t('standings.drawn')}</TableHead>
+                        <TableHead className="text-center">{t('standings.lost')}</TableHead>
+                        <TableHead className="text-center">{t('standings.goalDiff')}</TableHead>
+                        <TableHead className="text-center font-bold text-primary">{t('standings.points')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -254,8 +305,8 @@ export default function ViewerTournamentDetails() {
   );
 }
 
-/* Inline Join Request Form */
 function JoinRequestInline({ tournamentId }: { tournamentId: string }) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [teamName, setTeamName] = useState('');
@@ -272,7 +323,7 @@ function JoinRequestInline({ tournamentId }: { tournamentId: string }) {
 
   const handleSubmit = async () => {
     if (!teamName.trim()) {
-      toast({ title: 'أدخل اسم الفريق', variant: 'destructive' });
+      toast({ title: t('tournament.enterTeamName'), variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -283,11 +334,11 @@ function JoinRequestInline({ tournamentId }: { tournamentId: string }) {
         player_names: playerNames,
         requested_by: user?.id || null,
       });
-      toast({ title: 'تم إرسال الطلب بنجاح ✅' });
+      toast({ title: t('tournament.requestSent') });
       setTeamName('');
       setPlayerNames([]);
     } catch {
-      toast({ title: 'خطأ في الإرسال', variant: 'destructive' });
+      toast({ title: t('common.error'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -302,26 +353,26 @@ function JoinRequestInline({ tournamentId }: { tournamentId: string }) {
             <UserPlus className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="font-bold text-lg">طلب انضمام</h3>
-            <p className="text-sm text-muted-foreground">أدخل بيانات فريقك للمشاركة</p>
+            <h3 className="font-bold text-lg">{t('tournament.joinRequest')}</h3>
+            <p className="text-sm text-muted-foreground">{t('tournament.joinDesc')}</p>
           </div>
         </div>
 
         <div>
-          <label className="text-sm font-bold mb-1.5 block">اسم الفريق</label>
-          <Input placeholder="مثال: نجوم الحي" value={teamName} onChange={(e) => setTeamName(e.target.value)} />
+          <label className="text-sm font-bold mb-1.5 block">{t('tournament.teamName')}</label>
+          <Input value={teamName} onChange={(e) => setTeamName(e.target.value)} />
         </div>
 
         <div>
-          <label className="text-sm font-bold mb-1.5 block">اللاعبون ({playerNames.length})</label>
+          <label className="text-sm font-bold mb-1.5 block">{t('tournament.players')} ({playerNames.length})</label>
           <div className="flex gap-2 mb-2">
-            <Input placeholder="اسم اللاعب" value={newPlayer} onChange={(e) => setNewPlayer(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddPlayer()} className="flex-1" />
+            <Input placeholder={t('tournament.playerName')} value={newPlayer} onChange={(e) => setNewPlayer(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddPlayer()} className="flex-1" />
             <Button onClick={handleAddPlayer} variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
           </div>
           {playerNames.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {playerNames.map((name, i) => (
-                <Badge key={i} variant="secondary" className="gap-1 pr-1">
+                <Badge key={i} variant="secondary" className="gap-1 pe-1">
                   {name}
                   <button onClick={() => setPlayerNames(prev => prev.filter((_, idx) => idx !== i))}><X className="w-3 h-3" /></button>
                 </Badge>
@@ -331,8 +382,8 @@ function JoinRequestInline({ tournamentId }: { tournamentId: string }) {
         </div>
 
         <Button onClick={handleSubmit} disabled={loading} className="w-full gradient-primary text-primary-foreground">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Send className="w-4 h-4 ml-2" />}
-          إرسال الطلب
+          {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : <Send className="w-4 h-4 me-2" />}
+          {t('tournament.submitRequest')}
         </Button>
       </CardContent>
     </Card>

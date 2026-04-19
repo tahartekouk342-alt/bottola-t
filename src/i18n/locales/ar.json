@@ -51,6 +51,7 @@
     "notifications": "الإشعارات",
     "settings": "الإعدادات",
     "news": "الأخبار",
+    "newsFeed": "آخر الأخبار",
     "menu": "القائمة",
     "logout": "تسجيل الخروج",
     "login": "تسجيل الدخول",
@@ -123,7 +124,7 @@
     "deleteConfirm": "هل أنت متأكد من حذف هذا المنشور؟",
     "edited": "تم التعديل",
     "uploading": "جاري رفع الملفات...",
-    "loginToInteract": "سجل الدخول كمنظم للتفاعل والتعليق",
+    "loginToInteract": "سجل الدخول للتفاعل والتعليق",
     "reactions": {
       "like": "إعجاب",
       "love": "أحببته",
@@ -231,7 +232,9 @@
     "submitRequest": "إرسال الطلب",
     "requestSent": "تم إرسال الطلب بنجاح ✅",
     "enterTeamName": "أدخل اسم الفريق",
-    "minTwoTeams": "أدخل فريقين على الأقل"
+    "minTwoTeams": "أدخل فريقين على الأقل",
+    "groupStageLabel": "مرحلة المجموعات",
+    "knockoutStageLabel": "مرحلة الإقصاء"
   },
   "standings": {
     "team": "الفريق",
@@ -262,7 +265,9 @@
     "loginToFollow": "سجل دخولك لمتابعة المنظمين",
     "loginToFollowDesc": "يمكنك تصفح المنظمين، لكن المتابعة تتطلب حساباً",
     "organizerOf": "منظم بطولات رياضية",
-    "backToFollowing": "العودة للمتابعات"
+    "backToFollowing": "العودة للمتابعات",
+    "noTournamentsByOrganizer": "هذا المنظم لم يقم بإنشاء أي بطولات بعد",
+    "tournamentsTitle": "البطولات"
   },
   "notifications": {
     "title": "الإشعارات",
@@ -301,6 +306,7 @@
     "incompleteRound": "لم تكتمل جميع مباريات الجولة الحالية",
     "nextRoundManual": "تم إنشاء الجولة التالية",
     "nextRoundFailed": "فشل في إنشاء الجولة التالية",
-    "fetchDetailsFailed": "فشل في جلب تفاصيل البطولة"
+    "fetchDetailsFailed": "فشل في جلب تفاصيل البطولة",
+    "loginToReact": "سجل الدخول للتفاعل"
   }
 }
