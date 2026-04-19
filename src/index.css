@@ -288,6 +288,39 @@
     @apply py-12 md:py-16 lg:py-20;
   }
 
+  /* Subtle sports background applied to all main content pages */
+  .sports-bg {
+    @apply relative;
+  }
+
+  .sports-bg::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: url('/images/sport-stadium.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    opacity: 0.04;
+    pointer-events: none;
+  }
+
+  .dark .sports-bg::before {
+    opacity: 0.06;
+  }
+
+  .sports-bg::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(circle at 15% 20%, hsl(var(--primary) / 0.06), transparent 40%),
+      radial-gradient(circle at 85% 80%, hsl(var(--primary) / 0.05), transparent 40%);
+    pointer-events: none;
+  }
+
   .card-elevated {
     @apply bg-card border border-border rounded-xl shadow-card;
   }
