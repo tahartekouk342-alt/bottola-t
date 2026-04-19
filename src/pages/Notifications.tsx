@@ -1,5 +1,6 @@
-import { Bell, CheckCheck, Trophy, Loader2, Calendar, Swords, LogIn } from 'lucide-react';
+import { Bell, CheckCheck, Trophy, Loader2, Calendar, Swords, LogIn, Heart, MessageCircle, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,24 +10,29 @@ import { cn } from '@/lib/utils';
 const typeIcons: Record<string, typeof Trophy> = {
   tournament: Trophy,
   match_result: Swords,
+  post_reaction: Heart,
+  post_comment: MessageCircle,
+  post_share: Share2,
   general: Bell,
 };
 
 export default function Notifications() {
+  const { t, i18n } = useTranslation();
+  const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
   const { user } = useAuth();
   const navigate = useNavigate();
   const { notifications, isLoading, markAsRead, markAllAsRead, unreadCount } = useNotifications(user?.id);
 
   if (!user) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center" dir="rtl">
+      <div className="container mx-auto px-4 py-16 text-center" dir={dir}>
         <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
           <Bell className="w-10 h-10 text-primary" />
         </div>
-        <h2 className="text-2xl font-display font-bold mb-3">الإشعارات</h2>
-        <p className="text-muted-foreground mb-6">سجل دخولك لتلقي إشعارات البطولات والمباريات</p>
+        <h2 className="text-2xl font-display font-bold mb-3">{t('notifications.title')}</h2>
+        <p className="text-muted-foreground mb-6">{t('notifications.loginRequired')}</p>
         <Button onClick={() => navigate('/auth?role=viewer')} className="gradient-primary text-primary-foreground rounded-xl gap-2">
-          <LogIn className="w-4 h-4" />تسجيل الدخول
+          <LogIn className="w-4 h-4" />{t('nav.login')}
         </Button>
       </div>
     );
@@ -37,7 +43,7 @@ export default function Notifications() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl" dir="rtl">
+    <div className="container mx-auto px-4 py-8 max-w-2xl" dir={dir}>
       <div className="relative overflow-hidden rounded-2xl mb-8">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'url(/images/sport-stadium.jpg)', backgroundSize: 'cover' }} />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent" />
@@ -47,13 +53,15 @@ export default function Notifications() {
               <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
                 <Bell className="w-6 h-6 text-primary" />
               </div>
-              الإشعارات
+              {t('notifications.title')}
             </h1>
-            <p className="text-muted-foreground mr-15">{unreadCount > 0 ? `${unreadCount} إشعار غير مقروء` : 'لا توجد إشعارات جديدة'}</p>
+            <p className="text-muted-foreground ms-15">
+              {unreadCount > 0 ? t('notifications.unreadCount', { count: unreadCount }) : t('notifications.noNew')}
+            </p>
           </div>
           {unreadCount > 0 && (
             <Button variant="outline" size="sm" onClick={() => markAllAsRead()} className="rounded-xl">
-              <CheckCheck className="w-4 h-4 ml-2" />تحديد الكل كمقروء
+              <CheckCheck className="w-4 h-4 me-2" />{t('notifications.markAllRead')}
             </Button>
           )}
         </div>
@@ -65,8 +73,8 @@ export default function Notifications() {
             <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mb-4">
               <Bell className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">لا توجد إشعارات</h3>
-            <p className="text-muted-foreground">ستظهر هنا الإشعارات الخاصة بالمنظمين الذين تتابعهم</p>
+            <h3 className="text-lg font-semibold mb-2">{t('notifications.noNotifications')}</h3>
+            <p className="text-muted-foreground">{t('notifications.noNotificationsDesc')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -91,7 +99,7 @@ export default function Notifications() {
                     <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
                     <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {new Date(notification.created_at).toLocaleDateString('ar-SA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(notification.created_at).toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'ar-SA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                   {!notification.is_read && <div className="w-2.5 h-2.5 rounded-full bg-primary flex-shrink-0 mt-2 animate-pulse" />}
