@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { ar, fr } from 'date-fns/locale';
 import {
-  Heart, MessageCircle, Share2, Image as ImageIcon, Video, X, Send,
-  Loader2, Trash2, MoreHorizontal, User as UserIcon,
+  MessageCircle, Share2, Image as ImageIcon, X, Send,
+  Loader2, Trash2, MoreHorizontal, User as UserIcon, LogIn,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +18,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ORGANIZER_BASE } from '@/lib/constants';
+import { ReactionPicker, REACTION_EMOJIS, type ReactionType } from '@/components/news/ReactionPicker';
 
 interface Profile { user_id: string; display_name: string; avatar_url: string | null; }
 interface Post {
@@ -29,10 +29,11 @@ interface Post {
   media_types: string[];
   created_at: string;
   author?: Profile;
-  likes_count: number;
+  reaction_counts: Record<string, number>;
+  total_reactions: number;
   comments_count: number;
   shares_count: number;
-  liked_by_me: boolean;
+  my_reaction: ReactionType | null;
 }
 interface Comment {
   id: string;
@@ -43,12 +44,20 @@ interface Comment {
   author?: Profile;
 }
 
-export default function News() {
+interface NewsProps {
+  /** When true, hides the composer (viewer mode). */
+  readOnlyComposer?: boolean;
+}
+
+export default function News({ readOnlyComposer = false }: NewsProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, isOrganizer } = useAuth() as any;
   const { toast } = useToast();
   const dateLocale = i18n.language === 'fr' ? fr : ar;
+
+  // Composer is shown only to organizers AND only when readOnlyComposer is false.
+  const canCompose = !readOnlyComposer && !!user && isOrganizer;
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,15 +69,10 @@ export default function News() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate(`${ORGANIZER_BASE}/auth?tab=login`);
-      return;
-    }
-    if (user) loadPosts();
-  }, [user, authLoading]);
+    loadPosts();
+  }, [user?.id]);
 
   useEffect(() => {
-    if (!user) return;
     const ch = supabase
       .channel('news-feed')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => loadPosts())
@@ -76,10 +80,9 @@ export default function News() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, () => loadPosts())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [user]);
+  }, []);
 
   const loadPosts = async () => {
-    if (!user) return;
     setLoading(true);
     const { data: postsData } = await supabase
       .from('posts')
@@ -103,19 +106,18 @@ export default function News() {
 
     const enriched: Post[] = postsData.map(p => {
       const postReactions = reactions?.filter(r => r.post_id === p.id) || [];
-      const myReaction = postReactions.find(r => r.user_id === user.id);
+      const myReaction = user ? postReactions.find(r => r.user_id === user.id) : null;
       const counts: Record<string, number> = {};
       for (const r of postReactions) counts[r.reaction] = (counts[r.reaction] || 0) + 1;
       return {
         ...p,
         author: profiles?.find(pr => pr.user_id === p.author_id),
-        likes_count: postReactions.length,
+        reaction_counts: counts,
+        total_reactions: postReactions.length,
         comments_count: comments?.filter(c => c.post_id === p.id).length || 0,
         shares_count: shares?.filter(s => s.post_id === p.id).length || 0,
-        liked_by_me: !!myReaction,
-        my_reaction: myReaction?.reaction || null,
-        reaction_counts: counts,
-      } as any;
+        my_reaction: (myReaction?.reaction as ReactionType) || null,
+      };
     });
 
     setPosts(enriched);
@@ -163,26 +165,20 @@ export default function News() {
     }
   };
 
-  const reactionTypes = [
-    { type: 'like', emoji: '👍', label: t('news.reactions.like') },
-    { type: 'love', emoji: '❤️', label: t('news.reactions.love') },
-    { type: 'haha', emoji: '😂', label: t('news.reactions.haha') },
-    { type: 'wow', emoji: '😮', label: t('news.reactions.wow') },
-    { type: 'sad', emoji: '😢', label: t('news.reactions.sad') },
-  ];
-
-  const setReaction = async (post: Post, reaction: string) => {
-    if (!user) return;
-    // Remove any existing reaction first
+  const setReaction = async (post: Post, reaction: ReactionType | null) => {
+    if (!user) {
+      toast({ title: t('toasts.loginToReact'), variant: 'destructive' });
+      navigate('/auth?role=viewer');
+      return;
+    }
+    // Optimistic remove
     await supabase.from('post_reactions').delete().eq('post_id', post.id).eq('user_id', user.id);
-    if (!post.liked_by_me || (post as any).my_reaction !== reaction) {
-      await supabase.from('post_reactions').insert({ post_id: post.id, user_id: user.id, reaction });
+    if (reaction) {
+      await supabase.from('post_reactions').insert({
+        post_id: post.id, user_id: user.id, reaction,
+      });
     }
     loadPosts();
-  };
-
-  const toggleLike = async (post: Post) => {
-    await setReaction(post, (post as any).my_reaction || 'like');
   };
 
   const toggleComments = async (postId: string) => {
@@ -203,14 +199,16 @@ export default function News() {
   };
 
   const submitComment = async (postId: string) => {
-    if (!user) return;
+    if (!user) {
+      toast({ title: t('toasts.loginToReact'), variant: 'destructive' });
+      return;
+    }
     const text = commentInputs[postId]?.trim();
     if (!text) return;
     await supabase.from('post_comments').insert({
       post_id: postId, author_id: user.id, content: text,
     });
     setCommentInputs(prev => ({ ...prev, [postId]: '' }));
-    // refresh
     const { data: cmts } = await supabase
       .from('post_comments').select('*').eq('post_id', postId).order('created_at');
     if (cmts) {
@@ -226,8 +224,7 @@ export default function News() {
   };
 
   const sharePost = async (post: Post) => {
-    if (!user) return;
-    const url = `${window.location.origin}${ORGANIZER_BASE}/news#post-${post.id}`;
+    const url = `${window.location.origin}/news-feed#post-${post.id}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: t('news.title'), text: post.content.slice(0, 100), url });
@@ -235,8 +232,10 @@ export default function News() {
         await navigator.clipboard.writeText(url);
         toast({ title: t('news.linkCopied') });
       }
-      await supabase.from('post_shares').insert({ post_id: post.id, user_id: user.id }).select();
-      loadPosts();
+      if (user) {
+        await supabase.from('post_shares').insert({ post_id: post.id, user_id: user.id }).select();
+        loadPosts();
+      }
     } catch {}
   };
 
@@ -255,54 +254,75 @@ export default function News() {
     );
   }
 
+  // Top reactions, sorted descending
+  const topReactions = (post: Post) => Object.entries(post.reaction_counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([type]) => REACTION_EMOJIS[type] || '👍');
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       <header className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold">{t('news.title')}</h1>
-        <p className="text-sm text-muted-foreground mt-1">{t('news.subtitle')}</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          {canCompose ? t('news.subtitle') : t('news.viewerSubtitle')}
+        </p>
       </header>
 
-      {/* Composer */}
-      <Card className="mb-6">
-        <CardContent className="p-4 space-y-3">
-          <div className="flex gap-3">
-            <Avatar className="w-10 h-10 shrink-0">
-              <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                {profile?.display_name?.charAt(0) || <UserIcon className="w-4 h-4" />}
-              </AvatarFallback>
-            </Avatar>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={t('common.writePost')}
-              rows={3}
-              className="resize-none border-0 bg-secondary focus-visible:ring-1"
-            />
-          </div>
+      {/* Login prompt for guests */}
+      {!user && !readOnlyComposer && (
+        <Card className="mb-6 border-primary/20 bg-primary/5">
+          <CardContent className="p-4 flex items-center gap-3">
+            <LogIn className="w-6 h-6 text-primary shrink-0" />
+            <p className="text-sm flex-1">{t('news.loginToInteract')}</p>
+            <Button size="sm" onClick={() => navigate('/auth?role=viewer')} className="gradient-primary text-primary-foreground">
+              {t('nav.login')}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
-          {files.length > 0 && (
-            <div className="grid grid-cols-2 gap-2">
-              {files.map((f, i) => (
-                <div key={i} className="relative rounded-lg overflow-hidden bg-secondary aspect-video">
-                  {f.type.startsWith('video') ? (
-                    <video src={URL.createObjectURL(f)} className="w-full h-full object-cover" />
-                  ) : (
-                    <img src={URL.createObjectURL(f)} className="w-full h-full object-cover" alt="" />
-                  )}
-                  <button
-                    onClick={() => removeFile(i)}
-                    className="absolute top-1 end-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
+      {/* Composer (organizers only) */}
+      {canCompose && (
+        <Card className="mb-6">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex gap-3">
+              <Avatar className="w-10 h-10 shrink-0">
+                <AvatarImage src={profile?.avatar_url || undefined} />
+                <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                  {profile?.display_name?.charAt(0) || <UserIcon className="w-4 h-4" />}
+                </AvatarFallback>
+              </Avatar>
+              <Textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder={t('common.writePost')}
+                rows={3}
+                className="resize-none border-0 bg-secondary focus-visible:ring-1"
+              />
             </div>
-          )}
 
-          <div className="flex items-center justify-between">
-            <div className="flex gap-1">
+            {files.length > 0 && (
+              <div className="grid grid-cols-2 gap-2">
+                {files.map((f, i) => (
+                  <div key={i} className="relative rounded-lg overflow-hidden bg-secondary aspect-video">
+                    {f.type.startsWith('video') ? (
+                      <video src={URL.createObjectURL(f)} className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={URL.createObjectURL(f)} className="w-full h-full object-cover" alt="" />
+                    )}
+                    <button
+                      onClick={() => removeFile(i)}
+                      className="absolute top-1 end-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
               <Button
                 size="sm" variant="ghost"
                 onClick={() => fileInputRef.current?.click()}
@@ -314,26 +334,28 @@ export default function News() {
                 ref={fileInputRef} type="file" accept="image/*,video/*" multiple
                 onChange={handleFiles} className="hidden"
               />
+              <Button
+                onClick={handlePublish}
+                disabled={posting || (!content.trim() && files.length === 0)}
+                className="gradient-primary text-primary-foreground gap-2"
+              >
+                {posting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {posting ? t('news.publishing') : t('news.publish')}
+              </Button>
             </div>
-            <Button
-              onClick={handlePublish}
-              disabled={posting || (!content.trim() && files.length === 0)}
-              className="gradient-primary text-primary-foreground gap-2"
-            >
-              {posting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              {posting ? t('news.publishing') : t('news.publish')}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Posts */}
       {posts.length === 0 ? (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">{t('news.noPosts')}</CardContent></Card>
+        <Card><CardContent className="p-8 text-center text-muted-foreground">
+          {canCompose ? t('news.noPosts') : t('news.noPostsViewer')}
+        </CardContent></Card>
       ) : (
         <div className="space-y-4">
           {posts.map(post => (
-            <Card key={post.id} id={`post-${post.id}`} className="animate-fade-in-up">
+            <Card key={post.id} id={`post-${post.id}`} className="animate-fade-in">
               <CardContent className="p-4 space-y-3">
                 {/* Header */}
                 <div className="flex items-start justify-between">
@@ -367,10 +389,8 @@ export default function News() {
                   )}
                 </div>
 
-                {/* Content */}
                 {post.content && <p className="text-sm whitespace-pre-wrap leading-relaxed">{post.content}</p>}
 
-                {/* Media */}
                 {post.media_urls.length > 0 && (
                   <div className={`grid gap-1 rounded-lg overflow-hidden ${post.media_urls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                     {post.media_urls.map((url, i) => (
@@ -386,9 +406,14 @@ export default function News() {
                 )}
 
                 {/* Stats */}
-                {(post.likes_count > 0 || post.comments_count > 0 || post.shares_count > 0) && (
+                {(post.total_reactions > 0 || post.comments_count > 0 || post.shares_count > 0) && (
                   <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
-                    <span>{post.likes_count > 0 && `❤️ ${post.likes_count}`}</span>
+                    <span className="flex items-center gap-1">
+                      {topReactions(post).map((e, i) => (
+                        <span key={i} className="text-base -me-1">{e}</span>
+                      ))}
+                      {post.total_reactions > 0 && <span className="ms-2">{post.total_reactions}</span>}
+                    </span>
                     <span>
                       {post.comments_count > 0 && `${post.comments_count} ${t('news.comments')}`}
                       {post.shares_count > 0 && ` · ${post.shares_count} ${t('news.shares')}`}
@@ -398,14 +423,10 @@ export default function News() {
 
                 {/* Actions */}
                 <div className="grid grid-cols-3 gap-1 pt-2 border-t border-border">
-                  <Button
-                    variant="ghost" size="sm"
-                    onClick={() => toggleLike(post)}
-                    className={`gap-2 ${post.liked_by_me ? 'text-destructive' : ''}`}
-                  >
-                    <Heart className={`w-4 h-4 ${post.liked_by_me ? 'fill-current' : ''}`} />
-                    {t('common.like')}
-                  </Button>
+                  <ReactionPicker
+                    currentReaction={post.my_reaction}
+                    onReact={(r) => setReaction(post, r)}
+                  />
                   <Button variant="ghost" size="sm" onClick={() => toggleComments(post.id)} className="gap-2">
                     <MessageCircle className="w-4 h-4" />
                     {t('common.comment')}
@@ -433,26 +454,30 @@ export default function News() {
                         </div>
                       </div>
                     ))}
-                    <div className="flex gap-2">
-                      <Avatar className="w-8 h-8 shrink-0">
-                        <AvatarImage src={profile?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                          {profile?.display_name?.charAt(0) || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 flex gap-2">
-                        <Input
-                          value={commentInputs[post.id] || ''}
-                          onChange={(e) => setCommentInputs(p => ({ ...p, [post.id]: e.target.value }))}
-                          onKeyDown={(e) => e.key === 'Enter' && submitComment(post.id)}
-                          placeholder={t('common.writeComment')}
-                          className="bg-secondary border-0 rounded-full"
-                        />
-                        <Button size="icon" onClick={() => submitComment(post.id)} className="rounded-full shrink-0 gradient-primary text-primary-foreground">
-                          <Send className="w-4 h-4" />
-                        </Button>
+                    {user ? (
+                      <div className="flex gap-2">
+                        <Avatar className="w-8 h-8 shrink-0">
+                          <AvatarImage src={profile?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                            {profile?.display_name?.charAt(0) || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 flex gap-2">
+                          <Input
+                            value={commentInputs[post.id] || ''}
+                            onChange={(e) => setCommentInputs(p => ({ ...p, [post.id]: e.target.value }))}
+                            onKeyDown={(e) => e.key === 'Enter' && submitComment(post.id)}
+                            placeholder={t('common.writeComment')}
+                            className="bg-secondary border-0 rounded-full"
+                          />
+                          <Button size="icon" onClick={() => submitComment(post.id)} className="rounded-full shrink-0 gradient-primary text-primary-foreground">
+                            <Send className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <p className="text-xs text-center text-muted-foreground py-2">{t('news.loginToInteract')}</p>
+                    )}
                   </div>
                 )}
               </CardContent>
