@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import type { Database } from '@/integrations/supabase/types';
 
 type Tournament = Database['public']['Tables']['tournaments']['Row'];
@@ -21,6 +22,7 @@ export function useTournamentDetails(tournamentId: string | undefined) {
   const [standings, setStandings] = useState<Standing[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const fetchTournamentDetails = useCallback(async () => {
     if (!tournamentId) return;
@@ -74,14 +76,14 @@ export function useTournamentDetails(tournamentId: string | undefined) {
     } catch (error) {
       console.error('Error fetching tournament details:', error);
       toast({
-        title: 'خطأ',
-        description: 'فشل في جلب تفاصيل البطولة',
+        title: t('common.error'),
+        description: t('toasts.fetchDetailsFailed'),
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  }, [tournamentId, toast]);
+  }, [tournamentId, toast, t]);
 
   // Subscribe to realtime updates
   useEffect(() => {
@@ -145,17 +147,17 @@ export function useTournamentDetails(tournamentId: string | undefined) {
     const roundsFromEnd = totalRounds - round;
     switch (roundsFromEnd) {
       case 0:
-        return 'النهائي';
+        return t('tournament.rounds.final');
       case 1:
-        return 'نصف النهائي';
+        return t('tournament.rounds.semifinal');
       case 2:
-        return 'ربع النهائي';
+        return t('tournament.rounds.quarterfinal');
       case 3:
-        return 'دور الـ16';
+        return t('tournament.rounds.round16');
       case 4:
-        return 'دور الـ32';
+        return t('tournament.rounds.round32');
       default:
-        return `الجولة ${round}`;
+        return `${t('tournament.round')} ${round}`;
     }
   };
 

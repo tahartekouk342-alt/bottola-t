@@ -20,6 +20,7 @@ i18n
       lookupLocalStorage: 'bottola-lang',
     },
     interpolation: { escapeValue: false },
+    react: { useSuspense: false },
   });
 
 export const setLanguage = (lang: 'ar' | 'fr') => {
@@ -31,6 +32,7 @@ export const setLanguage = (lang: 'ar' | 'fr') => {
 
 // Apply on load
 const stored = (localStorage.getItem('bottola-lang') as 'ar' | 'fr') || 'ar';
+i18n.changeLanguage(stored);
 document.documentElement.lang = stored;
 document.documentElement.dir = stored === 'ar' ? 'rtl' : 'ltr';
 

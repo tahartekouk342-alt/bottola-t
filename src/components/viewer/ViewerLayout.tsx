@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { ViewerAppSidebar } from '@/components/viewer/ViewerAppSidebar';
 import { Link } from 'react-router-dom';
@@ -9,8 +10,10 @@ interface ViewerLayoutProps {
 }
 
 export function ViewerLayout({ children }: ViewerLayoutProps) {
+  const { i18n } = useTranslation();
   const location = useLocation();
   const isHome = location.pathname === '/home';
+  const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
 
   if (isHome) {
     return <>{children}</>;
@@ -18,13 +21,13 @@ export function ViewerLayout({ children }: ViewerLayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full" dir="rtl">
+      <div className="min-h-screen flex w-full sports-bg" dir={dir}>
         <ViewerAppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="sticky top-0 z-50 h-14 flex items-center gap-3 px-4 border-b border-border glass-effect">
             <SidebarTrigger className="shrink-0" />
             <Link to="/home" className="flex items-center gap-2 group">
-              <img src="/icon-512.png" alt="Bottola" className="w-8 h-8 rounded-xl" />
+              <img src="/icon-512.png" alt="Bottola" className="w-8 h-8 rounded-xl shadow-sm" />
               <span className="font-display text-lg font-bold">Bottola</span>
             </Link>
           </header>

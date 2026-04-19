@@ -1,7 +1,9 @@
 {
   "app": {
     "name": "Bottola",
-    "tagline": "La meilleure plateforme de gestion de tournois sportifs"
+    "tagline": "La meilleure plateforme de gestion de tournois sportifs",
+    "viewerSubtitle": "Suivez les tournois en direct",
+    "organizer": "Organisateur"
   },
   "common": {
     "loading": "Chargement...",
@@ -24,6 +26,7 @@
     "comment": "Commenter",
     "like": "J'aime",
     "post": "Publier",
+    "send": "Envoyer",
     "writeComment": "Écrire un commentaire...",
     "writePost": "Que voulez-vous partager ?",
     "addPhoto": "Ajouter une photo",
@@ -32,7 +35,10 @@
     "noData": "Aucune donnée",
     "error": "Erreur",
     "success": "Succès",
-    "vs": "VS"
+    "vs": "VS",
+    "view": "Voir",
+    "guest": "Invité",
+    "loginRequired": "Connexion requise"
   },
   "nav": {
     "home": "Accueil",
@@ -56,6 +62,22 @@
   "roles": {
     "viewer": "Spectateur",
     "organizer": "Organisateur"
+  },
+  "welcome": {
+    "viewerHi": "Bienvenue cher",
+    "viewerLabel": "Spectateur",
+    "viewerDesc": "Suivez vos organisateurs préférés, regardez les tournois et matchs, et recevez des notifications instantanées",
+    "createFreeAccount": "Créer un compte gratuit",
+    "browseAsGuest": "Parcourir en invité",
+    "feature1Title": "Suivi des tournois",
+    "feature1Desc": "Suivez les derniers tournois et matchs en temps réel",
+    "feature2Title": "Matchs",
+    "feature2Desc": "Consultez les résultats et tableaux en direct",
+    "feature3Title": "Classement",
+    "feature3Desc": "Découvrez le classement et les statistiques détaillées",
+    "feature4Title": "Notifications instantanées",
+    "feature4Desc": "Recevez des alertes en direct sur les résultats",
+    "rights": "© 2025 Bottola. Tous droits réservés."
   },
   "settings": {
     "title": "Paramètres",
@@ -85,10 +107,12 @@
   "news": {
     "title": "Actualités",
     "subtitle": "Connectez-vous et partagez avec les autres organisateurs",
+    "viewerSubtitle": "Suivez les actualités des organisateurs",
     "createPost": "Créer une publication",
     "publish": "Publier",
     "publishing": "Publication...",
     "noPosts": "Aucune publication. Soyez le premier !",
+    "noPostsViewer": "Aucune publication pour le moment",
     "likes": "J'aime",
     "comments": "commentaires",
     "shares": "partages",
@@ -99,6 +123,7 @@
     "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ?",
     "edited": "Modifié",
     "uploading": "Téléchargement des fichiers...",
+    "loginToInteract": "Connectez-vous comme organisateur pour interagir et commenter",
     "reactions": {
       "like": "J'aime",
       "love": "J'adore",
@@ -126,7 +151,9 @@
     "groupsKnockout": "Groupes + Élimination",
     "groupsKnockoutDesc": "Phase de groupes puis élimination",
     "teams": "Équipes",
+    "team": "équipe",
     "matches": "Matchs",
+    "match": "Match",
     "standings": "Classement",
     "champion": "Champion",
     "manOfMatch": "Homme du match",
@@ -168,6 +195,7 @@
     "tabTeams": "Équipes",
     "tabStandings": "Classement",
     "tabRequests": "Demandes",
+    "tabJoin": "Demande d'inscription",
     "nextRound": "Suivant",
     "startKnockout": "Démarrer l'élimination",
     "start": "Démarrer",
@@ -175,14 +203,35 @@
     "knockoutStage": "Phase d'élimination",
     "round": "Tour",
     "groupLabel": "Groupe",
-    "match": "Match",
     "noMatches": "Aucun match",
     "scheduled": "Programmé",
     "live": "🔴 En direct",
+    "liveShort": "Direct",
     "finished": "Terminé",
     "draft": "Brouillon",
     "upcoming": "Bientôt",
-    "completed": "Terminé"
+    "completed": "Terminé",
+    "ongoing": "En cours",
+    "noTournaments": "Aucun tournoi",
+    "noTournamentsDesc": "Aucun tournoi n'a été créé pour le moment",
+    "browseAll": "Tous les tournois disponibles",
+    "searchPlaceholder": "Rechercher un tournoi ou organisateur...",
+    "noDate": "Non définie",
+    "rounds": {
+      "final": "Finale",
+      "semifinal": "Demi-finale",
+      "quarterfinal": "Quart de finale",
+      "round16": "Huitièmes",
+      "round32": "Seizièmes"
+    },
+    "joinRequest": "Demande d'inscription",
+    "joinDesc": "Entrez les informations de votre équipe",
+    "playerName": "Nom du joueur",
+    "players": "Joueurs",
+    "submitRequest": "Envoyer la demande",
+    "requestSent": "Demande envoyée avec succès ✅",
+    "enterTeamName": "Entrez le nom de l'équipe",
+    "minTwoTeams": "Ajoutez au moins deux équipes"
   },
   "standings": {
     "team": "Équipe",
@@ -196,5 +245,62 @@
     "wonShort": "G",
     "drawnShort": "N",
     "lostShort": "P"
+  },
+  "following": {
+    "title": "Abonnements",
+    "subtitle": "Découvrez et suivez les organisateurs",
+    "discover": "Découvrir",
+    "myFollowing": "Mes abonnements",
+    "searchOrganizer": "Rechercher un organisateur...",
+    "noOrganizers": "Aucun organisateur",
+    "noResults": "Aucun résultat trouvé",
+    "noFollowing": "Aucun abonnement",
+    "startFollowing": "Commencez à suivre des organisateurs pour voir leurs tournois",
+    "viewTournaments": "Voir les tournois",
+    "tournamentCount": "tournoi",
+    "followerCount": "abonné",
+    "loginToFollow": "Connectez-vous pour suivre",
+    "loginToFollowDesc": "Vous pouvez parcourir les organisateurs, mais le suivi nécessite un compte",
+    "organizerOf": "Organisateur de tournois sportifs",
+    "backToFollowing": "Retour aux abonnements"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "loginRequired": "Connectez-vous pour recevoir les notifications",
+    "noNotifications": "Aucune notification",
+    "noNotificationsDesc": "Les notifications de vos organisateurs apparaîtront ici",
+    "unreadCount": "{{count}} non lue(s)",
+    "noNew": "Aucune nouvelle notification",
+    "markAllRead": "Tout marquer comme lu"
+  },
+  "toasts": {
+    "fetchTournamentsFailed": "Échec du chargement des tournois",
+    "tournamentCreated": "Tournoi créé avec succès",
+    "createTournamentFailed": "Échec de création du tournoi",
+    "tournamentDeleted": "Tournoi supprimé ✅",
+    "deleteTournamentFailed": "Échec de suppression",
+    "addTeamsFailed": "Échec d'ajout des équipes",
+    "minTwoTeams": "Au moins deux équipes requises",
+    "knockoutCreated": "Matchs d'élimination créés",
+    "createMatchesFailed": "Échec de création des matchs",
+    "groupsCreated": "Groupes créés ✅",
+    "groupsCreatedDesc": "{{count}} matchs créés en phase de groupes",
+    "createGroupsFailed": "Échec de création des groupes",
+    "incompleteGroupMatches": "{{count}} matchs de groupe non terminés",
+    "warning": "Attention ⚠️",
+    "knockoutStarted": "Phase d'élimination démarrée 🏆",
+    "knockoutStartedDesc": "{{count}} matchs en élimination",
+    "startKnockoutFailed": "Échec du démarrage de l'élimination",
+    "nextRoundCreated": "Tour suivant créé automatiquement ⚡",
+    "nextRoundCreatedDesc": "{{count}} nouveaux matchs",
+    "tournamentEnded": "🏆 Tournoi terminé !",
+    "tournamentEndedDesc": "Le champion a été désigné",
+    "resultUpdated": "Résultat mis à jour",
+    "updateResultFailed": "Échec de mise à jour du résultat",
+    "noMatches": "Aucun match",
+    "incompleteRound": "Tous les matchs du tour ne sont pas terminés",
+    "nextRoundManual": "Tour suivant créé",
+    "nextRoundFailed": "Échec de création du tour suivant",
+    "fetchDetailsFailed": "Échec du chargement des détails"
   }
 }

@@ -3,6 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
+import i18n from '@/i18n';
+
+const t = (k: string, opts?: Record<string, unknown>) => i18n.t(k, opts) as string;
 
 type Tournament = Database['public']['Tables']['tournaments']['Row'];
 type Team = Database['public']['Tables']['teams']['Row'];
@@ -25,7 +28,7 @@ export function useTournaments() {
       setTournaments(data || []);
     } catch (error) {
       console.error('Error fetching tournaments:', error);
-      toast({ title: 'خطأ', description: 'فشل في جلب البطولات', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('toasts.fetchTournamentsFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -73,11 +76,11 @@ export function useTournaments() {
 
       if (error) throw error;
       setTournaments((prev) => [data, ...prev]);
-      toast({ title: 'تم بنجاح', description: 'تم إنشاء البطولة بنجاح' });
+      toast({ title: t('common.success'), description: t('toasts.tournamentCreated') });
       return data;
     } catch (error) {
       console.error('Error creating tournament:', error);
-      toast({ title: 'خطأ', description: 'فشل في إنشاء البطولة', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('toasts.createTournamentFailed'), variant: 'destructive' });
       return null;
     }
   };
@@ -93,11 +96,11 @@ export function useTournaments() {
       if (error) throw error;
 
       setTournaments((prev) => prev.filter((t) => t.id !== tournamentId));
-      toast({ title: 'تم حذف البطولة ✅' });
+      toast({ title: t('toasts.tournamentDeleted') });
       return true;
     } catch (error) {
       console.error('Error deleting tournament:', error);
-      toast({ title: 'خطأ', description: 'فشل في حذف البطولة', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('toasts.deleteTournamentFailed'), variant: 'destructive' });
       return false;
     }
   };
@@ -114,7 +117,7 @@ export function useTournaments() {
       return data;
     } catch (error) {
       console.error('Error adding teams:', error);
-      toast({ title: 'خطأ', description: 'فشل في إضافة الفرق', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('toasts.addTeamsFailed'), variant: 'destructive' });
       return null;
     }
   };
@@ -145,12 +148,12 @@ export function useTournaments() {
   const generateKnockoutMatches = async (tournamentId: string, teams: Team[]) => {
     try {
       if (!teams || teams.length < 2) {
-        throw new Error('يجب أن يكون هناك فريقين على الأقل');
+        throw new Error(t('toasts.minTwoTeams'));
       }
 
       const matches = [];
       const numMatches = Math.floor(teams.length / 2);
-      
+
       for (let i = 0; i < numMatches; i++) {
         matches.push({
           tournament_id: tournamentId,
@@ -164,13 +167,13 @@ export function useTournaments() {
 
       const { data, error } = await supabase.from('matches').insert(matches).select();
       if (error) throw error;
-      
+
       await supabase.from('tournaments').update({ status: 'upcoming' as TournamentStatus }).eq('id', tournamentId);
-      toast({ title: 'تم بنجاح', description: 'تم إنشاء مباريات الإقصاء المباشر' });
+      toast({ title: t('common.success'), description: t('toasts.knockoutCreated') });
       return data;
     } catch (error) {
       console.error('Error generating knockout matches:', error);
-      toast({ title: 'خطأ', description: 'فشل في إنشاء المباريات', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('toasts.createMatchesFailed'), variant: 'destructive' });
       return null;
     }
   };
@@ -227,18 +230,17 @@ export function useTournaments() {
       }
 
       await supabase.from('tournaments').update({ status: 'upcoming' as TournamentStatus }).eq('id', tournamentId);
-      toast({ title: 'تم إنشاء المجموعات ✅', description: `تم إنشاء ${allMatches.length} مباراة في مرحلة المجموعات` });
+      toast({ title: t('toasts.groupsCreated'), description: t('toasts.groupsCreatedDesc', { count: allMatches.length }) });
       return true;
     } catch (error) {
       console.error('Error generating group matches:', error);
-      toast({ title: 'خطأ', description: 'فشل في إنشاء المجموعات', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('toasts.createGroupsFailed'), variant: 'destructive' });
       return null;
     }
   };
 
   const startKnockoutFromGroups = async (tournamentId: string) => {
     try {
-      // First check if all group matches are completed
       const { data: groupMatches } = await supabase
         .from('matches')
         .select('*')
@@ -248,7 +250,7 @@ export function useTournaments() {
       if (groupMatches && groupMatches.length > 0) {
         const incompleteGroupMatches = groupMatches.filter(m => m.status !== 'completed');
         if (incompleteGroupMatches.length > 0) {
-          toast({ title: 'تنبيه ⚠️', description: `لم تكتمل ${incompleteGroupMatches.length} مباراة في المجموعات بعد`, variant: 'destructive' });
+          toast({ title: t('toasts.warning'), description: t('toasts.incompleteGroupMatches', { count: incompleteGroupMatches.length }), variant: 'destructive' });
           return null;
         }
       }
@@ -262,10 +264,9 @@ export function useTournaments() {
         .order('goal_difference', { ascending: false });
 
       if (!standings || standings.length === 0) {
-        throw new Error('لا توجد جداول ترتيب');
+        throw new Error(t('toasts.noMatches'));
       }
 
-      // Group standings by group_name
       const grouped: Record<string, typeof standings> = {};
       for (const s of standings) {
         const key = s.group_name || 'A';
@@ -273,7 +274,6 @@ export function useTournaments() {
         grouped[key].push(s);
       }
 
-      // Sort each group by points then goal_difference
       for (const key of Object.keys(grouped)) {
         grouped[key].sort((a, b) => {
           const pointsDiff = (b.points || 0) - (a.points || 0);
@@ -283,8 +283,7 @@ export function useTournaments() {
       }
 
       const sortedGroups = Object.keys(grouped).sort();
-      
-      // Get top 2 from each group
+
       const firsts: string[] = [];
       const seconds: string[] = [];
       for (const groupName of sortedGroups) {
@@ -294,10 +293,9 @@ export function useTournaments() {
       }
 
       if (firsts.length === 0 || seconds.length === 0) {
-        throw new Error('عدد الفرق المتأهلة غير كافي');
+        throw new Error(t('toasts.startKnockoutFailed'));
       }
 
-      // Determine the next round number (after group matches)
       const { data: existingMatches } = await supabase
         .from('matches')
         .select('round')
@@ -305,11 +303,10 @@ export function useTournaments() {
         .order('round', { ascending: false })
         .limit(1);
 
-      const nextRound = existingMatches && existingMatches.length > 0 
-        ? (existingMatches[0].round || 1) + 1 
+      const nextRound = existingMatches && existingMatches.length > 0
+        ? (existingMatches[0].round || 1) + 1
         : 2;
 
-      // Cross-group pairing: 1st of group A vs 2nd of last group, etc.
       const matches = [];
       const reversedSeconds = [...seconds].reverse();
 
@@ -330,11 +327,11 @@ export function useTournaments() {
       }
 
       await supabase.from('tournaments').update({ status: 'live' as TournamentStatus }).eq('id', tournamentId);
-      toast({ title: 'تم بدء مرحلة الإقصاء 🏆', description: `${matches.length} مباراة في مرحلة الإقصاء` });
+      toast({ title: t('toasts.knockoutStarted'), description: t('toasts.knockoutStartedDesc', { count: matches.length }) });
       return true;
     } catch (error: any) {
       console.error('Error starting knockout from groups:', error);
-      toast({ title: 'خطأ', description: error.message || 'فشل في بدء مرحلة الإقصاء', variant: 'destructive' });
+      toast({ title: t('common.error'), description: error.message || t('toasts.startKnockoutFailed'), variant: 'destructive' });
       return null;
     }
   };
@@ -389,7 +386,6 @@ export function useTournaments() {
       const { error: updateError } = await supabase.from('matches').update(updateData).eq('id', matchId);
       if (updateError) throw updateError;
 
-      // Update standings for group matches OR league matches (where standings exist)
       if (match.home_team_id && match.away_team_id) {
         const { data: homeSt } = await supabase
           .from('standings').select('*').eq('tournament_id', match.tournament_id).eq('team_id', match.home_team_id).maybeSingle();
@@ -398,19 +394,16 @@ export function useTournaments() {
         }
       }
 
-      // Auto-advance: check if all matches in current knockout round are done, then generate next round
       if (!match.group_name && winnerId) {
         const { data: roundMatches } = await supabase.from('matches')
           .select('*').eq('tournament_id', match.tournament_id).eq('round', match.round).is('group_name', null);
 
         if (roundMatches) {
-          // Mark this match as completed in our local copy
           const updatedRoundMatches = roundMatches.map(m => m.id === matchId ? { ...m, status: 'completed' as const, winner_id: winnerId } : m);
           const allCompleted = updatedRoundMatches.every(m => m.status === 'completed');
           const winners = updatedRoundMatches.map(m => m.winner_id).filter(Boolean) as string[];
 
           if (allCompleted && winners.length >= 2) {
-            // Auto-generate next round
             const nextRound = (match.round || 1) + 1;
             const nextMatches = [];
             for (let i = 0; i < winners.length; i += 2) {
@@ -427,24 +420,23 @@ export function useTournaments() {
             }
             if (nextMatches.length > 0) {
               await supabase.from('matches').insert(nextMatches);
-              toast({ title: 'تم إنشاء الجولة التالية تلقائياً ⚡', description: `${nextMatches.length} مباراة جديدة` });
+              toast({ title: t('toasts.nextRoundCreated'), description: t('toasts.nextRoundCreatedDesc', { count: nextMatches.length }) });
             } else if (winners.length === 1) {
-              // Tournament completed - one winner
               await supabase.from('tournaments').update({ status: 'completed' as TournamentStatus }).eq('id', match.tournament_id);
-              toast({ title: '🏆 البطولة انتهت!', description: 'تم تحديد البطل' });
+              toast({ title: t('toasts.tournamentEnded'), description: t('toasts.tournamentEndedDesc') });
             }
           } else if (allCompleted && winners.length === 1) {
             await supabase.from('tournaments').update({ status: 'completed' as TournamentStatus }).eq('id', match.tournament_id);
-            toast({ title: '🏆 البطولة انتهت!', description: 'تم تحديد البطل' });
+            toast({ title: t('toasts.tournamentEnded'), description: t('toasts.tournamentEndedDesc') });
           }
         }
       }
 
-      toast({ title: 'تم تحديث النتيجة', description: `${homeScore} - ${awayScore}` });
+      toast({ title: t('toasts.resultUpdated'), description: `${homeScore} - ${awayScore}` });
       return true;
     } catch (error) {
       console.error('Error updating match result:', error);
-      toast({ title: 'خطأ', description: 'فشل في تحديث النتيجة', variant: 'destructive' });
+      toast({ title: t('common.error'), description: t('toasts.updateResultFailed'), variant: 'destructive' });
       return null;
     }
   };
@@ -456,7 +448,7 @@ export function useTournaments() {
         .is('group_name', null).order('round', { ascending: false });
 
       if (!allMatches || allMatches.length === 0) {
-        throw new Error('لا توجد مباريات');
+        throw new Error(t('toasts.noMatches'));
       }
 
       const currentRound = allMatches[0].round || 1;
@@ -465,13 +457,13 @@ export function useTournaments() {
       const completedRoundMatches = currentRoundMatches.filter(m => m.status === 'completed');
 
       if (completedRoundMatches.length < currentRoundMatches.length) {
-        throw new Error('لم تكتمل جميع مباريات الجولة الحالية');
+        throw new Error(t('toasts.incompleteRound'));
       }
 
       const winners = completedRoundMatches.map(m => m.winner_id).filter(Boolean) as string[];
 
       if (winners.length < 2) {
-        toast({ title: '🏆 البطولة انتهت!', description: 'تم تحديد البطل' });
+        toast({ title: t('toasts.tournamentEnded'), description: t('toasts.tournamentEndedDesc') });
         await supabase.from('tournaments').update({ status: 'completed' as TournamentStatus }).eq('id', tournamentId);
         return true;
       }
@@ -496,11 +488,11 @@ export function useTournaments() {
         if (error) throw error;
       }
 
-      toast({ title: 'تم إنشاء الجولة التالية', description: `${nextMatches.length} مباراة جديدة` });
+      toast({ title: t('toasts.nextRoundManual'), description: t('toasts.nextRoundCreatedDesc', { count: nextMatches.length }) });
       return true;
     } catch (error: any) {
       console.error('Error generating next round:', error);
-      toast({ title: 'خطأ', description: error.message || 'فشل في إنشاء الجولة التالية', variant: 'destructive' });
+      toast({ title: t('common.error'), description: error.message || t('toasts.nextRoundFailed'), variant: 'destructive' });
       return null;
     }
   };
