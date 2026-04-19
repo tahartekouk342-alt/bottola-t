@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Trophy, Loader2, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,8 +9,10 @@ import { TournamentCard } from '@/components/tournament/TournamentCard';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function ViewerTournamentsFeed() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const localeStr = i18n.language === 'fr' ? 'fr-FR' : 'ar-SA';
 
   const { data: tournaments, isLoading } = useQuery({
     queryKey: ['all-tournaments-feed'],
@@ -27,14 +30,11 @@ export default function ViewerTournamentsFeed() {
         profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
       }
 
-      // Get team counts
       const tournamentIds = (data || []).map(t => t.id);
-      let teamCountMap = new Map<string, number>();
+      const teamCountMap = new Map<string, number>();
       if (tournamentIds.length > 0) {
         const { data: teams } = await supabase.from('teams').select('tournament_id').in('tournament_id', tournamentIds);
-        if (teams) {
-          teams.forEach(t => teamCountMap.set(t.tournament_id, (teamCountMap.get(t.tournament_id) || 0) + 1));
-        }
+        if (teams) teams.forEach(t => teamCountMap.set(t.tournament_id, (teamCountMap.get(t.tournament_id) || 0) + 1));
       }
 
       return (data || []).map(t => ({
@@ -47,7 +47,7 @@ export default function ViewerTournamentsFeed() {
 
   const filtered = tournaments?.filter(t =>
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.organizer?.display_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    t.organizer?.display_name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const mapStatus = (s: string) => {
@@ -57,14 +57,14 @@ export default function ViewerTournamentsFeed() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8" dir="rtl">
+    <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">البطولات</h1>
-        <p className="text-muted-foreground">جميع البطولات المتاحة</p>
+        <h1 className="font-display text-3xl md:text-4xl font-bold mb-2">{t('nav.tournaments')}</h1>
+        <p className="text-muted-foreground">{t('tournament.browseAll')}</p>
       </div>
       <div className="relative mb-8 max-w-md">
-        <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-        <Input placeholder="ابحث عن بطولة أو منظم..." className="pr-12 rounded-2xl bg-secondary/40 border-border" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        <Search className="absolute end-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        <Input placeholder={t('tournament.searchPlaceholder')} className="pe-12 rounded-2xl bg-secondary/40 border-border" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
       </div>
       {isLoading ? (
         <div className="flex items-center justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
@@ -76,7 +76,7 @@ export default function ViewerTournamentsFeed() {
               id={tournament.id}
               name={tournament.name}
               teams={tournament.teamCount}
-              startDate={tournament.start_date ? new Date(tournament.start_date).toLocaleDateString('ar-SA') : 'غير محدد'}
+              startDate={tournament.start_date ? new Date(tournament.start_date).toLocaleDateString(localeStr) : t('tournament.noDate')}
               status={mapStatus(tournament.status)}
               type={tournament.type}
               logoUrl={tournament.logo_url}
@@ -92,8 +92,8 @@ export default function ViewerTournamentsFeed() {
         <Card className="border-dashed rounded-3xl">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <Trophy className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
-            <h3 className="text-2xl font-display font-bold mb-2">لا توجد بطولات</h3>
-            <p className="text-muted-foreground">لم يتم إنشاء أي بطولات بعد</p>
+            <h3 className="text-2xl font-display font-bold mb-2">{t('tournament.noTournaments')}</h3>
+            <p className="text-muted-foreground">{t('tournament.noTournamentsDesc')}</p>
           </CardContent>
         </Card>
       )}
