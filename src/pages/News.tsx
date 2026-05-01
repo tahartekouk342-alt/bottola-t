@@ -320,18 +320,21 @@ export default function News({ readOnlyComposer = false }: NewsProps) {
             </div>
 
             {files.length > 0 && (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {files.map((f, i) => (
-                  <div key={i} className="relative rounded-lg overflow-hidden bg-secondary aspect-video">
-                    {f.type.startsWith('video') ? (
+                  <div key={i} className="relative rounded-lg overflow-hidden bg-secondary aspect-square">
+                    {f.type.startsWith('image') ? (
+                      <img src={URL.createObjectURL(f)} className="w-full h-full object-cover" alt="" />
+                    ) : f.type.startsWith('video') ? (
                       <video src={URL.createObjectURL(f)} className="w-full h-full object-cover" />
                     ) : (
-                      <img src={URL.createObjectURL(f)} className="w-full h-full object-cover" alt="" />
+                      <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
+                        <ImageIcon className="w-6 h-6 text-muted-foreground mb-1" />
+                        <span className="text-[10px] text-muted-foreground truncate w-full">{f.name}</span>
+                      </div>
                     )}
-                    <button
-                      onClick={() => removeFile(i)}
-                      className="absolute top-1 end-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center"
-                    >
+                    <button onClick={() => removeFile(i)}
+                      className="absolute top-1 end-1 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center">
                       <X className="w-3 h-3" />
                     </button>
                   </div>
@@ -340,22 +343,16 @@ export default function News({ readOnlyComposer = false }: NewsProps) {
             )}
 
             <div className="flex items-center justify-between">
-              <Button
-                size="sm" variant="ghost"
+              <Button size="sm" variant="ghost"
                 onClick={() => fileInputRef.current?.click()}
-                className="gap-2 text-muted-foreground"
-              >
-                <ImageIcon className="w-4 h-4 text-success" /> {t('common.addPhoto')}
+                className="gap-2 text-muted-foreground">
+                <ImageIcon className="w-4 h-4 text-success" /> {t('news.addMedia')}
               </Button>
-              <input
-                ref={fileInputRef} type="file" accept="image/*,video/*" multiple
-                onChange={handleFiles} className="hidden"
-              />
-              <Button
-                onClick={handlePublish}
+              <input ref={fileInputRef} type="file" multiple
+                onChange={handleFiles} className="hidden" />
+              <Button onClick={handlePublish}
                 disabled={posting || (!content.trim() && files.length === 0)}
-                className="gradient-primary text-primary-foreground gap-2"
-              >
+                className="gradient-primary text-primary-foreground gap-2">
                 {posting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 {posting ? t('news.publishing') : t('news.publish')}
               </Button>
