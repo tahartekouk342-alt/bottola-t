@@ -64,10 +64,12 @@ export type Database = {
       matches: {
         Row: {
           away_score: number | null
+          away_sets: number | null
           away_team_id: string | null
           created_at: string
           group_name: string | null
           home_score: number | null
+          home_sets: number | null
           home_team_id: string | null
           id: string
           man_of_match_name: string | null
@@ -76,6 +78,7 @@ export type Database = {
           match_time: string | null
           next_match_id: string | null
           round: number
+          sets_detail: Json | null
           status: Database["public"]["Enums"]["match_status"]
           tournament_id: string
           updated_at: string
@@ -83,10 +86,12 @@ export type Database = {
         }
         Insert: {
           away_score?: number | null
+          away_sets?: number | null
           away_team_id?: string | null
           created_at?: string
           group_name?: string | null
           home_score?: number | null
+          home_sets?: number | null
           home_team_id?: string | null
           id?: string
           man_of_match_name?: string | null
@@ -95,6 +100,7 @@ export type Database = {
           match_time?: string | null
           next_match_id?: string | null
           round?: number
+          sets_detail?: Json | null
           status?: Database["public"]["Enums"]["match_status"]
           tournament_id: string
           updated_at?: string
@@ -102,10 +108,12 @@ export type Database = {
         }
         Update: {
           away_score?: number | null
+          away_sets?: number | null
           away_team_id?: string | null
           created_at?: string
           group_name?: string | null
           home_score?: number | null
+          home_sets?: number | null
           home_team_id?: string | null
           id?: string
           man_of_match_name?: string | null
@@ -114,6 +122,7 @@ export type Database = {
           match_time?: string | null
           next_match_id?: string | null
           round?: number
+          sets_detail?: Json | null
           status?: Database["public"]["Enums"]["match_status"]
           tournament_id?: string
           updated_at?: string
@@ -201,8 +210,42 @@ export type Database = {
           },
         ]
       }
+      player_pool: {
+        Row: {
+          age_category: string | null
+          birth_date: string | null
+          created_at: string
+          full_name: string
+          id: string
+          organizer_id: string
+          photo_url: string | null
+          season: string
+        }
+        Insert: {
+          age_category?: string | null
+          birth_date?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          organizer_id: string
+          photo_url?: string | null
+          season?: string
+        }
+        Update: {
+          age_category?: string | null
+          birth_date?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          organizer_id?: string
+          photo_url?: string | null
+          season?: string
+        }
+        Relationships: []
+      }
       players: {
         Row: {
+          birth_date: string | null
           created_at: string
           id: string
           is_captain: boolean
@@ -213,6 +256,7 @@ export type Database = {
           team_id: string
         }
         Insert: {
+          birth_date?: string | null
           created_at?: string
           id?: string
           is_captain?: boolean
@@ -223,6 +267,7 @@ export type Database = {
           team_id: string
         }
         Update: {
+          birth_date?: string | null
           created_at?: string
           id?: string
           is_captain?: boolean
@@ -340,6 +385,7 @@ export type Database = {
           author_id: string
           content: string
           created_at: string
+          file_names: string[] | null
           id: string
           media_types: string[] | null
           media_urls: string[] | null
@@ -349,6 +395,7 @@ export type Database = {
           author_id: string
           content: string
           created_at?: string
+          file_names?: string[] | null
           id?: string
           media_types?: string[] | null
           media_urls?: string[] | null
@@ -358,6 +405,7 @@ export type Database = {
           author_id?: string
           content?: string
           created_at?: string
+          file_names?: string[] | null
           id?: string
           media_types?: string[] | null
           media_urls?: string[] | null
@@ -514,10 +562,13 @@ export type Database = {
       tournaments: {
         Row: {
           accept_join_requests: boolean | null
+          age_category: string | null
+          completed_at: string | null
           created_at: string
           current_round: number | null
           end_date: string | null
           id: string
+          is_archived: boolean
           logo_url: string | null
           max_teams: number | null
           name: string
@@ -525,6 +576,7 @@ export type Database = {
           num_teams: number
           owner_id: string | null
           referee_name: string | null
+          season: string | null
           sport_type: Database["public"]["Enums"]["sport_type"]
           start_date: string | null
           status: Database["public"]["Enums"]["tournament_status"]
@@ -534,13 +586,17 @@ export type Database = {
           venue_address: string | null
           venue_name: string | null
           venue_photos: string[] | null
+          volleyball_format: string | null
         }
         Insert: {
           accept_join_requests?: boolean | null
+          age_category?: string | null
+          completed_at?: string | null
           created_at?: string
           current_round?: number | null
           end_date?: string | null
           id?: string
+          is_archived?: boolean
           logo_url?: string | null
           max_teams?: number | null
           name: string
@@ -548,6 +604,7 @@ export type Database = {
           num_teams?: number
           owner_id?: string | null
           referee_name?: string | null
+          season?: string | null
           sport_type?: Database["public"]["Enums"]["sport_type"]
           start_date?: string | null
           status?: Database["public"]["Enums"]["tournament_status"]
@@ -557,13 +614,17 @@ export type Database = {
           venue_address?: string | null
           venue_name?: string | null
           venue_photos?: string[] | null
+          volleyball_format?: string | null
         }
         Update: {
           accept_join_requests?: boolean | null
+          age_category?: string | null
+          completed_at?: string | null
           created_at?: string
           current_round?: number | null
           end_date?: string | null
           id?: string
+          is_archived?: boolean
           logo_url?: string | null
           max_teams?: number | null
           name?: string
@@ -571,6 +632,7 @@ export type Database = {
           num_teams?: number
           owner_id?: string | null
           referee_name?: string | null
+          season?: string | null
           sport_type?: Database["public"]["Enums"]["sport_type"]
           start_date?: string | null
           status?: Database["public"]["Enums"]["tournament_status"]
@@ -580,6 +642,7 @@ export type Database = {
           venue_address?: string | null
           venue_name?: string | null
           venue_photos?: string[] | null
+          volleyball_format?: string | null
         }
         Relationships: []
       }
@@ -641,7 +704,7 @@ export type Database = {
     Enums: {
       app_role: "organizer" | "viewer"
       match_status: "scheduled" | "live" | "completed"
-      sport_type: "football" | "basketball"
+      sport_type: "football" | "basketball" | "volleyball"
       tournament_status: "draft" | "upcoming" | "live" | "completed"
       tournament_type: "knockout" | "league" | "groups"
     }
@@ -773,7 +836,7 @@ export const Constants = {
     Enums: {
       app_role: ["organizer", "viewer"],
       match_status: ["scheduled", "live", "completed"],
-      sport_type: ["football", "basketball"],
+      sport_type: ["football", "basketball", "volleyball"],
       tournament_status: ["draft", "upcoming", "live", "completed"],
       tournament_type: ["knockout", "league", "groups"],
     },
