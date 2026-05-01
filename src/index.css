@@ -6,74 +6,74 @@
 
 @layer base {
   :root {
-    /* Light Mode - Official Sports Platform */
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    /* Light Mode — Premium official sports identity (Apple-like) */
+    --background: 0 0% 99%;
+    --foreground: 222 47% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 222 47% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 222 47% 9%;
 
-    /* Primary - Deep Sport Green (more official) */
-    --primary: 158 64% 32%;
+    /* Primary — refined Sport Green */
+    --primary: 158 70% 28%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 210 30% 96%;
+    --secondary-foreground: 222 47% 9%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 210 30% 96%;
+    --muted-foreground: 215 16% 42%;
 
-    --accent: 158 64% 32%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 222 47% 9%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 158 64% 32%;
+    --success: 158 70% 28%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 222 47% 11%;
 
-    --info: 217 91% 60%;
+    --info: 217 91% 55%;
     --info-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 210 40% 96%;
-    --ring: 158 64% 32%;
+    --border: 214 25% 90%;
+    --input: 214 25% 90%;
+    --ring: 158 70% 28%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    --bracket-line: 214 32% 91%;
-    --group-header: 210 40% 96%;
+    --bracket-line: 214 25% 88%;
+    --group-header: 210 30% 96%;
     --match-card: 0 0% 100%;
-    --standings-row-alt: 210 40% 98%;
-    --live-pulse: 0 84% 60%;
+    --standings-row-alt: 210 30% 98%;
+    --live-pulse: 0 72% 51%;
 
-    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.08), 0 2px 4px -2px hsl(222 47% 11% / 0.05);
-    --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.1), 0 4px 6px -4px hsl(222 47% 11% / 0.05);
-    --shadow-xl: 0 20px 25px -5px hsl(222 47% 11% / 0.1), 0 8px 10px -6px hsl(222 47% 11% / 0.05);
-    --shadow-glow: 0 0 24px hsl(158 64% 32% / 0.18);
-    --shadow-card: 0 2px 8px hsl(222 47% 11% / 0.06);
+    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.04);
+    --shadow-md: 0 2px 4px hsl(222 47% 11% / 0.04), 0 4px 12px hsl(222 47% 11% / 0.05);
+    --shadow-lg: 0 8px 16px -4px hsl(222 47% 11% / 0.08), 0 16px 32px -8px hsl(222 47% 11% / 0.06);
+    --shadow-xl: 0 20px 40px -12px hsl(222 47% 11% / 0.12);
+    --shadow-glow: 0 0 24px hsl(158 70% 28% / 0.18);
+    --shadow-card: 0 1px 3px hsl(222 47% 11% / 0.04), 0 4px 12px hsl(222 47% 11% / 0.04);
 
-    --gradient-primary: linear-gradient(135deg, hsl(158 64% 32%), hsl(158 64% 24%));
-    --gradient-accent: linear-gradient(135deg, hsl(38 92% 50%), hsl(38 92% 40%));
-    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 40% 98%));
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 40% 99%));
-    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.85), hsl(210 40% 96% / 0.65));
+    --gradient-primary: linear-gradient(135deg, hsl(158 70% 32%), hsl(158 70% 22%));
+    --gradient-accent: linear-gradient(135deg, hsl(38 92% 55%), hsl(38 92% 42%));
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 30% 98%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 30% 99%));
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.92), hsl(210 30% 96% / 0.78));
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 158 64% 32%;
+    --sidebar-foreground: 222 47% 9%;
+    --sidebar-primary: 158 70% 28%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 158 64% 32%;
+    --sidebar-accent: 210 30% 96%;
+    --sidebar-accent-foreground: 222 47% 9%;
+    --sidebar-border: 214 25% 90%;
+    --sidebar-ring: 158 70% 28%;
   }
 
   .dark {
