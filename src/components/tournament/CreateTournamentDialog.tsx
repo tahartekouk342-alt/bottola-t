@@ -40,6 +40,15 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const sportTypes = [
     { value: 'football', label: t('tournament.football'), icon: '⚽' },
     { value: 'basketball', label: t('tournament.basketball'), icon: '🏀' },
+    { value: 'volleyball', label: t('tournament.volleyball'), icon: '🏐' },
+  ];
+
+  const ageCategories = [
+    { value: 'u13', label: t('tournament.ageCategory') + ' U13' },
+    { value: 'u15', label: t('tournament.ageCategory') + ' U15' },
+    { value: 'u17', label: t('tournament.ageCategory') + ' U17' },
+    { value: 'u19', label: t('tournament.ageCategory') + ' U19' },
+    { value: 'senior', label: t('tournament.ageCategory') + ' Senior' },
   ];
 
   const [step, setStep] = useState(1);
@@ -48,7 +57,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
 
   const [name, setName] = useState('');
   const [type, setType] = useState<TournamentType>('knockout');
-  const [sportType, setSportType] = useState<'football' | 'basketball'>('football');
+  const [sportType, setSportType] = useState<'football' | 'basketball' | 'volleyball'>('football');
+  const [volleyFormat, setVolleyFormat] = useState<'3of5' | '2of3'>('3of5');
+  const [ageCategory, setAgeCategory] = useState<string>('senior');
   const [startDate, setStartDate] = useState('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -64,7 +75,8 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [drawResult, setDrawResult] = useState<any>(null);
 
   const resetForm = () => {
-    setStep(1); setName(''); setType('knockout'); setSportType('football'); setStartDate('');
+    setStep(1); setName(''); setType('knockout'); setSportType('football');
+    setVolleyFormat('3of5'); setAgeCategory('senior'); setStartDate('');
     setLogoFile(null); setLogoPreview(null);
     setVenueName(''); setVenueAddress(''); setRefereeName('');
     setAcceptJoinRequests(false);
