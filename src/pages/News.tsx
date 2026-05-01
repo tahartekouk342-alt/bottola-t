@@ -126,10 +126,22 @@ export default function News({ readOnlyComposer = false }: NewsProps) {
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const list = Array.from(e.target.files || []);
-    setFiles(prev => [...prev, ...list].slice(0, 4));
+    // Validate size: 50MB per file
+    const valid = list.filter(f => {
+      if (f.size > 50 * 1024 * 1024) {
+        toast({ title: t('common.error'), description: t('news.fileTooLarge'), variant: 'destructive' });
+        return false;
+      }
+      return true;
+    });
+    setFiles(prev => [...prev, ...valid].slice(0, 6));
+    e.target.value = '';
   };
 
   const removeFile = (i: number) => setFiles(prev => prev.filter((_, idx) => idx !== i));
+
+  const fileKind = (mime: string): 'image' | 'video' | 'file' =>
+    mime.startsWith('image/') ? 'image' : mime.startsWith('video/') ? 'video' : 'file';
 
   const handlePublish = async () => {
     if (!user || (!content.trim() && files.length === 0)) return;
@@ -137,14 +149,18 @@ export default function News({ readOnlyComposer = false }: NewsProps) {
     try {
       const urls: string[] = [];
       const types: string[] = [];
+      const names: string[] = [];
       for (const file of files) {
         const ext = file.name.split('.').pop();
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error } = await supabase.storage.from('posts-media').upload(path, file);
+        const { error } = await supabase.storage.from('posts-media').upload(path, file, {
+          contentType: file.type || 'application/octet-stream',
+        });
         if (error) throw error;
         const { data: { publicUrl } } = supabase.storage.from('posts-media').getPublicUrl(path);
         urls.push(publicUrl);
-        types.push(file.type.startsWith('video') ? 'video' : 'image');
+        types.push(fileKind(file.type));
+        names.push(file.name);
       }
 
       const { error: insErr } = await supabase.from('posts').insert({
@@ -152,7 +168,8 @@ export default function News({ readOnlyComposer = false }: NewsProps) {
         content: content.trim(),
         media_urls: urls,
         media_types: types,
-      });
+        file_names: names,
+      } as any);
       if (insErr) throw insErr;
 
       setContent('');
