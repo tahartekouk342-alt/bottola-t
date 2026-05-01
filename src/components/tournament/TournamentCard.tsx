@@ -1,6 +1,5 @@
-import { Trophy, Users, Calendar, ChevronLeft, MapPin, Target, Gavel } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Trophy, Users, Calendar, ChevronLeft, MapPin } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
@@ -11,7 +10,9 @@ interface TournamentCardProps {
   startDate: string;
   status: 'upcoming' | 'live' | 'completed' | 'draft';
   type: 'knockout' | 'league' | 'groups';
-  sportType?: 'football' | 'basketball';
+  sportType?: 'football' | 'basketball' | 'volleyball';
+  ageCategory?: string | null;
+  championName?: string | null;
   logoUrl?: string | null;
   venueName?: string | null;
   stadiumImageUrl?: string | null;
@@ -19,48 +20,56 @@ interface TournamentCardProps {
   onClick?: () => void;
 }
 
-export function TournamentCard({ name, teams, startDate, status, type, sportType = 'football', logoUrl, venueName, stadiumImageUrl, refereeName, onClick }: TournamentCardProps) {
+const STATUS_DOT: Record<string, string> = {
+  draft: 'bg-muted-foreground',
+  upcoming: 'bg-info',
+  live: 'bg-destructive animate-pulse',
+  completed: 'bg-success',
+};
+
+export function TournamentCard({
+  name, teams, startDate, status, sportType = 'football',
+  ageCategory, championName, logoUrl, venueName, stadiumImageUrl, onClick,
+}: TournamentCardProps) {
   const { t } = useTranslation();
 
-  const statusConfig: Record<string, { label: string; color: string }> = {
-    draft: { label: t('tournament.draft'), color: 'text-muted-foreground bg-muted/60' },
-    upcoming: { label: t('tournament.upcoming'), color: 'text-blue-500 bg-blue-500/10' },
-    live: { label: t('tournament.ongoing'), color: 'text-red-500 bg-red-500/10' },
-    completed: { label: t('tournament.completed'), color: 'text-emerald-500 bg-emerald-500/10' },
+  const statusLabel: Record<string, string> = {
+    draft: t('tournament.draft'),
+    upcoming: t('tournament.upcoming'),
+    live: t('tournament.ongoing'),
+    completed: t('tournament.completed'),
   };
 
-  const typeConfig: Record<string, { label: string; icon: JSX.Element }> = {
-    knockout: { label: t('tournament.knockout'), icon: <Target className="w-3 h-3" /> },
-    league: { label: t('tournament.league'), icon: <Trophy className="w-3 h-3" /> },
-    groups: { label: t('tournament.groups'), icon: <Users className="w-3 h-3" /> },
-  };
-
-  const sportEmoji = sportType === 'basketball' ? '🏀' : '⚽';
+  const sportEmoji = sportType === 'basketball' ? '🏀' : sportType === 'volleyball' ? '🏐' : '⚽';
 
   return (
     <Card
       onClick={onClick}
       className={cn(
-        'group relative overflow-hidden transition-all duration-300 rounded-2xl cursor-pointer hover:shadow-lg hover:-translate-y-1',
-        status === 'live' && 'ring-1 ring-primary/30',
+        'group relative overflow-hidden cursor-pointer rounded-2xl border-border/70',
+        'transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 hover:border-primary/40',
       )}
     >
-      <div className="relative h-28 overflow-hidden bg-gradient-to-br from-secondary/50 to-secondary/30">
+      <div className="relative h-24 overflow-hidden bg-gradient-to-br from-foreground via-foreground/95 to-foreground/85">
         {stadiumImageUrl && (
-          <img src={stadiumImageUrl} alt={name} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 group-hover:scale-105 transition-all duration-500" />
+          <img src={stadiumImageUrl} alt=""
+            className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700"
+          />
         )}
+        <div className="absolute inset-0 opacity-[0.08]"
+          style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '14px 14px' }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
 
-        <div className="absolute top-2.5 start-2.5 end-2.5 z-20 flex items-center justify-between">
-          <Badge className={cn('px-2.5 py-1 rounded-full text-[10px] font-bold border-none backdrop-blur-md', statusConfig[status]?.color)}>
-            {status === 'live' && <span className="w-1.5 h-1.5 bg-red-500 rounded-full me-1.5 animate-pulse" />}
-            {statusConfig[status]?.label}
-          </Badge>
-          <span className="text-sm">{sportEmoji}</span>
+        <div className="absolute top-3 start-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-md border border-border/50 text-[10px] font-semibold uppercase tracking-wider">
+          <span className={cn('w-1.5 h-1.5 rounded-full', STATUS_DOT[status])} />
+          <span>{statusLabel[status]}</span>
         </div>
 
-        <div className="absolute -bottom-5 end-4 z-20">
-          <div className="w-14 h-14 rounded-xl bg-card border-2 border-background shadow-lg flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-300">
+        <span className="absolute top-3 end-3 text-lg drop-shadow-md">{sportEmoji}</span>
+
+        <div className="absolute -bottom-6 end-4 z-20">
+          <div className="w-14 h-14 rounded-2xl bg-card border-2 border-background shadow-lg flex items-center justify-center overflow-hidden">
             {logoUrl ? (
               <img src={logoUrl} alt={name} className="w-full h-full object-cover" />
             ) : (
@@ -70,33 +79,41 @@ export function TournamentCard({ name, teams, startDate, status, type, sportType
         </div>
       </div>
 
-      <CardContent className="p-3.5 pt-8">
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="font-display text-base font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors duration-200 flex-1">{name}</h3>
-          <div className="w-7 h-7 rounded-full bg-secondary/50 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200 shrink-0 ms-2">
-            <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" />
+      <div className="p-4 pt-7">
+        {status === 'completed' && championName && (
+          <div className="inline-flex items-center gap-1.5 px-2 py-1 mb-2 rounded-md bg-foreground text-background text-[10px] font-semibold">
+            <Trophy className="w-3 h-3 text-amber-400" />
+            <span className="truncate max-w-[160px]">{championName}</span>
           </div>
+        )}
+
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h3 className="font-display text-base font-bold leading-snug text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+            {name}
+          </h3>
+          <ChevronLeft className="w-4 h-4 text-muted-foreground rtl:rotate-180 shrink-0 mt-1 group-hover:text-primary transition-colors" />
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2 flex-wrap">
-          <span className="flex items-center gap-1"><Users className="w-3 h-3 text-primary" />{teams} {t('tournament.team')}</span>
+        <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground flex-wrap">
+          <span className="inline-flex items-center gap-1"><Users className="w-3 h-3" /> {teams}</span>
           <span className="text-border">·</span>
-          <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-primary" />{startDate}</span>
-          <span className="text-border">·</span>
-          <span className="flex items-center gap-1">{typeConfig[type]?.icon}{typeConfig[type]?.label}</span>
+          <span className="inline-flex items-center gap-1"><Calendar className="w-3 h-3" /> {startDate}</span>
+          {ageCategory && (
+            <>
+              <span className="text-border">·</span>
+              <span className="px-1.5 py-0.5 rounded bg-secondary text-foreground/80 font-semibold uppercase text-[10px] tracking-wider">
+                {ageCategory}
+              </span>
+            </>
+          )}
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          {venueName ? (
-            <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><MapPin className="w-3 h-3 text-primary" />{venueName}</span>
-          ) : (
-            <span className="text-[10px] text-muted-foreground">—</span>
-          )}
-          {refereeName && (
-            <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><Gavel className="w-3 h-3 text-primary" />{refereeName}</span>
-          )}
-        </div>
-      </CardContent>
+        {venueName && (
+          <p className="mt-2 pt-2 border-t border-border/60 text-[10px] text-muted-foreground inline-flex items-center gap-1">
+            <MapPin className="w-3 h-3" /> {venueName}
+          </p>
+        )}
+      </div>
     </Card>
   );
 }

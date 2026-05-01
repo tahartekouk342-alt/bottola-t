@@ -85,9 +85,7 @@ export default function OrganizerWelcome() {
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between p-4 md:p-6">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center glow-primary">
-            <Trophy className="w-7 h-7 text-primary-foreground" />
-          </div>
+          <img src="/icon-512.png" alt="Bottola" className="w-12 h-12 rounded-2xl shadow-lg" />
           <span className="font-display text-2xl font-bold text-foreground">Bottola</span>
           <span className="text-xs bg-accent/20 text-accent-foreground px-3 py-1 rounded-full font-semibold">منظم</span>
         </div>
