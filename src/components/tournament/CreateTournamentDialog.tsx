@@ -166,7 +166,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         acceptJoinRequests,
         maxTeams: maxTeams ? Number(maxTeams) : undefined,
         venuePhotos, sportType,
-      });
+        ageCategory,
+        volleyballFormat: sportType === 'volleyball' ? volleyFormat : undefined,
+      } as any);
 
       if (!tournament) return;
 
@@ -233,15 +235,48 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
             {/* Sport Type */}
             <div className="space-y-2">
               <Label>{t('tournament.sportLabel')}</Label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 {sportTypes.map((s) => (
                   <Card key={s.value} className={cn('cursor-pointer transition-all hover:scale-[1.02]',
                     sportType === s.value ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50')}
-                    onClick={() => setSportType(s.value as 'football' | 'basketball')}>
-                    <CardContent className="p-3 flex items-center gap-3">
+                    onClick={() => setSportType(s.value as any)}>
+                    <CardContent className="p-3 flex flex-col items-center gap-1.5">
                       <span className="text-2xl">{s.icon}</span>
-                      <span className="font-bold text-sm">{s.label}</span>
+                      <span className="font-bold text-xs text-center">{s.label}</span>
                     </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Volleyball format selector */}
+            {sportType === 'volleyball' && (
+              <div className="space-y-2">
+                <Label>{t('tournament.volleyballFormat')}</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { v: '3of5', l: t('tournament.volley3of5') },
+                    { v: '2of3', l: t('tournament.volley2of3') },
+                  ].map((opt) => (
+                    <Card key={opt.v} className={cn('cursor-pointer transition-all',
+                      volleyFormat === opt.v ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50')}
+                      onClick={() => setVolleyFormat(opt.v as any)}>
+                      <CardContent className="p-3 text-center text-sm font-semibold">{opt.l}</CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Age Category */}
+            <div className="space-y-2">
+              <Label>{t('tournament.ageCategory')}</Label>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {ageCategories.map((c) => (
+                  <Card key={c.value} className={cn('cursor-pointer transition-all',
+                    ageCategory === c.value ? 'ring-2 ring-primary border-primary bg-primary/5' : 'hover:border-primary/50')}
+                    onClick={() => setAgeCategory(c.value)}>
+                    <CardContent className="p-2 text-center text-[11px] font-bold uppercase">{c.value}</CardContent>
                   </Card>
                 ))}
               </div>
