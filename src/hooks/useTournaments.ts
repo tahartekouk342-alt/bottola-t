@@ -49,6 +49,9 @@ export function useTournaments() {
     maxTeams?: number;
     venuePhotos?: string[];
     sportType?: string;
+    ageCategory?: string;
+    volleyballFormat?: string;
+    season?: string;
   }) => {
     try {
       const { data, error } = await supabase
@@ -70,7 +73,10 @@ export function useTournaments() {
           max_teams: tournament.maxTeams || null,
           venue_photos: tournament.venuePhotos || [],
           sport_type: (tournament.sportType as any) || 'football',
-        })
+          age_category: tournament.ageCategory || null,
+          volleyball_format: tournament.volleyballFormat || null,
+          season: tournament.season || null,
+        } as any)
         .select()
         .single();
 
