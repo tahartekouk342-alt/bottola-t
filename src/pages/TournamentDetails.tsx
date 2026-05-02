@@ -74,8 +74,8 @@ export default function TournamentDetails() {
     }
   };
 
-  const handleUpdateMatch = async (matchId: string, homeScore: number, awayScore: number, manOfMatch?: string) => {
-    const result = await updateMatchResult(matchId, homeScore, awayScore, manOfMatch);
+  const handleUpdateMatch = async (matchId: string, homeScore: number, awayScore: number, manOfMatch?: string, sets?: any) => {
+    const result = await updateMatchResult(matchId, homeScore, awayScore, manOfMatch, sets);
     if (result) fetchTournamentDetails();
     return result;
   };
@@ -544,7 +544,15 @@ export default function TournamentDetails() {
         )}
       </div>
 
-      <UpdateMatchDialog match={selectedMatch} open={matchDialogOpen} onOpenChange={setMatchDialogOpen} onUpdate={handleUpdateMatch} tournamentType={tournament?.type} />
+      <UpdateMatchDialog
+        match={selectedMatch}
+        open={matchDialogOpen}
+        onOpenChange={setMatchDialogOpen}
+        onUpdate={handleUpdateMatch}
+        tournamentType={tournament?.type}
+        sportType={(tournament as any)?.sport_type}
+        volleyballFormat={(tournament as any)?.volleyball_format}
+      />
       
       {editTeam && (
         <EditTeamDialog

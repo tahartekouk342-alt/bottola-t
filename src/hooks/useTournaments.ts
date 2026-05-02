@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
 import i18n from '@/i18n';
+import { volleyballPoints, type VolleyballSet } from '@/lib/volleyball';
 
 const t = (k: string, opts?: Record<string, unknown>) => i18n.t(k, opts) as string;
 
@@ -342,23 +343,46 @@ export function useTournaments() {
     }
   };
 
-  const updateStandings = async (tournamentId: string, homeTeamId: string, awayTeamId: string, homeScore: number, awayScore: number) => {
+  const updateStandings = async (
+    tournamentId: string,
+    homeTeamId: string,
+    awayTeamId: string,
+    homeScore: number,
+    awayScore: number,
+    sportType: string = 'football',
+  ) => {
     try {
       const { data: homeSt } = await supabase
         .from('standings').select('*').eq('tournament_id', tournamentId).eq('team_id', homeTeamId).single();
       const { data: awaySt } = await supabase
         .from('standings').select('*').eq('tournament_id', tournamentId).eq('team_id', awayTeamId).single();
 
+      // Compute points awarded based on sport
+      let homePts: number;
+      let awayPts: number;
+      if (sportType === 'volleyball') {
+        const p = volleyballPoints(homeScore, awayScore);
+        homePts = p.home;
+        awayPts = p.away;
+      } else {
+        // Football / basketball / default: win=3, draw=1, loss=0
+        const homeWon = homeScore > awayScore;
+        const awayWon = awayScore > homeScore;
+        const draw = homeScore === awayScore;
+        homePts = homeWon ? 3 : draw ? 1 : 0;
+        awayPts = awayWon ? 3 : draw ? 1 : 0;
+      }
+
       if (homeSt) {
         const won = homeScore > awayScore ? 1 : 0;
         const drawn = homeScore === awayScore ? 1 : 0;
         const lost = homeScore < awayScore ? 1 : 0;
-        const points = (homeSt.points || 0) + (won ? 3 : drawn ? 1 : 0);
         await supabase.from('standings').update({
           played: (homeSt.played || 0) + 1, won: (homeSt.won || 0) + won,
           drawn: (homeSt.drawn || 0) + drawn, lost: (homeSt.lost || 0) + lost,
           goals_for: (homeSt.goals_for || 0) + homeScore, goals_against: (homeSt.goals_against || 0) + awayScore,
-          goal_difference: ((homeSt.goals_for || 0) + homeScore) - ((homeSt.goals_against || 0) + awayScore), points,
+          goal_difference: ((homeSt.goals_for || 0) + homeScore) - ((homeSt.goals_against || 0) + awayScore),
+          points: (homeSt.points || 0) + homePts,
         }).eq('id', homeSt.id);
       }
 
@@ -366,12 +390,12 @@ export function useTournaments() {
         const won = awayScore > homeScore ? 1 : 0;
         const drawn = homeScore === awayScore ? 1 : 0;
         const lost = awayScore < homeScore ? 1 : 0;
-        const points = (awaySt.points || 0) + (won ? 3 : drawn ? 1 : 0);
         await supabase.from('standings').update({
           played: (awaySt.played || 0) + 1, won: (awaySt.won || 0) + won,
           drawn: (awaySt.drawn || 0) + drawn, lost: (awaySt.lost || 0) + lost,
           goals_for: (awaySt.goals_for || 0) + awayScore, goals_against: (awaySt.goals_against || 0) + homeScore,
-          goal_difference: ((awaySt.goals_for || 0) + awayScore) - ((awaySt.goals_against || 0) + homeScore), points,
+          goal_difference: ((awaySt.goals_for || 0) + awayScore) - ((awaySt.goals_against || 0) + homeScore),
+          points: (awaySt.points || 0) + awayPts,
         }).eq('id', awaySt.id);
       }
     } catch (error) {
@@ -379,15 +403,31 @@ export function useTournaments() {
     }
   };
 
-  const updateMatchResult = async (matchId: string, homeScore: number, awayScore: number, manOfMatchName?: string) => {
+  const updateMatchResult = async (
+    matchId: string,
+    homeScore: number,
+    awayScore: number,
+    manOfMatchName?: string,
+    sets?: VolleyballSet[],
+  ) => {
     try {
       const { data: match, error: fetchError } = await supabase.from('matches').select('*').eq('id', matchId).single();
       if (fetchError) throw fetchError;
+
+      // Look up tournament's sport for correct standings logic
+      const { data: tournamentRow } = await supabase
+        .from('tournaments').select('sport_type').eq('id', match.tournament_id).maybeSingle();
+      const sportType = (tournamentRow as any)?.sport_type || 'football';
 
       const winnerId = homeScore > awayScore ? match.home_team_id : homeScore < awayScore ? match.away_team_id : null;
 
       const updateData: any = { home_score: homeScore, away_score: awayScore, status: 'completed' as const, winner_id: winnerId };
       if (manOfMatchName) updateData.man_of_match_name = manOfMatchName;
+      if (sportType === 'volleyball' && sets) {
+        updateData.home_sets = homeScore;
+        updateData.away_sets = awayScore;
+        updateData.sets_detail = sets as any;
+      }
 
       const { error: updateError } = await supabase.from('matches').update(updateData).eq('id', matchId);
       if (updateError) throw updateError;
@@ -396,7 +436,7 @@ export function useTournaments() {
         const { data: homeSt } = await supabase
           .from('standings').select('*').eq('tournament_id', match.tournament_id).eq('team_id', match.home_team_id).maybeSingle();
         if (homeSt) {
-          await updateStandings(match.tournament_id, match.home_team_id, match.away_team_id, homeScore, awayScore);
+          await updateStandings(match.tournament_id, match.home_team_id, match.away_team_id, homeScore, awayScore, sportType);
         }
       }
 

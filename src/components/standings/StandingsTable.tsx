@@ -29,10 +29,13 @@ interface StandingsTableProps {
     promotion?: number[];
     relegation?: number[];
   };
+  sportType?: string;
 }
 
-export function StandingsTable({ standings, highlightPositions }: StandingsTableProps) {
+export function StandingsTable({ standings, highlightPositions, sportType = 'football' }: StandingsTableProps) {
   const { t } = useTranslation();
+  const isVolleyball = sportType === 'volleyball';
+  const diffLabel = isVolleyball ? t('standings.setsDiff', 'فارق الأشواط') : t('standings.goalDiff');
   const getPositionStyle = (position: number) => {
     if (highlightPositions?.promotion?.includes(position)) {
       return 'border-r-4 border-r-primary bg-primary/5';
@@ -69,9 +72,11 @@ export function StandingsTable({ standings, highlightPositions }: StandingsTable
           <TableHead className="font-bold">{t('standings.team')}</TableHead>
           <TableHead className="text-center w-12 font-bold">{t('standings.played')}</TableHead>
           <TableHead className="text-center w-12 hidden sm:table-cell font-bold">{t('standings.won')}</TableHead>
-          <TableHead className="text-center w-12 hidden sm:table-cell font-bold">{t('standings.drawn')}</TableHead>
+          {!isVolleyball && (
+            <TableHead className="text-center w-12 hidden sm:table-cell font-bold">{t('standings.drawn')}</TableHead>
+          )}
           <TableHead className="text-center w-12 hidden sm:table-cell font-bold">{t('standings.lost')}</TableHead>
-          <TableHead className="text-center w-16 hidden md:table-cell font-bold">{t('standings.goalDiff')}</TableHead>
+          <TableHead className="text-center w-16 hidden md:table-cell font-bold">{diffLabel}</TableHead>
           <TableHead className="text-center w-14 font-bold text-primary">{t('standings.points')}</TableHead>
           <TableHead className="text-center hidden lg:table-cell font-bold">{t('standings.form')}</TableHead>
         </TableRow>
@@ -106,7 +111,9 @@ export function StandingsTable({ standings, highlightPositions }: StandingsTable
             </TableCell>
             <TableCell className="text-center text-muted-foreground font-medium">{team.played}</TableCell>
             <TableCell className="text-center text-muted-foreground font-medium hidden sm:table-cell">{team.won}</TableCell>
-            <TableCell className="text-center text-muted-foreground font-medium hidden sm:table-cell">{team.drawn}</TableCell>
+            {!isVolleyball && (
+              <TableCell className="text-center text-muted-foreground font-medium hidden sm:table-cell">{team.drawn}</TableCell>
+            )}
             <TableCell className="text-center text-muted-foreground font-medium hidden sm:table-cell">{team.lost}</TableCell>
             <TableCell className={cn(
               "text-center font-semibold hidden md:table-cell",
