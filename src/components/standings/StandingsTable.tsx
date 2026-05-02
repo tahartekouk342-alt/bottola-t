@@ -72,9 +72,11 @@ export function StandingsTable({ standings, highlightPositions, sportType = 'foo
           <TableHead className="font-bold">{t('standings.team')}</TableHead>
           <TableHead className="text-center w-12 font-bold">{t('standings.played')}</TableHead>
           <TableHead className="text-center w-12 hidden sm:table-cell font-bold">{t('standings.won')}</TableHead>
-          <TableHead className="text-center w-12 hidden sm:table-cell font-bold">{t('standings.drawn')}</TableHead>
+          {!isVolleyball && (
+            <TableHead className="text-center w-12 hidden sm:table-cell font-bold">{t('standings.drawn')}</TableHead>
+          )}
           <TableHead className="text-center w-12 hidden sm:table-cell font-bold">{t('standings.lost')}</TableHead>
-          <TableHead className="text-center w-16 hidden md:table-cell font-bold">{t('standings.goalDiff')}</TableHead>
+          <TableHead className="text-center w-16 hidden md:table-cell font-bold">{diffLabel}</TableHead>
           <TableHead className="text-center w-14 font-bold text-primary">{t('standings.points')}</TableHead>
           <TableHead className="text-center hidden lg:table-cell font-bold">{t('standings.form')}</TableHead>
         </TableRow>
