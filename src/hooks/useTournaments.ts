@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
 import i18n from '@/i18n';
+import { volleyballPoints, type VolleyballSet } from '@/lib/volleyball';
 
 const t = (k: string, opts?: Record<string, unknown>) => i18n.t(k, opts) as string;
 
