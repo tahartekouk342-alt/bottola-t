@@ -544,7 +544,15 @@ export default function TournamentDetails() {
         )}
       </div>
 
-      <UpdateMatchDialog match={selectedMatch} open={matchDialogOpen} onOpenChange={setMatchDialogOpen} onUpdate={handleUpdateMatch} tournamentType={tournament?.type} />
+      <UpdateMatchDialog
+        match={selectedMatch}
+        open={matchDialogOpen}
+        onOpenChange={setMatchDialogOpen}
+        onUpdate={handleUpdateMatch}
+        tournamentType={tournament?.type}
+        sportType={(tournament as any)?.sport_type}
+        volleyballFormat={(tournament as any)?.volleyball_format}
+      />
       
       {editTeam && (
         <EditTeamDialog
