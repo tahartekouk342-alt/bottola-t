@@ -29,10 +29,13 @@ interface StandingsTableProps {
     promotion?: number[];
     relegation?: number[];
   };
+  sportType?: string;
 }
 
-export function StandingsTable({ standings, highlightPositions }: StandingsTableProps) {
+export function StandingsTable({ standings, highlightPositions, sportType = 'football' }: StandingsTableProps) {
   const { t } = useTranslation();
+  const isVolleyball = sportType === 'volleyball';
+  const diffLabel = isVolleyball ? t('standings.setsDiff', 'فارق الأشواط') : t('standings.goalDiff');
   const getPositionStyle = (position: number) => {
     if (highlightPositions?.promotion?.includes(position)) {
       return 'border-r-4 border-r-primary bg-primary/5';
