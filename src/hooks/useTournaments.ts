@@ -343,23 +343,46 @@ export function useTournaments() {
     }
   };
 
-  const updateStandings = async (tournamentId: string, homeTeamId: string, awayTeamId: string, homeScore: number, awayScore: number) => {
+  const updateStandings = async (
+    tournamentId: string,
+    homeTeamId: string,
+    awayTeamId: string,
+    homeScore: number,
+    awayScore: number,
+    sportType: string = 'football',
+  ) => {
     try {
       const { data: homeSt } = await supabase
         .from('standings').select('*').eq('tournament_id', tournamentId).eq('team_id', homeTeamId).single();
       const { data: awaySt } = await supabase
         .from('standings').select('*').eq('tournament_id', tournamentId).eq('team_id', awayTeamId).single();
 
+      // Compute points awarded based on sport
+      let homePts: number;
+      let awayPts: number;
+      if (sportType === 'volleyball') {
+        const p = volleyballPoints(homeScore, awayScore);
+        homePts = p.home;
+        awayPts = p.away;
+      } else {
+        // Football / basketball / default: win=3, draw=1, loss=0
+        const homeWon = homeScore > awayScore;
+        const awayWon = awayScore > homeScore;
+        const draw = homeScore === awayScore;
+        homePts = homeWon ? 3 : draw ? 1 : 0;
+        awayPts = awayWon ? 3 : draw ? 1 : 0;
+      }
+
       if (homeSt) {
         const won = homeScore > awayScore ? 1 : 0;
         const drawn = homeScore === awayScore ? 1 : 0;
         const lost = homeScore < awayScore ? 1 : 0;
-        const points = (homeSt.points || 0) + (won ? 3 : drawn ? 1 : 0);
         await supabase.from('standings').update({
           played: (homeSt.played || 0) + 1, won: (homeSt.won || 0) + won,
           drawn: (homeSt.drawn || 0) + drawn, lost: (homeSt.lost || 0) + lost,
           goals_for: (homeSt.goals_for || 0) + homeScore, goals_against: (homeSt.goals_against || 0) + awayScore,
-          goal_difference: ((homeSt.goals_for || 0) + homeScore) - ((homeSt.goals_against || 0) + awayScore), points,
+          goal_difference: ((homeSt.goals_for || 0) + homeScore) - ((homeSt.goals_against || 0) + awayScore),
+          points: (homeSt.points || 0) + homePts,
         }).eq('id', homeSt.id);
       }
 
@@ -367,12 +390,12 @@ export function useTournaments() {
         const won = awayScore > homeScore ? 1 : 0;
         const drawn = homeScore === awayScore ? 1 : 0;
         const lost = awayScore < homeScore ? 1 : 0;
-        const points = (awaySt.points || 0) + (won ? 3 : drawn ? 1 : 0);
         await supabase.from('standings').update({
           played: (awaySt.played || 0) + 1, won: (awaySt.won || 0) + won,
           drawn: (awaySt.drawn || 0) + drawn, lost: (awaySt.lost || 0) + lost,
           goals_for: (awaySt.goals_for || 0) + awayScore, goals_against: (awaySt.goals_against || 0) + homeScore,
-          goal_difference: ((awaySt.goals_for || 0) + awayScore) - ((awaySt.goals_against || 0) + homeScore), points,
+          goal_difference: ((awaySt.goals_for || 0) + awayScore) - ((awaySt.goals_against || 0) + homeScore),
+          points: (awaySt.points || 0) + awayPts,
         }).eq('id', awaySt.id);
       }
     } catch (error) {
