@@ -111,7 +111,9 @@ export function StandingsTable({ standings, highlightPositions, sportType = 'foo
             </TableCell>
             <TableCell className="text-center text-muted-foreground font-medium">{team.played}</TableCell>
             <TableCell className="text-center text-muted-foreground font-medium hidden sm:table-cell">{team.won}</TableCell>
-            <TableCell className="text-center text-muted-foreground font-medium hidden sm:table-cell">{team.drawn}</TableCell>
+            {!isVolleyball && (
+              <TableCell className="text-center text-muted-foreground font-medium hidden sm:table-cell">{team.drawn}</TableCell>
+            )}
             <TableCell className="text-center text-muted-foreground font-medium hidden sm:table-cell">{team.lost}</TableCell>
             <TableCell className={cn(
               "text-center font-semibold hidden md:table-cell",
