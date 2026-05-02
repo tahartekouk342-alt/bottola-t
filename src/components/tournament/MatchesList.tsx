@@ -168,11 +168,26 @@ function MatchCardInline({ match, onClick, showDate, venueName, stadiumImageUrl,
           </div>
         )}
 
+        {/* Volleyball sets detail */}
+        {isCompleted && Array.isArray((match as any).sets_detail) && (match as any).sets_detail.length > 0 && (
+          <div className="mt-3 pt-2 border-t border-dashed border-border flex justify-center flex-wrap gap-1.5">
+            {((match as any).sets_detail as Array<{ home: number; away: number }>).map((s, i) => (
+              <span
+                key={i}
+                className="px-2 py-0.5 rounded-md bg-muted text-[10px] font-bold tabular-nums"
+                title={`الشوط ${i + 1}`}
+              >
+                {s.home}-{s.away}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Man of the Match */}
         {isCompleted && (match as any).man_of_match_name && (
           <div className="mt-3 pt-2 border-t border-dashed border-border flex justify-center">
-            <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-400 text-[11px] font-bold">
-              <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
+            <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 text-[11px] font-bold">
+              <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
               {t('tournament.manOfMatch')}: {(match as any).man_of_match_name}
             </span>
           </div>
