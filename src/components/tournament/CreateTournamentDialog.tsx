@@ -66,8 +66,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [venueName, setVenueName] = useState('');
   const [venueAddress, setVenueAddress] = useState('');
   const [refereeName, setRefereeName] = useState('');
-  const [acceptJoinRequests, setAcceptJoinRequests] = useState(false);
-  const [maxTeams, setMaxTeams] = useState<number | ''>('');
+  const [leagueLegs, setLeagueLegs] = useState<1 | 2>(1);
+  const [hasPlayoff, setHasPlayoff] = useState(false);
+  const [playoffTeams, setPlayoffTeams] = useState<4 | 8>(4);
   const [stadiumImageFile, setStadiumImageFile] = useState<File | null>(null);
   const [stadiumImagePreview, setStadiumImagePreview] = useState<string | null>(null);
   const [teamsList, setTeamsList] = useState<string[]>([]);
