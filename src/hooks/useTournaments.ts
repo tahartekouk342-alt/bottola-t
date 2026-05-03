@@ -493,6 +493,161 @@ export function useTournaments() {
     }
   };
 
+  /**
+   * Generate full Round-Robin schedule for a league using the circle method.
+   * legs = 1 (single round-robin) or 2 (double round-robin: home & away).
+   * Each leg fills (n-1) rounds (or n rounds if odd, with a BYE skipped).
+   */
+  const generateLeagueMatches = async (tournamentId: string, teams: Team[], legs: number = 1) => {
+    try {
+      if (!teams || teams.length < 2) {
+        throw new Error(t('toasts.minTwoTeams'));
+      }
+
+      // Use circle method. Add a BYE placeholder if odd number of teams.
+      const arr: (Team | null)[] = [...teams];
+      if (arr.length % 2 === 1) arr.push(null);
+      const n = arr.length;
+      const roundsPerLeg = n - 1;
+
+      // Initialize standings
+      const standingsRows = teams.map((team, index) => ({
+        tournament_id: tournamentId,
+        team_id: team.id,
+        position: index + 1,
+        played: 0, won: 0, drawn: 0, lost: 0,
+        goals_for: 0, goals_against: 0, goal_difference: 0, points: 0,
+      }));
+      if (standingsRows.length > 0) {
+        const { error: stErr } = await supabase.from('standings').insert(standingsRows);
+        if (stErr) throw stErr;
+      }
+
+      const allMatches: any[] = [];
+      let matchOrder = 1;
+
+      // Working array we rotate (keep position 0 fixed, rotate the rest)
+      const working = [...arr];
+
+      for (let leg = 1; leg <= legs; leg++) {
+        // Reset working at the start of each leg so home/away pairings repeat (with sides flipped on leg 2)
+        const w = [...arr];
+        for (let r = 0; r < roundsPerLeg; r++) {
+          for (let i = 0; i < n / 2; i++) {
+            const a = w[i];
+            const b = w[n - 1 - i];
+            if (!a || !b) continue;
+            const home = leg === 2 ? b : a;
+            const away = leg === 2 ? a : b;
+            allMatches.push({
+              tournament_id: tournamentId,
+              home_team_id: home.id,
+              away_team_id: away.id,
+              round: (leg - 1) * roundsPerLeg + r + 1,
+              match_order: matchOrder++,
+              status: 'scheduled' as const,
+              leg,
+            });
+          }
+          // rotate (keep first fixed)
+          const fixed = w[0];
+          const rest = w.slice(1);
+          rest.unshift(rest.pop() as any);
+          w.splice(0, w.length, fixed as any, ...rest);
+        }
+      }
+
+      if (allMatches.length > 0) {
+        const { error: mErr } = await supabase.from('matches').insert(allMatches);
+        if (mErr) throw mErr;
+      }
+
+      await supabase.from('tournaments').update({ status: 'upcoming' as TournamentStatus }).eq('id', tournamentId);
+      toast({ title: t('common.success'), description: t('toasts.leagueCreated', { count: allMatches.length, defaultValue: 'تم إنشاء جدول الدوري ({{count}} مباراة)' }) });
+      return true;
+    } catch (error: any) {
+      console.error('Error generating league matches:', error);
+      toast({ title: t('common.error'), description: error.message || t('toasts.createMatchesFailed'), variant: 'destructive' });
+      return null;
+    }
+  };
+
+  /**
+   * Start the play-off phase from the league standings.
+   * Picks the top N teams (4 or 8) and creates the first round of knockout matches (1 vs N, 2 vs N-1, …).
+   */
+  const startPlayoffFromLeague = async (tournamentId: string) => {
+    try {
+      // Verify all league matches completed
+      const { data: leagueMatches } = await supabase
+        .from('matches')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .is('group_name', null);
+
+      const leagueRows = (leagueMatches || []).filter(m => !(m as any).round || (m as any).round); // all
+      const incomplete = leagueRows.filter(m => m.status !== 'completed');
+      if (incomplete.length > 0) {
+        toast({ title: t('toasts.warning'), description: t('toasts.incompleteLeagueMatches', { count: incomplete.length, defaultValue: 'تبقى {{count}} مباراة غير مكتملة' }), variant: 'destructive' });
+        return null;
+      }
+
+      // Tournament config
+      const { data: tour } = await supabase
+        .from('tournaments').select('*').eq('id', tournamentId).single();
+      if (!tour) throw new Error('not found');
+      const playoffSize = (tour as any).playoff_teams || 4;
+
+      // Get standings sorted
+      const { data: standings } = await supabase
+        .from('standings').select('*').eq('tournament_id', tournamentId);
+      if (!standings || standings.length < 2) throw new Error(t('toasts.startKnockoutFailed'));
+
+      const sorted = [...standings].sort((a, b) =>
+        (b.points || 0) - (a.points || 0) ||
+        (b.goal_difference || 0) - (a.goal_difference || 0) ||
+        (b.goals_for || 0) - (a.goals_for || 0)
+      );
+      const qualifiers = sorted.slice(0, Math.min(playoffSize, sorted.length));
+      if (qualifiers.length < 2) throw new Error(t('toasts.startKnockoutFailed'));
+
+      // Get next round number
+      const { data: lastRound } = await supabase
+        .from('matches').select('round')
+        .eq('tournament_id', tournamentId).order('round', { ascending: false }).limit(1);
+      const nextRound = (lastRound?.[0]?.round || 0) + 1;
+
+      const playoffMatches: any[] = [];
+      const half = qualifiers.length;
+      for (let i = 0; i < half / 2; i++) {
+        playoffMatches.push({
+          tournament_id: tournamentId,
+          home_team_id: qualifiers[i].team_id,
+          away_team_id: qualifiers[half - 1 - i].team_id,
+          round: nextRound,
+          match_order: i + 1,
+          status: 'scheduled' as const,
+        });
+      }
+
+      if (playoffMatches.length > 0) {
+        const { error } = await supabase.from('matches').insert(playoffMatches);
+        if (error) throw error;
+      }
+
+      await supabase.from('tournaments').update({
+        status: 'live' as TournamentStatus,
+        playoff_started: true,
+      } as any).eq('id', tournamentId);
+      toast({ title: t('toasts.playoffStarted', 'انطلق البلاي أوف 🔥'), description: t('toasts.knockoutStartedDesc', { count: playoffMatches.length }) });
+      return true;
+    } catch (error: any) {
+      console.error('Error starting playoff:', error);
+      toast({ title: t('common.error'), description: error.message || t('toasts.startKnockoutFailed'), variant: 'destructive' });
+      return null;
+    }
+  };
+
   const generateNextRound = async (tournamentId: string) => {
     try {
       const { data: allMatches } = await supabase
