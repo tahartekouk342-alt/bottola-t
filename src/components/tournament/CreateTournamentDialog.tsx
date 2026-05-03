@@ -161,23 +161,29 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       }
 
       const tournament = await createTournament({
-        name, type: 'knockout', startDate,
+        name, type, startDate,
         numTeams: teamsList.length,
         logoUrl, venueName, venueAddress, refereeName,
-        acceptJoinRequests,
-        maxTeams: maxTeams ? Number(maxTeams) : undefined,
+        acceptJoinRequests: false,
         venuePhotos, sportType,
         ageCategory,
         volleyballFormat: sportType === 'volleyball' ? volleyFormat : undefined,
+        leagueLegs: type === 'league' ? leagueLegs : 1,
+        hasPlayoff: type === 'league' ? hasPlayoff : false,
+        playoffTeams: type === 'league' && hasPlayoff ? playoffTeams : 4,
       } as any);
 
       if (!tournament) return;
 
-      const orderedTeams = drawResult.draw || teamsList;
+      const orderedTeams = drawResult?.draw || teamsList;
       const teams = await addTeams(tournament.id, orderedTeams as string[]);
       if (!teams) return;
 
-      await generateKnockoutMatches(tournament.id, teams);
+      if (type === 'league') {
+        await generateLeagueMatches(tournament.id, teams, leagueLegs);
+      } else {
+        await generateKnockoutMatches(tournament.id, teams);
+      }
 
       toast({ title: 'تم بنجاح! 🎉', description: 'تم إنشاء البطولة وإجراء القرعة' });
       onOpenChange(false);
