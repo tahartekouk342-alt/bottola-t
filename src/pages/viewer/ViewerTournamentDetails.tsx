@@ -73,12 +73,10 @@ export default function ViewerTournamentDetails() {
   }
 
   const showStandings = tournament.type === 'league' || tournament.type === 'groups';
-  const showJoin = tournament.accept_join_requests;
   const sportType = (tournament as any).sport_type || 'football';
 
   const visibleTabs = tabs.filter(tab => {
     if (tab.id === 'standings' && !showStandings) return false;
-    if (tab.id === 'join' && !showJoin) return false;
     if (tab.id === 'bracket' && tournament.type === 'league') return false;
     return true;
   });
