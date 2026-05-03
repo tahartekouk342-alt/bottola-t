@@ -33,7 +33,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
 
   const tournamentTypes = [
     { value: 'knockout' as TournamentType, label: t('tournament.knockout'), icon: Swords, desc: t('tournament.knockoutDesc'), bg: 'from-red-500/20 to-orange-500/20', available: true },
-    { value: 'league' as TournamentType, label: t('tournament.league'), icon: Trophy, desc: t('tournament.leagueDesc'), bg: 'from-blue-500/20 to-cyan-500/20', available: false },
+    { value: 'league' as TournamentType, label: t('tournament.league'), icon: Trophy, desc: t('tournament.leagueDesc'), bg: 'from-blue-500/20 to-cyan-500/20', available: true },
     { value: 'groups' as TournamentType, label: t('tournament.groupsKnockout'), icon: Layers, desc: t('tournament.groupsKnockoutDesc'), bg: 'from-purple-500/20 to-pink-500/20', available: false },
   ];
 
