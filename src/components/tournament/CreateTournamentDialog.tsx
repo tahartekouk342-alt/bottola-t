@@ -80,8 +80,8 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
     setVolleyFormat('3of5'); setAgeCategory('senior'); setStartDate('');
     setLogoFile(null); setLogoPreview(null);
     setVenueName(''); setVenueAddress(''); setRefereeName('');
-    setAcceptJoinRequests(false);
-    setMaxTeams(''); setStadiumImageFile(null); setStadiumImagePreview(null);
+    setLeagueLegs(1); setHasPlayoff(false); setPlayoffTeams(4);
+    setStadiumImageFile(null); setStadiumImagePreview(null);
     setTeamsList([]); setNewTeamName(''); setDrawResult(null);
   };
 
