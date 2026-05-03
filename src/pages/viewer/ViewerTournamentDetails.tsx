@@ -34,7 +34,6 @@ export default function ViewerTournamentDetails() {
     { id: 'teams', label: t('tournament.tabTeams'), icon: Users },
     { id: 'bracket', label: t('tournament.tabBracket'), icon: GitBranch },
     { id: 'standings', label: t('tournament.tabStandings'), icon: TableIcon },
-    { id: 'join', label: t('tournament.tabJoin'), icon: UserPlus },
   ];
 
   const knockoutMatches = matches.filter(m => !m.group_name);
