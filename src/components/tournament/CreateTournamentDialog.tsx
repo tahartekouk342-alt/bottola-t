@@ -28,7 +28,7 @@ interface CreateTournamentDialogProps {
 export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentDialogProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { createTournament, addTeams, performAIDraw, generateKnockoutMatches } = useTournaments();
+  const { createTournament, addTeams, performAIDraw, generateKnockoutMatches, generateLeagueMatches } = useTournaments();
   const { toast } = useToast();
 
   const tournamentTypes = [
