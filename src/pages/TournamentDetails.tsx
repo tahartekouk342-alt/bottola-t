@@ -43,7 +43,6 @@ export default function TournamentDetails() {
     { id: 'bracket', label: t('tournament.tabBracket'), icon: GitBranch },
     { id: 'teams', label: t('tournament.tabTeams'), icon: Users },
     { id: 'standings', label: t('tournament.tabStandings'), icon: TableIcon },
-    { id: 'requests', label: t('tournament.tabRequests'), icon: UserPlus },
   ];
 
   const { id } = useParams<{ id: string }>();
