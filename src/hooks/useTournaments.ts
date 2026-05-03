@@ -53,6 +53,9 @@ export function useTournaments() {
     ageCategory?: string;
     volleyballFormat?: string;
     season?: string;
+    leagueLegs?: number;
+    hasPlayoff?: boolean;
+    playoffTeams?: number;
   }) => {
     try {
       const { data, error } = await supabase
@@ -70,13 +73,16 @@ export function useTournaments() {
           venue_name: tournament.venueName || null,
           venue_address: tournament.venueAddress || null,
           referee_name: tournament.refereeName || null,
-          accept_join_requests: tournament.acceptJoinRequests || false,
+          accept_join_requests: false,
           max_teams: tournament.maxTeams || null,
           venue_photos: tournament.venuePhotos || [],
           sport_type: (tournament.sportType as any) || 'football',
           age_category: tournament.ageCategory || null,
           volleyball_format: tournament.volleyballFormat || null,
           season: tournament.season || null,
+          league_legs: tournament.leagueLegs ?? 1,
+          has_playoff: tournament.hasPlayoff ?? false,
+          playoff_teams: tournament.playoffTeams ?? 4,
         } as any)
         .select()
         .single();
