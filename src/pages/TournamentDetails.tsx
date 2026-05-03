@@ -539,9 +539,7 @@ export default function TournamentDetails() {
           )
         )}
 
-        {currentTab === 'requests' && id && (
-          <JoinRequestsPanel tournamentId={id} />
-        )}
+        {/* requests tab removed */}
       </div>
 
       <UpdateMatchDialog
