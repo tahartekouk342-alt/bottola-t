@@ -352,23 +352,65 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
               <Input placeholder={t('tournament.refereePlaceholder')} value={refereeName} onChange={(e) => setRefereeName(e.target.value)} />
             </div>
 
-            <Card>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-sm font-medium flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> {t('tournament.acceptJoinRequests')}</Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">{t('tournament.acceptJoinRequestsDesc')}</p>
+            {/* League Settings (only when type === 'league') */}
+            {type === 'league' && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="p-4 space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-primary" />{t('tournament.leagueSettings', 'إعدادات الدوري')}
+                  </h3>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm">{t('tournament.leagueLegs', 'صيغة الجولات')}</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { v: 1, l: t('tournament.legsSingle', 'ذهاب فقط'), d: t('tournament.legsSingleDesc', 'كل فريق ضد كل فريق مرة') },
+                        { v: 2, l: t('tournament.legsDouble', 'ذهاب وإياب'), d: t('tournament.legsDoubleDesc', 'كل فريق ضد كل فريق مرتين') },
+                      ].map((opt) => (
+                        <Card key={opt.v}
+                          className={cn('cursor-pointer transition-all',
+                            leagueLegs === opt.v ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50')}
+                          onClick={() => setLeagueLegs(opt.v as 1 | 2)}>
+                          <CardContent className="p-3 text-center">
+                            <p className="font-semibold text-sm">{opt.l}</p>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">{opt.d}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
-                  <Switch checked={acceptJoinRequests} onCheckedChange={setAcceptJoinRequests} />
-                </div>
-                {acceptJoinRequests && (
-                  <div className="space-y-1">
-                    <Label className="text-xs">{t('tournament.maxTeams')}</Label>
-                    <Input type="number" min={2} placeholder={t('tournament.maxTeamsPlaceholder')} value={maxTeams} onChange={(e) => setMaxTeams(e.target.value ? parseInt(e.target.value) : '')} />
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <Swords className="w-4 h-4 text-primary" />
+                        {t('tournament.hasPlayoff', 'مرحلة بلاي أوف')}
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t('tournament.hasPlayoffDesc', 'إقصاء مباشر لأفضل الفرق بعد انتهاء الدوري')}
+                      </p>
+                    </div>
+                    <Switch checked={hasPlayoff} onCheckedChange={setHasPlayoff} />
                   </div>
-                )}
-              </CardContent>
-            </Card>
+
+                  {hasPlayoff && (
+                    <div className="space-y-2">
+                      <Label className="text-xs">{t('tournament.playoffSize', 'عدد فرق البلاي أوف')}</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[4, 8].map((n) => (
+                          <Card key={n}
+                            className={cn('cursor-pointer transition-all',
+                              playoffTeams === n ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50')}
+                            onClick={() => setPlayoffTeams(n as 4 | 8)}>
+                            <CardContent className="p-2 text-center text-sm font-semibold">Top {n}</CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 
