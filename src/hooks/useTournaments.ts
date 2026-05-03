@@ -639,7 +639,7 @@ export function useTournaments() {
         status: 'live' as TournamentStatus,
         playoff_started: true,
       } as any).eq('id', tournamentId);
-      toast({ title: t('toasts.playoffStarted', 'انطلق البلاي أوف 🔥'), description: t('toasts.knockoutStartedDesc', { count: playoffMatches.length }) });
+      toast({ title: t('toasts.playoffStarted', { defaultValue: 'انطلق البلاي أوف 🔥' }), description: t('toasts.knockoutStartedDesc', { count: playoffMatches.length }) });
       return true;
     } catch (error: any) {
       console.error('Error starting playoff:', error);
