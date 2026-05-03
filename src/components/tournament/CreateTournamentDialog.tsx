@@ -28,12 +28,12 @@ interface CreateTournamentDialogProps {
 export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentDialogProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { createTournament, addTeams, performAIDraw, generateKnockoutMatches } = useTournaments();
+  const { createTournament, addTeams, performAIDraw, generateKnockoutMatches, generateLeagueMatches } = useTournaments();
   const { toast } = useToast();
 
   const tournamentTypes = [
     { value: 'knockout' as TournamentType, label: t('tournament.knockout'), icon: Swords, desc: t('tournament.knockoutDesc'), bg: 'from-red-500/20 to-orange-500/20', available: true },
-    { value: 'league' as TournamentType, label: t('tournament.league'), icon: Trophy, desc: t('tournament.leagueDesc'), bg: 'from-blue-500/20 to-cyan-500/20', available: false },
+    { value: 'league' as TournamentType, label: t('tournament.league'), icon: Trophy, desc: t('tournament.leagueDesc'), bg: 'from-blue-500/20 to-cyan-500/20', available: true },
     { value: 'groups' as TournamentType, label: t('tournament.groupsKnockout'), icon: Layers, desc: t('tournament.groupsKnockoutDesc'), bg: 'from-purple-500/20 to-pink-500/20', available: false },
   ];
 
@@ -66,8 +66,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [venueName, setVenueName] = useState('');
   const [venueAddress, setVenueAddress] = useState('');
   const [refereeName, setRefereeName] = useState('');
-  const [acceptJoinRequests, setAcceptJoinRequests] = useState(false);
-  const [maxTeams, setMaxTeams] = useState<number | ''>('');
+  const [leagueLegs, setLeagueLegs] = useState<1 | 2>(1);
+  const [hasPlayoff, setHasPlayoff] = useState(false);
+  const [playoffTeams, setPlayoffTeams] = useState<4 | 8>(4);
   const [stadiumImageFile, setStadiumImageFile] = useState<File | null>(null);
   const [stadiumImagePreview, setStadiumImagePreview] = useState<string | null>(null);
   const [teamsList, setTeamsList] = useState<string[]>([]);
@@ -79,8 +80,8 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
     setVolleyFormat('3of5'); setAgeCategory('senior'); setStartDate('');
     setLogoFile(null); setLogoPreview(null);
     setVenueName(''); setVenueAddress(''); setRefereeName('');
-    setAcceptJoinRequests(false);
-    setMaxTeams(''); setStadiumImageFile(null); setStadiumImagePreview(null);
+    setLeagueLegs(1); setHasPlayoff(false); setPlayoffTeams(4);
+    setStadiumImageFile(null); setStadiumImagePreview(null);
     setTeamsList([]); setNewTeamName(''); setDrawResult(null);
   };
 
@@ -160,23 +161,29 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       }
 
       const tournament = await createTournament({
-        name, type: 'knockout', startDate,
+        name, type, startDate,
         numTeams: teamsList.length,
         logoUrl, venueName, venueAddress, refereeName,
-        acceptJoinRequests,
-        maxTeams: maxTeams ? Number(maxTeams) : undefined,
+        acceptJoinRequests: false,
         venuePhotos, sportType,
         ageCategory,
         volleyballFormat: sportType === 'volleyball' ? volleyFormat : undefined,
+        leagueLegs: type === 'league' ? leagueLegs : 1,
+        hasPlayoff: type === 'league' ? hasPlayoff : false,
+        playoffTeams: type === 'league' && hasPlayoff ? playoffTeams : 4,
       } as any);
 
       if (!tournament) return;
 
-      const orderedTeams = drawResult.draw || teamsList;
+      const orderedTeams = drawResult?.draw || teamsList;
       const teams = await addTeams(tournament.id, orderedTeams as string[]);
       if (!teams) return;
 
-      await generateKnockoutMatches(tournament.id, teams);
+      if (type === 'league') {
+        await generateLeagueMatches(tournament.id, teams, leagueLegs);
+      } else {
+        await generateKnockoutMatches(tournament.id, teams);
+      }
 
       toast({ title: 'تم بنجاح! 🎉', description: 'تم إنشاء البطولة وإجراء القرعة' });
       onOpenChange(false);
@@ -345,23 +352,65 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
               <Input placeholder={t('tournament.refereePlaceholder')} value={refereeName} onChange={(e) => setRefereeName(e.target.value)} />
             </div>
 
-            <Card>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-sm font-medium flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> {t('tournament.acceptJoinRequests')}</Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">{t('tournament.acceptJoinRequestsDesc')}</p>
+            {/* League Settings (only when type === 'league') */}
+            {type === 'league' && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="p-4 space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-primary" />{t('tournament.leagueSettings', 'إعدادات الدوري')}
+                  </h3>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm">{t('tournament.leagueLegs', 'صيغة الجولات')}</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { v: 1, l: t('tournament.legsSingle', 'ذهاب فقط'), d: t('tournament.legsSingleDesc', 'كل فريق ضد كل فريق مرة') },
+                        { v: 2, l: t('tournament.legsDouble', 'ذهاب وإياب'), d: t('tournament.legsDoubleDesc', 'كل فريق ضد كل فريق مرتين') },
+                      ].map((opt) => (
+                        <Card key={opt.v}
+                          className={cn('cursor-pointer transition-all',
+                            leagueLegs === opt.v ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50')}
+                          onClick={() => setLeagueLegs(opt.v as 1 | 2)}>
+                          <CardContent className="p-3 text-center">
+                            <p className="font-semibold text-sm">{opt.l}</p>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">{opt.d}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
-                  <Switch checked={acceptJoinRequests} onCheckedChange={setAcceptJoinRequests} />
-                </div>
-                {acceptJoinRequests && (
-                  <div className="space-y-1">
-                    <Label className="text-xs">{t('tournament.maxTeams')}</Label>
-                    <Input type="number" min={2} placeholder={t('tournament.maxTeamsPlaceholder')} value={maxTeams} onChange={(e) => setMaxTeams(e.target.value ? parseInt(e.target.value) : '')} />
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <Swords className="w-4 h-4 text-primary" />
+                        {t('tournament.hasPlayoff', 'مرحلة بلاي أوف')}
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {t('tournament.hasPlayoffDesc', 'إقصاء مباشر لأفضل الفرق بعد انتهاء الدوري')}
+                      </p>
+                    </div>
+                    <Switch checked={hasPlayoff} onCheckedChange={setHasPlayoff} />
                   </div>
-                )}
-              </CardContent>
-            </Card>
+
+                  {hasPlayoff && (
+                    <div className="space-y-2">
+                      <Label className="text-xs">{t('tournament.playoffSize', 'عدد فرق البلاي أوف')}</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[4, 8].map((n) => (
+                          <Card key={n}
+                            className={cn('cursor-pointer transition-all',
+                              playoffTeams === n ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50')}
+                            onClick={() => setPlayoffTeams(n as 4 | 8)}>
+                            <CardContent className="p-2 text-center text-sm font-semibold">Top {n}</CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 

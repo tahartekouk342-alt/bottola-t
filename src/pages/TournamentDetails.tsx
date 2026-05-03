@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { BracketView } from '@/components/tournament/BracketView';
 import { MatchesList } from '@/components/tournament/MatchesList';
 import { UpdateMatchDialog } from '@/components/tournament/UpdateMatchDialog';
-import { JoinRequestsPanel } from '@/components/tournament/JoinRequestsPanel';
+// JoinRequestsPanel removed — feature deprecated
 import { EditTeamDialog } from '@/components/tournament/EditTeamDialog';
 import { VictoryConfetti } from '@/components/effects/VictoryConfetti';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,6 @@ export default function TournamentDetails() {
     { id: 'bracket', label: t('tournament.tabBracket'), icon: GitBranch },
     { id: 'teams', label: t('tournament.tabTeams'), icon: Users },
     { id: 'standings', label: t('tournament.tabStandings'), icon: TableIcon },
-    { id: 'requests', label: t('tournament.tabRequests'), icon: UserPlus },
   ];
 
   const { id } = useParams<{ id: string }>();
@@ -205,7 +204,6 @@ export default function TournamentDetails() {
   const visibleTabs = tabs.filter(tab => {
     if (tab.id === 'bracket' && tournament.type === 'league') return false;
     if (tab.id === 'standings' && tournament.type === 'knockout') return false;
-    if (tab.id === 'requests' && !tournament.accept_join_requests) return false;
     return true;
   });
 
@@ -539,9 +537,7 @@ export default function TournamentDetails() {
           )
         )}
 
-        {currentTab === 'requests' && id && (
-          <JoinRequestsPanel tournamentId={id} />
-        )}
+        {/* requests tab removed */}
       </div>
 
       <UpdateMatchDialog

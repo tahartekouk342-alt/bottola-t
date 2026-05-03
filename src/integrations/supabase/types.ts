@@ -72,6 +72,7 @@ export type Database = {
           home_sets: number | null
           home_team_id: string | null
           id: string
+          leg: number
           man_of_match_name: string | null
           match_date: string | null
           match_order: number
@@ -94,6 +95,7 @@ export type Database = {
           home_sets?: number | null
           home_team_id?: string | null
           id?: string
+          leg?: number
           man_of_match_name?: string | null
           match_date?: string | null
           match_order?: number
@@ -116,6 +118,7 @@ export type Database = {
           home_sets?: number | null
           home_team_id?: string | null
           id?: string
+          leg?: number
           man_of_match_name?: string | null
           match_date?: string | null
           match_order?: number
@@ -567,14 +570,18 @@ export type Database = {
           created_at: string
           current_round: number | null
           end_date: string | null
+          has_playoff: boolean
           id: string
           is_archived: boolean
+          league_legs: number
           logo_url: string | null
           max_teams: number | null
           name: string
           num_groups: number | null
           num_teams: number
           owner_id: string | null
+          playoff_started: boolean
+          playoff_teams: number
           referee_name: string | null
           season: string | null
           sport_type: Database["public"]["Enums"]["sport_type"]
@@ -595,14 +602,18 @@ export type Database = {
           created_at?: string
           current_round?: number | null
           end_date?: string | null
+          has_playoff?: boolean
           id?: string
           is_archived?: boolean
+          league_legs?: number
           logo_url?: string | null
           max_teams?: number | null
           name: string
           num_groups?: number | null
           num_teams?: number
           owner_id?: string | null
+          playoff_started?: boolean
+          playoff_teams?: number
           referee_name?: string | null
           season?: string | null
           sport_type?: Database["public"]["Enums"]["sport_type"]
@@ -623,14 +634,18 @@ export type Database = {
           created_at?: string
           current_round?: number | null
           end_date?: string | null
+          has_playoff?: boolean
           id?: string
           is_archived?: boolean
+          league_legs?: number
           logo_url?: string | null
           max_teams?: number | null
           name?: string
           num_groups?: number | null
           num_teams?: number
           owner_id?: string | null
+          playoff_started?: boolean
+          playoff_teams?: number
           referee_name?: string | null
           season?: string | null
           sport_type?: Database["public"]["Enums"]["sport_type"]

@@ -34,7 +34,6 @@ export default function ViewerTournamentDetails() {
     { id: 'teams', label: t('tournament.tabTeams'), icon: Users },
     { id: 'bracket', label: t('tournament.tabBracket'), icon: GitBranch },
     { id: 'standings', label: t('tournament.tabStandings'), icon: TableIcon },
-    { id: 'join', label: t('tournament.tabJoin'), icon: UserPlus },
   ];
 
   const knockoutMatches = matches.filter(m => !m.group_name);
@@ -74,12 +73,10 @@ export default function ViewerTournamentDetails() {
   }
 
   const showStandings = tournament.type === 'league' || tournament.type === 'groups';
-  const showJoin = tournament.accept_join_requests;
   const sportType = (tournament as any).sport_type || 'football';
 
   const visibleTabs = tabs.filter(tab => {
     if (tab.id === 'standings' && !showStandings) return false;
-    if (tab.id === 'join' && !showJoin) return false;
     if (tab.id === 'bracket' && tournament.type === 'league') return false;
     return true;
   });
@@ -297,95 +294,9 @@ export default function ViewerTournamentDetails() {
           </div>
         )}
 
-        {activeTab === 'join' && showJoin && tournamentId && (
-          <JoinRequestInline tournamentId={tournamentId} />
-        )}
+        {/* join-request feature removed */}
       </div>
     </div>
   );
 }
 
-function JoinRequestInline({ tournamentId }: { tournamentId: string }) {
-  const { t } = useTranslation();
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [teamName, setTeamName] = useState('');
-  const [playerNames, setPlayerNames] = useState<string[]>([]);
-  const [newPlayer, setNewPlayer] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleAddPlayer = () => {
-    if (newPlayer.trim() && !playerNames.includes(newPlayer.trim())) {
-      setPlayerNames(prev => [...prev, newPlayer.trim()]);
-      setNewPlayer('');
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!teamName.trim()) {
-      toast({ title: t('tournament.enterTeamName'), variant: 'destructive' });
-      return;
-    }
-    setLoading(true);
-    try {
-      await supabase.from('join_requests').insert({
-        tournament_id: tournamentId,
-        team_name: teamName.trim(),
-        player_names: playerNames,
-        requested_by: user?.id || null,
-      });
-      toast({ title: t('tournament.requestSent') });
-      setTeamName('');
-      setPlayerNames([]);
-    } catch {
-      toast({ title: t('common.error'), variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Card className="max-w-lg mx-auto overflow-hidden">
-      <div className="h-2 bg-gradient-to-r from-primary via-primary/50 to-primary" />
-      <CardContent className="p-6 space-y-4">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-            <UserPlus className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-bold text-lg">{t('tournament.joinRequest')}</h3>
-            <p className="text-sm text-muted-foreground">{t('tournament.joinDesc')}</p>
-          </div>
-        </div>
-
-        <div>
-          <label className="text-sm font-bold mb-1.5 block">{t('tournament.teamName')}</label>
-          <Input value={teamName} onChange={(e) => setTeamName(e.target.value)} />
-        </div>
-
-        <div>
-          <label className="text-sm font-bold mb-1.5 block">{t('tournament.players')} ({playerNames.length})</label>
-          <div className="flex gap-2 mb-2">
-            <Input placeholder={t('tournament.playerName')} value={newPlayer} onChange={(e) => setNewPlayer(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddPlayer()} className="flex-1" />
-            <Button onClick={handleAddPlayer} variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
-          </div>
-          {playerNames.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {playerNames.map((name, i) => (
-                <Badge key={i} variant="secondary" className="gap-1 pe-1">
-                  {name}
-                  <button onClick={() => setPlayerNames(prev => prev.filter((_, idx) => idx !== i))}><X className="w-3 h-3" /></button>
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <Button onClick={handleSubmit} disabled={loading} className="w-full gradient-primary text-primary-foreground">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin me-2" /> : <Send className="w-4 h-4 me-2" />}
-          {t('tournament.submitRequest')}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
