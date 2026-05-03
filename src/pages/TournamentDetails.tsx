@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { BracketView } from '@/components/tournament/BracketView';
 import { MatchesList } from '@/components/tournament/MatchesList';
 import { UpdateMatchDialog } from '@/components/tournament/UpdateMatchDialog';
-import { JoinRequestsPanel } from '@/components/tournament/JoinRequestsPanel';
+// JoinRequestsPanel removed — feature deprecated
 import { EditTeamDialog } from '@/components/tournament/EditTeamDialog';
 import { VictoryConfetti } from '@/components/effects/VictoryConfetti';
 import { Button } from '@/components/ui/button';
