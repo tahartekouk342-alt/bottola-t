@@ -204,7 +204,6 @@ export default function TournamentDetails() {
   const visibleTabs = tabs.filter(tab => {
     if (tab.id === 'bracket' && tournament.type === 'league') return false;
     if (tab.id === 'standings' && tournament.type === 'knockout') return false;
-    if (tab.id === 'requests' && !tournament.accept_join_requests) return false;
     return true;
   });
 
