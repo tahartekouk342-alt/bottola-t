@@ -270,7 +270,7 @@ export function useTournaments() {
             group_name: groupName,
             position: index + 1,
             played: 0, won: 0, drawn: 0, lost: 0,
-            goals_for: 0, goals_against: 0, goal_difference: 0, points: 0,
+            goals_for: 0, goals_against: 0, points: 0,
           });
         });
 
@@ -444,7 +444,6 @@ export function useTournaments() {
           played: (homeSt.played || 0) + 1, won: (homeSt.won || 0) + won,
           drawn: (homeSt.drawn || 0) + drawn, lost: (homeSt.lost || 0) + lost,
           goals_for: (homeSt.goals_for || 0) + homeScore, goals_against: (homeSt.goals_against || 0) + awayScore,
-          goal_difference: ((homeSt.goals_for || 0) + homeScore) - ((homeSt.goals_against || 0) + awayScore),
           points: (homeSt.points || 0) + homePts,
         }).eq('id', homeSt.id);
       }
@@ -457,7 +456,6 @@ export function useTournaments() {
           played: (awaySt.played || 0) + 1, won: (awaySt.won || 0) + won,
           drawn: (awaySt.drawn || 0) + drawn, lost: (awaySt.lost || 0) + lost,
           goals_for: (awaySt.goals_for || 0) + awayScore, goals_against: (awaySt.goals_against || 0) + homeScore,
-          goal_difference: ((awaySt.goals_for || 0) + awayScore) - ((awaySt.goals_against || 0) + homeScore),
           points: (awaySt.points || 0) + awayPts,
         }).eq('id', awaySt.id);
       }
