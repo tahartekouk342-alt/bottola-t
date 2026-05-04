@@ -770,6 +770,7 @@ export function useTournaments() {
     loading,
     fetchTournaments,
     createTournament,
+    createLeagueTournamentWithTeams,
     deleteTournament,
     addTeams,
     performAIDraw,
