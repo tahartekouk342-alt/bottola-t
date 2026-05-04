@@ -46,9 +46,7 @@ export default function OrganizerWelcome() {
 
       <div className="relative flex-1 px-6 pb-10 -mt-4 flex flex-col items-center text-center">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg">
-            <span className="text-primary-foreground font-display font-black text-3xl leading-none">B</span>
-          </div>
+          <img src="/icon-512.png" alt="Bottola" className="w-14 h-14 rounded-2xl shadow-lg" />
           <span className="font-display text-4xl font-black text-primary tracking-tight">Bottola</span>
           <span className="text-xs bg-accent/20 text-accent-foreground px-3 py-1 rounded-full font-bold">منظم</span>
         </div>
