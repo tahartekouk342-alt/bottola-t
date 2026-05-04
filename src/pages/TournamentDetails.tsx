@@ -52,7 +52,7 @@ export default function TournamentDetails() {
   const {
     tournament, teams, matches, standings, loading, getRoundName, fetchTournamentDetails,
   } = useTournamentDetails(id);
-  const { updateMatchResult, deleteTournament, addTeams, generateKnockoutMatches, generateGroupMatches, performAIDraw, startKnockoutFromGroups, generateNextRound } = useTournaments();
+  const { updateMatchResult, deleteTournament, addTeams, generateKnockoutMatches, generateGroupMatches, generateLeagueMatches, performAIDraw, startKnockoutFromGroups, generateNextRound } = useTournaments();
 
   const [selectedMatch, setSelectedMatch] = useState<MatchWithTeams | null>(null);
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
@@ -317,6 +317,37 @@ export default function TournamentDetails() {
             </div>
           );
         })()}
+
+        {/* Repair: teams exist but no matches were generated */}
+        {teams.length >= 2 && matches.length === 0 && (
+          <Card className="mb-6 border-2 border-amber-400/40 bg-amber-50/40 dark:bg-amber-500/5">
+            <CardContent className="p-5 flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-amber-400/20 flex items-center justify-center shrink-0">
+                <Loader2 className="w-7 h-7 text-amber-600" />
+              </div>
+              <div className="flex-1 text-center sm:text-right">
+                <h3 className="font-bold text-base mb-1">لم يتم توليد المباريات بعد</h3>
+                <p className="text-sm text-muted-foreground">عندك {teams.length} فريق لكن لا توجد مباريات. اضغط لتوليدها الآن.</p>
+              </div>
+              <Button
+                size="sm"
+                className="bg-amber-500 hover:bg-amber-600 text-white shrink-0"
+                onClick={async () => {
+                  if (!id) return;
+                  let ok: any = null;
+                  if (tournament.type === 'league') {
+                    ok = await generateLeagueMatches(id, teams as any, (tournament as any).league_legs || 1);
+                  } else if (tournament.type === 'knockout') {
+                    ok = await generateKnockoutMatches(id, teams as any);
+                  }
+                  if (ok) fetchTournamentDetails();
+                }}
+              >
+                <Play className="w-4 h-4 ml-1" /> توليد المباريات الآن
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Add Teams */}
         {canAddTeams && (

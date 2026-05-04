@@ -39,9 +39,7 @@ export default function ViewerWelcome() {
       <div className="relative flex-1 px-6 pb-10 -mt-4 flex flex-col items-center text-center">
         {/* Brand */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg">
-            <span className="text-primary-foreground font-display font-black text-3xl leading-none">B</span>
-          </div>
+          <img src="/icon-512.png" alt="Bottola" className="w-14 h-14 rounded-2xl shadow-lg" />
           <span className="font-display text-4xl font-black text-primary tracking-tight">Bottola</span>
         </div>
 
@@ -55,36 +53,37 @@ export default function ViewerWelcome() {
 
         {/* CTA buttons */}
         <div className="w-full max-w-sm space-y-3">
-          {/* Primary: create account */}
+          {/* Primary: login — clearly visible */}
           <button
-            onClick={() => navigate('/auth?role=viewer')}
-            className="group w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-between px-5 shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
+            onClick={() => navigate('/auth?role=viewer&tab=login')}
+            className="group w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-between px-5 shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
           >
             <span className="w-9 h-9 rounded-full bg-primary-foreground/15 flex items-center justify-center">
+              <UserPlus className="w-5 h-5" />
+            </span>
+            <span>{t('nav.login', 'تسجيل الدخول')}</span>
+            <ChevronLeft className="w-5 h-5 opacity-90 rtl:rotate-0 ltr:rotate-180" />
+          </button>
+
+          {/* Secondary: create account */}
+          <button
+            onClick={() => navigate('/auth?role=viewer&tab=signup')}
+            className="group w-full h-14 rounded-2xl border-2 border-primary text-primary font-bold text-base flex items-center justify-between px-5 bg-card hover:bg-primary/5 transition-all active:scale-[0.98]"
+          >
+            <span className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
               <UserPlus className="w-5 h-5" />
             </span>
             <span>{t('welcome.createFreeAccount')}</span>
             <ChevronLeft className="w-5 h-5 opacity-80 rtl:rotate-0 ltr:rotate-180" />
           </button>
 
-          {/* Secondary: guest browse — replaces "Continue as organizer" */}
+          {/* Tertiary: guest browse */}
           <button
             onClick={() => navigate('/tournaments-feed')}
-            className="group w-full h-14 rounded-2xl border-2 border-primary text-primary font-bold text-base flex items-center justify-between px-5 bg-card hover:bg-primary/5 transition-all active:scale-[0.98]"
+            className="group w-full h-12 rounded-2xl text-muted-foreground hover:text-primary font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
           >
-            <span className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-              <Eye className="w-5 h-5" />
-            </span>
+            <Eye className="w-4 h-4" />
             <span>{t('welcome.browseAsGuest', 'تصفح كضيف')}</span>
-            <ChevronLeft className="w-5 h-5 opacity-80 rtl:rotate-0 ltr:rotate-180" />
-          </button>
-
-          {/* Tiny login link */}
-          <button
-            onClick={() => navigate('/auth?role=viewer&tab=login')}
-            className="w-full text-sm text-muted-foreground hover:text-primary pt-2 transition-colors"
-          >
-            {t('nav.login')}
           </button>
         </div>
       </div>

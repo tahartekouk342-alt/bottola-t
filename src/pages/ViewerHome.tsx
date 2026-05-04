@@ -30,7 +30,7 @@ export default function ViewerHome() {
 
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-12">
         <div className="mb-10 text-center">
-          <img src="/icon-512.png" alt="Bottola" className="w-16 h-16 mx-auto mb-3 rounded-2xl shadow-2xl" />
+          <img src="/icon-512.png" alt="Bottola" className="w-20 h-20 mx-auto mb-3 rounded-2xl shadow-2xl" />
           <h1 className="font-display text-4xl md:text-5xl font-bold text-white tracking-tight">Bottola</h1>
           <p className="text-white/60 mt-1 text-sm">{t('app.viewerSubtitle')}</p>
         </div>

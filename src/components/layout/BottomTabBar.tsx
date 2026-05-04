@@ -26,7 +26,7 @@ export function BottomTabBar({ variant }: BottomTabBarProps) {
   const { unreadCount } = useNotifications(user?.id);
 
   const viewerTabs: TabItem[] = [
-    { label: t('nav.home'), icon: Home, path: '/home', match: (p) => p === '/home' || p === '/' },
+    { label: t('nav.home'), icon: Home, path: '/', match: (p) => p === '/home' || p === '/' },
     { label: t('nav.tournaments'), icon: Trophy, path: '/tournaments-feed', match: (p) => p.startsWith('/tournaments-feed') || p.startsWith('/viewer/tournament') || p.startsWith('/viewer/organizer') },
     { label: t('nav.newsFeed'), icon: Newspaper, path: '/news-feed', match: (p) => p.startsWith('/news-feed') },
     { label: t('nav.notifications'), icon: Bell, path: '/notifications', match: (p) => p.startsWith('/notifications'), badge: unreadCount },

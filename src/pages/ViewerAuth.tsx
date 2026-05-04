@@ -98,9 +98,7 @@ export default function ViewerAuth() {
 
       <Card className="w-full max-w-md relative z-10 border-border/50 bg-card/80 backdrop-blur-xl">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center glow-primary">
-            <Trophy className="w-8 h-8 text-primary-foreground" />
-          </div>
+          <img src="/icon-512.png" alt="Bottola" className="mx-auto w-16 h-16 rounded-2xl shadow-lg" />
           <div>
             <CardTitle className="text-2xl font-display">مرحباً بك في Bottola</CardTitle>
             <CardDescription>تابع المنظمين وشاهد البطولات</CardDescription>
