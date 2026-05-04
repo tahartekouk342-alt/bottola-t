@@ -9,7 +9,6 @@ import { ORGANIZER_BASE } from "@/lib/constants";
 // Viewer Pages
 import ViewerWelcome from "./pages/ViewerWelcome";
 import ViewerAuth from "./pages/ViewerAuth";
-import ViewerHome from "./pages/ViewerHome";
 import ViewerTournamentsFeed from "./pages/ViewerTournamentsFeed";
 import Following from "./pages/Following";
 import Notifications from "./pages/Notifications";
@@ -46,7 +45,7 @@ const App = () => (
             <Route path="/auth" element={<ViewerAuth />} />
 
             {/* Viewer with sidebar layout - accessible to guests */}
-            <Route path="/home" element={<ViewerLayout><ViewerHome /></ViewerLayout>} />
+            <Route path="/home" element={<ViewerLayout><ViewerTournamentsFeed /></ViewerLayout>} />
             <Route path="/tournaments-feed" element={<ViewerLayout><ViewerTournamentsFeed /></ViewerLayout>} />
             <Route path="/following" element={<ViewerLayout><Following /></ViewerLayout>} />
             <Route path="/notifications" element={<ViewerLayout><Notifications /></ViewerLayout>} />
