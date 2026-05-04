@@ -1,47 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Plus, Loader2, Users, Bell, Settings } from 'lucide-react';
+import { Trophy, Plus, Loader2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PinLockScreen } from '@/components/organizer/PinLockScreen';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { ORGANIZER_BASE } from '@/lib/constants';
 import { useQuery } from '@tanstack/react-query';
-
-const menuItems = [
-  {
-    title: 'بطولاتي',
-    icon: Trophy,
-    path: 'tournaments',
-    image: '/images/sport-stadium.jpg',
-    color: 'from-orange-500 to-amber-600',
-    ring: 'ring-orange-500/60',
-  },
-  {
-    title: 'المتابعون',
-    icon: Users,
-    path: 'followers',
-    image: '/images/sport-basketball.jpg',
-    color: 'from-emerald-500 to-green-600',
-    ring: 'ring-emerald-500/60',
-  },
-  {
-    title: 'الإشعارات',
-    icon: Bell,
-    path: 'notifications',
-    image: '/images/sport-football.jpg',
-    color: 'from-blue-500 to-cyan-600',
-    ring: 'ring-blue-500/60',
-  },
-  {
-    title: 'الإعدادات',
-    icon: Settings,
-    path: 'settings',
-    image: '/images/sport-volleyball.jpg',
-    color: 'from-slate-500 to-gray-600',
-    ring: 'ring-slate-500/60',
-  },
-];
 
 export default function OrganizerDashboard() {
   const navigate = useNavigate();
@@ -59,7 +24,6 @@ export default function OrganizerDashboard() {
     }
   }, [user]);
 
-  // Get follower count
   const { data: followerCount } = useQuery({
     queryKey: ['follower-count', user?.id],
     queryFn: async () => {
@@ -78,43 +42,43 @@ export default function OrganizerDashboard() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden" dir="rtl">
-      {/* Stadium background */}
-      <div className="absolute inset-0">
+    <div className="min-h-screen relative overflow-hidden bg-background" dir="rtl">
+      <div className="relative h-56 overflow-hidden">
         <img src="/images/sport-hero.jpg" alt="" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-background" />
+        <svg className="absolute bottom-0 left-0 w-full h-16" viewBox="0 0 1440 120" preserveAspectRatio="none">
+          <path d="M0,120 C360,0 1080,0 1440,120 L1440,120 L0,120 Z" fill="hsl(var(--background))" />
+        </svg>
       </div>
 
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] px-4 py-12">
-        {/* Logo + Profile */}
-        <div className="mb-10 text-center">
-          <img src="/icon-512.png" alt="Bottola" className="w-16 h-16 mx-auto mb-3 rounded-2xl shadow-2xl" />
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-white tracking-tight">Bottola</h1>
-          <p className="text-white/60 mt-1 text-sm">مرحباً {profile?.display_name || 'منظم'}</p>
+      <div className="relative z-10 px-4 -mt-8 pb-24 space-y-4">
+        <div className="flex items-center gap-3">
+          <img src="/icon-512.png" alt="Bottola" className="w-16 h-16 rounded-2xl shadow-xl" />
+          <div>
+            <h1 className="font-display text-3xl font-black text-primary">Bottola</h1>
+            <p className="text-sm text-muted-foreground">مرحباً {profile?.display_name || 'منظم'}</p>
+          </div>
         </div>
 
-        {/* Circular cards grid */}
-        <div className="grid grid-cols-2 gap-6 max-w-sm mx-auto">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(`${ORGANIZER_BASE}/${item.path}`)}
-                className="group flex flex-col items-center gap-3 focus:outline-none"
-              >
-                <div className={`relative w-36 h-36 md:w-40 md:h-40 rounded-full overflow-hidden ring-[3px] ${item.ring} shadow-2xl transition-transform group-hover:scale-105 group-active:scale-95`}>
-                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-                  <div className={`absolute inset-0 bg-gradient-to-b ${item.color} opacity-50`} />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Icon className="w-12 h-12 text-white drop-shadow-lg" />
-                  </div>
-                </div>
-                <span className="text-white font-bold text-sm tracking-wide uppercase">{item.title}</span>
-              </button>
-            );
-          })}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-card border border-border p-4 shadow-sm">
+            <Trophy className="w-6 h-6 text-primary mb-3" />
+            <p className="text-2xl font-black">بطولاتي</p>
+            <p className="text-xs text-muted-foreground">إدارة البطولات والمباريات</p>
+          </div>
+          <div className="rounded-2xl bg-card border border-border p-4 shadow-sm">
+            <Users className="w-6 h-6 text-primary mb-3" />
+            <p className="text-2xl font-black">{followerCount || 0}</p>
+            <p className="text-xs text-muted-foreground">متابع</p>
+          </div>
         </div>
+
+        <Button onClick={() => navigate(`${ORGANIZER_BASE}/tournaments`)} className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-base shadow-lg">
+          <Trophy className="w-5 h-5 ml-2" /> عرض البطولات
+        </Button>
+        <Button onClick={() => navigate(`${ORGANIZER_BASE}/tournaments?create=1`)} variant="outline" className="w-full h-14 rounded-2xl font-bold text-base border-2 border-primary text-primary bg-card">
+          <Plus className="w-5 h-5 ml-2" /> إنشاء بطولة جديدة
+        </Button>
       </div>
     </div>
   );

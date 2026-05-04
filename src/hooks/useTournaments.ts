@@ -12,6 +12,7 @@ type Tournament = Database['public']['Tables']['tournaments']['Row'];
 type Team = Database['public']['Tables']['teams']['Row'];
 type TournamentType = Database['public']['Enums']['tournament_type'];
 type TournamentStatus = Database['public']['Enums']['tournament_status'];
+type SportType = Database['public']['Enums']['sport_type'];
 
 export function useTournaments() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -94,6 +95,62 @@ export function useTournaments() {
     } catch (error) {
       console.error('Error creating tournament:', error);
       toast({ title: t('common.error'), description: t('toasts.createTournamentFailed'), variant: 'destructive' });
+      return null;
+    }
+  };
+
+  const createLeagueTournamentWithTeams = async (tournament: {
+    name: string;
+    startDate: string;
+    teamNames: string[];
+    logoUrl?: string | null;
+    venueName?: string;
+    venueAddress?: string;
+    refereeName?: string;
+    venuePhotos?: string[];
+    sportType?: SportType;
+    ageCategory?: string;
+    volleyballFormat?: string;
+    season?: string;
+    leagueLegs?: 1 | 2;
+    hasPlayoff?: boolean;
+    playoffTeams?: 4 | 8;
+  }) => {
+    try {
+      const { data: tournamentId, error } = await supabase.rpc('create_league_tournament_full', {
+        p_name: tournament.name,
+        p_start_date: tournament.startDate || null,
+        p_team_names: tournament.teamNames,
+        p_owner_id: user?.id || null,
+        p_logo_url: tournament.logoUrl || null,
+        p_venue_name: tournament.venueName || null,
+        p_venue_address: tournament.venueAddress || null,
+        p_referee_name: tournament.refereeName || null,
+        p_venue_photos: tournament.venuePhotos || [],
+        p_sport_type: tournament.sportType || 'football',
+        p_age_category: tournament.ageCategory || null,
+        p_volleyball_format: tournament.volleyballFormat || null,
+        p_season: tournament.season || null,
+        p_league_legs: tournament.leagueLegs ?? 1,
+        p_has_playoff: tournament.hasPlayoff ?? false,
+        p_playoff_teams: tournament.playoffTeams ?? 4,
+      });
+
+      if (error) throw error;
+
+      const { data, error: fetchError } = await supabase
+        .from('tournaments')
+        .select('*')
+        .eq('id', tournamentId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      setTournaments((prev) => [data, ...prev]);
+      toast({ title: t('common.success'), description: t('toasts.leagueCreated', { count: tournament.teamNames.length, defaultValue: 'تم إنشاء الدوري وجدوله بنجاح' }) });
+      return data;
+    } catch (error: any) {
+      console.error('Error creating league tournament:', error);
+      toast({ title: t('common.error'), description: error.message || t('toasts.createTournamentFailed'), variant: 'destructive' });
       return null;
     }
   };
@@ -181,7 +238,7 @@ export function useTournaments() {
       const { data, error } = await supabase.from('matches').insert(matches).select();
       if (error) throw error;
 
-      await supabase.from('tournaments').update({ status: 'upcoming' as TournamentStatus }).eq('id', tournamentId);
+      await supabase.from('tournaments').update({ status: 'active' as TournamentStatus }).eq('id', tournamentId);
       toast({ title: t('common.success'), description: t('toasts.knockoutCreated') });
       return data;
     } catch (error) {
@@ -213,7 +270,7 @@ export function useTournaments() {
             group_name: groupName,
             position: index + 1,
             played: 0, won: 0, drawn: 0, lost: 0,
-            goals_for: 0, goals_against: 0, goal_difference: 0, points: 0,
+            goals_for: 0, goals_against: 0, points: 0,
           });
         });
 
@@ -242,7 +299,7 @@ export function useTournaments() {
         if (matchesError) throw matchesError;
       }
 
-      await supabase.from('tournaments').update({ status: 'upcoming' as TournamentStatus }).eq('id', tournamentId);
+      await supabase.from('tournaments').update({ status: 'active' as TournamentStatus }).eq('id', tournamentId);
       toast({ title: t('toasts.groupsCreated'), description: t('toasts.groupsCreatedDesc', { count: allMatches.length }) });
       return true;
     } catch (error) {
@@ -387,7 +444,6 @@ export function useTournaments() {
           played: (homeSt.played || 0) + 1, won: (homeSt.won || 0) + won,
           drawn: (homeSt.drawn || 0) + drawn, lost: (homeSt.lost || 0) + lost,
           goals_for: (homeSt.goals_for || 0) + homeScore, goals_against: (homeSt.goals_against || 0) + awayScore,
-          goal_difference: ((homeSt.goals_for || 0) + homeScore) - ((homeSt.goals_against || 0) + awayScore),
           points: (homeSt.points || 0) + homePts,
         }).eq('id', homeSt.id);
       }
@@ -400,7 +456,6 @@ export function useTournaments() {
           played: (awaySt.played || 0) + 1, won: (awaySt.won || 0) + won,
           drawn: (awaySt.drawn || 0) + drawn, lost: (awaySt.lost || 0) + lost,
           goals_for: (awaySt.goals_for || 0) + awayScore, goals_against: (awaySt.goals_against || 0) + homeScore,
-          goal_difference: ((awaySt.goals_for || 0) + awayScore) - ((awaySt.goals_against || 0) + homeScore),
           points: (awaySt.points || 0) + awayPts,
         }).eq('id', awaySt.id);
       }
@@ -516,7 +571,7 @@ export function useTournaments() {
         team_id: team.id,
         position: index + 1,
         played: 0, won: 0, drawn: 0, lost: 0,
-        goals_for: 0, goals_against: 0, goal_difference: 0, points: 0,
+        goals_for: 0, goals_against: 0, points: 0,
       }));
       if (standingsRows.length > 0) {
         const { error: stErr } = await supabase.from('standings').insert(standingsRows);
@@ -562,7 +617,7 @@ export function useTournaments() {
         if (mErr) throw mErr;
       }
 
-      await supabase.from('tournaments').update({ status: 'upcoming' as TournamentStatus }).eq('id', tournamentId);
+      await supabase.from('tournaments').update({ status: 'active' as TournamentStatus }).eq('id', tournamentId);
       toast({ title: t('common.success'), description: t('toasts.leagueCreated', { count: allMatches.length, defaultValue: 'تم إنشاء جدول الدوري ({{count}} مباراة)' }) });
       return true;
     } catch (error: any) {
@@ -713,6 +768,7 @@ export function useTournaments() {
     loading,
     fetchTournaments,
     createTournament,
+    createLeagueTournamentWithTeams,
     deleteTournament,
     addTeams,
     performAIDraw,

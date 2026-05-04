@@ -708,6 +708,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_league_tournament_full: {
+        Args: {
+          p_age_category?: string
+          p_has_playoff?: boolean
+          p_league_legs?: number
+          p_logo_url?: string
+          p_name: string
+          p_owner_id?: string
+          p_playoff_teams?: number
+          p_referee_name?: string
+          p_season?: string
+          p_sport_type?: Database["public"]["Enums"]["sport_type"]
+          p_start_date: string
+          p_team_names: string[]
+          p_venue_address?: string
+          p_venue_name?: string
+          p_venue_photos?: string[]
+          p_volleyball_format?: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -720,7 +741,7 @@ export type Database = {
       app_role: "organizer" | "viewer"
       match_status: "scheduled" | "live" | "completed"
       sport_type: "football" | "basketball" | "volleyball"
-      tournament_status: "draft" | "upcoming" | "live" | "completed"
+      tournament_status: "draft" | "upcoming" | "live" | "completed" | "active"
       tournament_type: "knockout" | "league" | "groups"
     }
     CompositeTypes: {
@@ -852,7 +873,7 @@ export const Constants = {
       app_role: ["organizer", "viewer"],
       match_status: ["scheduled", "live", "completed"],
       sport_type: ["football", "basketball", "volleyball"],
-      tournament_status: ["draft", "upcoming", "live", "completed"],
+      tournament_status: ["draft", "upcoming", "live", "completed", "active"],
       tournament_type: ["knockout", "league", "groups"],
     },
   },
