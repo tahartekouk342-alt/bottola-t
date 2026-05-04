@@ -43,9 +43,7 @@ export function MobileShell({ children, variant, hideHeader, hideTabBar }: Mobil
           style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
           <Link to={homePath} className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-2xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
-              <span className="text-primary-foreground font-display font-black text-lg leading-none">B</span>
-            </div>
+            <img src="/icon-512.png" alt="Bottola" className="w-9 h-9 rounded-2xl shadow-md shadow-primary/20" />
             <span className="font-display text-base font-black text-foreground tracking-tight">Bottola</span>
           </Link>
         </header>
