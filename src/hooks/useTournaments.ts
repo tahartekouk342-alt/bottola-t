@@ -238,7 +238,7 @@ export function useTournaments() {
       const { data, error } = await supabase.from('matches').insert(matches).select();
       if (error) throw error;
 
-      await supabase.from('tournaments').update({ status: 'upcoming' as TournamentStatus }).eq('id', tournamentId);
+      await supabase.from('tournaments').update({ status: 'active' as TournamentStatus }).eq('id', tournamentId);
       toast({ title: t('common.success'), description: t('toasts.knockoutCreated') });
       return data;
     } catch (error) {
@@ -299,7 +299,7 @@ export function useTournaments() {
         if (matchesError) throw matchesError;
       }
 
-      await supabase.from('tournaments').update({ status: 'upcoming' as TournamentStatus }).eq('id', tournamentId);
+      await supabase.from('tournaments').update({ status: 'active' as TournamentStatus }).eq('id', tournamentId);
       toast({ title: t('toasts.groupsCreated'), description: t('toasts.groupsCreatedDesc', { count: allMatches.length }) });
       return true;
     } catch (error) {
@@ -619,7 +619,7 @@ export function useTournaments() {
         if (mErr) throw mErr;
       }
 
-      await supabase.from('tournaments').update({ status: 'upcoming' as TournamentStatus }).eq('id', tournamentId);
+      await supabase.from('tournaments').update({ status: 'active' as TournamentStatus }).eq('id', tournamentId);
       toast({ title: t('common.success'), description: t('toasts.leagueCreated', { count: allMatches.length, defaultValue: 'تم إنشاء جدول الدوري ({{count}} مباراة)' }) });
       return true;
     } catch (error: any) {
