@@ -720,7 +720,7 @@ export type Database = {
       app_role: "organizer" | "viewer"
       match_status: "scheduled" | "live" | "completed"
       sport_type: "football" | "basketball" | "volleyball"
-      tournament_status: "draft" | "upcoming" | "live" | "completed"
+      tournament_status: "draft" | "upcoming" | "live" | "completed" | "active"
       tournament_type: "knockout" | "league" | "groups"
     }
     CompositeTypes: {
@@ -852,7 +852,7 @@ export const Constants = {
       app_role: ["organizer", "viewer"],
       match_status: ["scheduled", "live", "completed"],
       sport_type: ["football", "basketball", "volleyball"],
-      tournament_status: ["draft", "upcoming", "live", "completed"],
+      tournament_status: ["draft", "upcoming", "live", "completed", "active"],
       tournament_type: ["knockout", "league", "groups"],
     },
   },
