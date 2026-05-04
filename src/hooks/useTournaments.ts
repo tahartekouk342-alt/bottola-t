@@ -571,7 +571,7 @@ export function useTournaments() {
         team_id: team.id,
         position: index + 1,
         played: 0, won: 0, drawn: 0, lost: 0,
-        goals_for: 0, goals_against: 0, goal_difference: 0, points: 0,
+        goals_for: 0, goals_against: 0, points: 0,
       }));
       if (standingsRows.length > 0) {
         const { error: stErr } = await supabase.from('standings').insert(standingsRows);
