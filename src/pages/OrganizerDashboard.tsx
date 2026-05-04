@@ -8,41 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { ORGANIZER_BASE } from '@/lib/constants';
 import { useQuery } from '@tanstack/react-query';
 
-const menuItems = [
-  {
-    title: 'بطولاتي',
-    icon: Trophy,
-    path: 'tournaments',
-    image: '/images/sport-stadium.jpg',
-    color: 'from-orange-500 to-amber-600',
-    ring: 'ring-orange-500/60',
-  },
-  {
-    title: 'المتابعون',
-    icon: Users,
-    path: 'followers',
-    image: '/images/sport-basketball.jpg',
-    color: 'from-emerald-500 to-green-600',
-    ring: 'ring-emerald-500/60',
-  },
-  {
-    title: 'الإشعارات',
-    icon: Bell,
-    path: 'notifications',
-    image: '/images/sport-football.jpg',
-    color: 'from-blue-500 to-cyan-600',
-    ring: 'ring-blue-500/60',
-  },
-  {
-    title: 'الإعدادات',
-    icon: Settings,
-    path: 'settings',
-    image: '/images/sport-volleyball.jpg',
-    color: 'from-slate-500 to-gray-600',
-    ring: 'ring-slate-500/60',
-  },
-];
-
 export default function OrganizerDashboard() {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading } = useAuth();
