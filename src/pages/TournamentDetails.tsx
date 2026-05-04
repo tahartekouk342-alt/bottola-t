@@ -29,6 +29,7 @@ export default function TournamentDetails() {
   const { t } = useTranslation();
   const statusMap: Record<string, { label: string; variant: any }> = {
     draft: { label: t('tournament.draft'), variant: 'secondary' },
+    active: { label: t('tournament.ongoing'), variant: 'destructive' },
     upcoming: { label: t('tournament.upcoming'), variant: 'default' },
     live: { label: t('tournament.live').replace('🔴 ', ''), variant: 'destructive' },
     completed: { label: t('tournament.completed'), variant: 'outline' },
@@ -52,7 +53,7 @@ export default function TournamentDetails() {
   const {
     tournament, teams, matches, standings, loading, getRoundName, fetchTournamentDetails,
   } = useTournamentDetails(id);
-  const { updateMatchResult, deleteTournament, addTeams, generateKnockoutMatches, generateGroupMatches, generateLeagueMatches, performAIDraw, startKnockoutFromGroups, generateNextRound } = useTournaments();
+  const { updateMatchResult, deleteTournament, addTeams, generateKnockoutMatches, generateGroupMatches, performAIDraw, startKnockoutFromGroups, generateNextRound } = useTournaments();
 
   const [selectedMatch, setSelectedMatch] = useState<MatchWithTeams | null>(null);
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
