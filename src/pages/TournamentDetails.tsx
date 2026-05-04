@@ -52,7 +52,7 @@ export default function TournamentDetails() {
   const {
     tournament, teams, matches, standings, loading, getRoundName, fetchTournamentDetails,
   } = useTournamentDetails(id);
-  const { updateMatchResult, deleteTournament, addTeams, generateKnockoutMatches, generateGroupMatches, performAIDraw, startKnockoutFromGroups, generateNextRound } = useTournaments();
+  const { updateMatchResult, deleteTournament, addTeams, generateKnockoutMatches, generateGroupMatches, generateLeagueMatches, performAIDraw, startKnockoutFromGroups, generateNextRound } = useTournaments();
 
   const [selectedMatch, setSelectedMatch] = useState<MatchWithTeams | null>(null);
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
