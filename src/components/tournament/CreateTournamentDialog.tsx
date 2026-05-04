@@ -28,7 +28,7 @@ interface CreateTournamentDialogProps {
 export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentDialogProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { createTournament, addTeams, performAIDraw, generateKnockoutMatches, generateLeagueMatches } = useTournaments();
+  const { createTournament, createLeagueTournamentWithTeams, addTeams, performAIDraw, generateKnockoutMatches } = useTournaments();
   const { toast } = useToast();
 
   const tournamentTypes = [
@@ -160,6 +160,29 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         }
       }
 
+      const orderedTeams = drawResult?.draw || teamsList;
+
+      if (type === 'league') {
+        const tournament = await createLeagueTournamentWithTeams({
+          name, startDate,
+          teamNames: orderedTeams as string[],
+          logoUrl, venueName, venueAddress, refereeName,
+          venuePhotos, sportType,
+          ageCategory,
+          volleyballFormat: sportType === 'volleyball' ? volleyFormat : undefined,
+          leagueLegs,
+          hasPlayoff,
+          playoffTeams: hasPlayoff ? playoffTeams : 4,
+        });
+
+        if (!tournament) return;
+        toast({ title: 'تم بنجاح! 🎉', description: 'تم إنشاء الدوري وجدول المباريات والترتيب' });
+        onOpenChange(false);
+        resetForm();
+        navigate(`${ORGANIZER_BASE}/tournament/${tournament.id}`);
+        return;
+      }
+
       const tournament = await createTournament({
         name, type, startDate,
         numTeams: teamsList.length,
@@ -175,15 +198,10 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
 
       if (!tournament) return;
 
-      const orderedTeams = drawResult?.draw || teamsList;
       const teams = await addTeams(tournament.id, orderedTeams as string[]);
       if (!teams) return;
 
-      if (type === 'league') {
-        await generateLeagueMatches(tournament.id, teams, leagueLegs);
-      } else {
-        await generateKnockoutMatches(tournament.id, teams);
-      }
+      await generateKnockoutMatches(tournament.id, teams);
 
       toast({ title: 'تم بنجاح! 🎉', description: 'تم إنشاء البطولة وإجراء القرعة' });
       onOpenChange(false);
