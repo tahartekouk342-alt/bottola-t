@@ -12,6 +12,7 @@ type Tournament = Database['public']['Tables']['tournaments']['Row'];
 type Team = Database['public']['Tables']['teams']['Row'];
 type TournamentType = Database['public']['Enums']['tournament_type'];
 type TournamentStatus = Database['public']['Enums']['tournament_status'];
+type SportType = Database['public']['Enums']['sport_type'];
 
 export function useTournaments() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -94,6 +95,62 @@ export function useTournaments() {
     } catch (error) {
       console.error('Error creating tournament:', error);
       toast({ title: t('common.error'), description: t('toasts.createTournamentFailed'), variant: 'destructive' });
+      return null;
+    }
+  };
+
+  const createLeagueTournamentWithTeams = async (tournament: {
+    name: string;
+    startDate: string;
+    teamNames: string[];
+    logoUrl?: string | null;
+    venueName?: string;
+    venueAddress?: string;
+    refereeName?: string;
+    venuePhotos?: string[];
+    sportType?: SportType;
+    ageCategory?: string;
+    volleyballFormat?: string;
+    season?: string;
+    leagueLegs?: 1 | 2;
+    hasPlayoff?: boolean;
+    playoffTeams?: 4 | 8;
+  }) => {
+    try {
+      const { data: tournamentId, error } = await supabase.rpc('create_league_tournament_full', {
+        p_name: tournament.name,
+        p_start_date: tournament.startDate || null,
+        p_team_names: tournament.teamNames,
+        p_owner_id: user?.id || null,
+        p_logo_url: tournament.logoUrl || null,
+        p_venue_name: tournament.venueName || null,
+        p_venue_address: tournament.venueAddress || null,
+        p_referee_name: tournament.refereeName || null,
+        p_venue_photos: tournament.venuePhotos || [],
+        p_sport_type: tournament.sportType || 'football',
+        p_age_category: tournament.ageCategory || null,
+        p_volleyball_format: tournament.volleyballFormat || null,
+        p_season: tournament.season || null,
+        p_league_legs: tournament.leagueLegs ?? 1,
+        p_has_playoff: tournament.hasPlayoff ?? false,
+        p_playoff_teams: tournament.playoffTeams ?? 4,
+      });
+
+      if (error) throw error;
+
+      const { data, error: fetchError } = await supabase
+        .from('tournaments')
+        .select('*')
+        .eq('id', tournamentId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      setTournaments((prev) => [data, ...prev]);
+      toast({ title: t('common.success'), description: t('toasts.leagueCreated', { count: tournament.teamNames.length, defaultValue: 'تم إنشاء الدوري وجدوله بنجاح' }) });
+      return data;
+    } catch (error: any) {
+      console.error('Error creating league tournament:', error);
+      toast({ title: t('common.error'), description: error.message || t('toasts.createTournamentFailed'), variant: 'destructive' });
       return null;
     }
   };
