@@ -8,7 +8,7 @@ interface TournamentCardProps {
   name: string;
   teams: number;
   startDate: string;
-  status: 'upcoming' | 'live' | 'completed' | 'draft';
+  status: 'upcoming' | 'live' | 'completed' | 'draft' | 'active';
   type: 'knockout' | 'league' | 'groups';
   sportType?: 'football' | 'basketball' | 'volleyball';
   ageCategory?: string | null;
@@ -22,6 +22,7 @@ interface TournamentCardProps {
 
 const STATUS_DOT: Record<string, string> = {
   draft: 'bg-muted-foreground',
+  active: 'bg-success animate-pulse',
   upcoming: 'bg-info',
   live: 'bg-destructive animate-pulse',
   completed: 'bg-success',
@@ -35,6 +36,7 @@ export function TournamentCard({
 
   const statusLabel: Record<string, string> = {
     draft: t('tournament.draft'),
+    active: t('tournament.ongoing'),
     upcoming: t('tournament.upcoming'),
     live: t('tournament.ongoing'),
     completed: t('tournament.completed'),
