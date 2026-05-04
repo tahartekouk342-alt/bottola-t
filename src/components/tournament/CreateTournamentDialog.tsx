@@ -191,9 +191,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         venuePhotos, sportType,
         ageCategory,
         volleyballFormat: sportType === 'volleyball' ? volleyFormat : undefined,
-        leagueLegs: type === 'league' ? leagueLegs : 1,
-        hasPlayoff: type === 'league' ? hasPlayoff : false,
-        playoffTeams: type === 'league' && hasPlayoff ? playoffTeams : 4,
+        leagueLegs: 1,
+        hasPlayoff: false,
+        playoffTeams: 4,
       } as any);
 
       if (!tournament) return;
