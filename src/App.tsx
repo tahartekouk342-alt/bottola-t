@@ -61,6 +61,8 @@ const App = () => (
             <Route path={`${ORGANIZER_BASE}/auth`} element={<OrganizerAuth />} />
             <Route path={`${ORGANIZER_BASE}/dashboard`} element={<OrganizerLayout><OrganizerDashboard /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/tournaments`} element={<OrganizerLayout><OrganizerTournamentsList /></OrganizerLayout>} />
+            <Route path={`${ORGANIZER_BASE}/matches`} element={<OrganizerLayout><OrganizerMatches /></OrganizerLayout>} />
+            <Route path={`${ORGANIZER_BASE}/teams`} element={<OrganizerLayout><OrganizerTeams /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/followers`} element={<OrganizerLayout><OrganizerFollowers /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/settings`} element={<OrganizerLayout><OrganizerSettings /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/tournament/:id`} element={<OrganizerLayout><TournamentDetails /></OrganizerLayout>} />
