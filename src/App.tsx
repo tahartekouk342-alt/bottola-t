@@ -22,6 +22,8 @@ import OrganizerWelcome from "./pages/OrganizerWelcome";
 import OrganizerAuth from "./pages/OrganizerAuth";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import OrganizerTournamentsList from "./pages/OrganizerTournamentsList";
+import OrganizerMatches from "./pages/OrganizerMatches";
+import OrganizerTeams from "./pages/OrganizerTeams";
 import OrganizerFollowers from "./pages/OrganizerFollowers";
 import OrganizerSettings from "./pages/OrganizerSettings";
 import TournamentDetails from "./pages/TournamentDetails";
