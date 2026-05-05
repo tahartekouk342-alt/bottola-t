@@ -25,13 +25,13 @@ export function MobileShell({ children, variant, hideHeader, hideTabBar }: Mobil
     document.documentElement.dir = dir;
   }, [dir]);
 
-  // Hide header on routes that have their own immersive hero
+  // Organizer pages all ship their own custom headers
+  const isOrganizer = variant === 'organizer';
   const isHome = location.pathname === '/home';
-  const isOrgDashboard = location.pathname === `${ORGANIZER_BASE}/dashboard`;
   const isTournamentDetail =
     location.pathname.startsWith('/viewer/tournament/') ||
     location.pathname.includes(`${ORGANIZER_BASE}/tournament/`);
-  const showHeader = !hideHeader && !isHome && !isOrgDashboard && !isTournamentDetail;
+  const showHeader = !hideHeader && !isOrganizer && !isHome && !isTournamentDetail;
 
   const homePath = variant === 'viewer' ? '/home' : `${ORGANIZER_BASE}/dashboard`;
 
