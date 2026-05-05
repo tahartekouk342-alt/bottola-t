@@ -35,9 +35,10 @@ export function BottomTabBar({ variant }: BottomTabBarProps) {
 
   const organizerTabs: TabItem[] = [
     { label: t('nav.home'), icon: LayoutDashboard, path: `${ORGANIZER_BASE}/dashboard`, match: (p) => p === `${ORGANIZER_BASE}/dashboard` || p === ORGANIZER_BASE },
-    { label: t('nav.myTournaments'), icon: Trophy, path: `${ORGANIZER_BASE}/tournaments`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/tournaments`) || p.includes(`${ORGANIZER_BASE}/tournament/`) },
+    { label: t('nav.tournaments'), icon: Trophy, path: `${ORGANIZER_BASE}/tournaments`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/tournaments`) || p.includes(`${ORGANIZER_BASE}/tournament/`) },
+    { label: t('nav.matches'), icon: CalendarDays, path: `${ORGANIZER_BASE}/matches`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/matches`) },
+    { label: 'الفرق', icon: Users, path: `${ORGANIZER_BASE}/teams`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/teams`) || p.startsWith(`${ORGANIZER_BASE}/followers`) },
     { label: t('nav.news'), icon: Newspaper, path: `${ORGANIZER_BASE}/news`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/news`) },
-    { label: t('nav.followers'), icon: Users, path: `${ORGANIZER_BASE}/followers`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/followers`) },
     { label: t('nav.settings'), icon: Settings, path: `${ORGANIZER_BASE}/settings`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/settings`) },
   ];
 
@@ -45,11 +46,11 @@ export function BottomTabBar({ variant }: BottomTabBarProps) {
 
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.08)]"
+      className="fixed bottom-0 inset-x-0 z-50 bg-card border-t border-border"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="bottom navigation"
     >
-      <div className="grid grid-cols-5 max-w-md mx-auto">
+      <div className={cn('grid max-w-md mx-auto', variant === 'organizer' ? 'grid-cols-6' : 'grid-cols-5')}>
         {tabs.map((tab) => {
           const active = tab.match(pathname);
           const Icon = tab.icon;
