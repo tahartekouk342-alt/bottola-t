@@ -59,22 +59,20 @@ export function BottomTabBar({ variant }: BottomTabBarProps) {
               key={tab.path}
               onClick={() => navigate(tab.path)}
               className={cn(
-                'relative flex flex-col items-center justify-center gap-0.5 py-2 px-1 transition-all active:scale-95',
-                active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                'relative flex flex-col items-center justify-center gap-1 py-2 px-1 transition-all',
+                active ? 'text-primary' : 'text-muted-foreground'
               )}
             >
-              <div className={cn(
-                'relative w-11 h-7 rounded-full flex items-center justify-center transition-all',
-                active && 'bg-primary/12'
-              )}>
-                <Icon className={cn('w-5 h-5 transition-transform', active && 'scale-110')} strokeWidth={active ? 2.4 : 1.8} />
+              {active && <span className="absolute top-0 left-2 right-2 h-[3px] rounded-full bg-primary" />}
+              <div className="relative">
+                <Icon className="w-6 h-6" strokeWidth={active ? 2.2 : 1.8} />
                 {tab.badge && tab.badge > 0 ? (
                   <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
                     {tab.badge > 9 ? '9+' : tab.badge}
                   </span>
                 ) : null}
               </div>
-              <span className={cn('text-[10px] leading-none truncate max-w-full', active ? 'font-bold' : 'font-medium')}>
+              <span className={cn('text-[10px] leading-none', active ? 'font-bold' : 'font-medium')}>
                 {tab.label}
               </span>
             </button>
