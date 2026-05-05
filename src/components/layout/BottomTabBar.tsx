@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Home, Trophy, Newspaper, Bell, Settings, LayoutDashboard, Users } from 'lucide-react';
+import { Home, Trophy, Newspaper, Bell, Settings, LayoutDashboard, Users, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuth } from '@/hooks/useAuth';
