@@ -22,6 +22,8 @@ import OrganizerWelcome from "./pages/OrganizerWelcome";
 import OrganizerAuth from "./pages/OrganizerAuth";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import OrganizerTournamentsList from "./pages/OrganizerTournamentsList";
+import OrganizerMatches from "./pages/OrganizerMatches";
+import OrganizerTeams from "./pages/OrganizerTeams";
 import OrganizerFollowers from "./pages/OrganizerFollowers";
 import OrganizerSettings from "./pages/OrganizerSettings";
 import TournamentDetails from "./pages/TournamentDetails";
@@ -59,6 +61,8 @@ const App = () => (
             <Route path={`${ORGANIZER_BASE}/auth`} element={<OrganizerAuth />} />
             <Route path={`${ORGANIZER_BASE}/dashboard`} element={<OrganizerLayout><OrganizerDashboard /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/tournaments`} element={<OrganizerLayout><OrganizerTournamentsList /></OrganizerLayout>} />
+            <Route path={`${ORGANIZER_BASE}/matches`} element={<OrganizerLayout><OrganizerMatches /></OrganizerLayout>} />
+            <Route path={`${ORGANIZER_BASE}/teams`} element={<OrganizerLayout><OrganizerTeams /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/followers`} element={<OrganizerLayout><OrganizerFollowers /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/settings`} element={<OrganizerLayout><OrganizerSettings /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/tournament/:id`} element={<OrganizerLayout><TournamentDetails /></OrganizerLayout>} />
