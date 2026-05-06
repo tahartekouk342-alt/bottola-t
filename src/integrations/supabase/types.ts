@@ -66,6 +66,7 @@ export type Database = {
           away_score: number | null
           away_sets: number | null
           away_team_id: string | null
+          cards: Json | null
           created_at: string
           group_name: string | null
           home_score: number | null
@@ -89,6 +90,7 @@ export type Database = {
           away_score?: number | null
           away_sets?: number | null
           away_team_id?: string | null
+          cards?: Json | null
           created_at?: string
           group_name?: string | null
           home_score?: number | null
@@ -112,6 +114,7 @@ export type Database = {
           away_score?: number | null
           away_sets?: number | null
           away_team_id?: string | null
+          cards?: Json | null
           created_at?: string
           group_name?: string | null
           home_score?: number | null
@@ -253,6 +256,7 @@ export type Database = {
           id: string
           is_captain: boolean
           name: string
+          nickname: string | null
           number: number
           photo_url: string | null
           position: string
@@ -264,6 +268,7 @@ export type Database = {
           id?: string
           is_captain?: boolean
           name: string
+          nickname?: string | null
           number?: number
           photo_url?: string | null
           position?: string
@@ -275,6 +280,7 @@ export type Database = {
           id?: string
           is_captain?: boolean
           name?: string
+          nickname?: string | null
           number?: number
           photo_url?: string | null
           position?: string
@@ -521,36 +527,75 @@ export type Database = {
           },
         ]
       }
+      team_staff: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          photo_url: string | null
+          position: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          photo_url?: string | null
+          position?: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          photo_url?: string | null
+          position?: string
+          team_id?: string
+        }
+        Relationships: []
+      }
       teams: {
         Row: {
+          age_category: string | null
           created_at: string
           group_name: string | null
           id: string
           is_eliminated: boolean | null
           logo_url: string | null
           name: string
+          nickname: string | null
+          organizer_id: string | null
           seed: number | null
-          tournament_id: string
+          sport_type: string | null
+          tournament_id: string | null
         }
         Insert: {
+          age_category?: string | null
           created_at?: string
           group_name?: string | null
           id?: string
           is_eliminated?: boolean | null
           logo_url?: string | null
           name: string
+          nickname?: string | null
+          organizer_id?: string | null
           seed?: number | null
-          tournament_id: string
+          sport_type?: string | null
+          tournament_id?: string | null
         }
         Update: {
+          age_category?: string | null
           created_at?: string
           group_name?: string | null
           id?: string
           is_eliminated?: boolean | null
           logo_url?: string | null
           name?: string
+          nickname?: string | null
+          organizer_id?: string | null
           seed?: number | null
-          tournament_id?: string
+          sport_type?: string | null
+          tournament_id?: string | null
         }
         Relationships: [
           {
@@ -569,12 +614,15 @@ export type Database = {
           completed_at: string | null
           created_at: string
           current_round: number | null
+          daily_end_time: string | null
+          daily_start_time: string | null
           end_date: string | null
           has_playoff: boolean
           id: string
           is_archived: boolean
           league_legs: number
           logo_url: string | null
+          match_duration_minutes: number | null
           max_teams: number | null
           name: string
           num_groups: number | null
@@ -583,6 +631,7 @@ export type Database = {
           playoff_started: boolean
           playoff_teams: number
           referee_name: string | null
+          rest_minutes: number | null
           season: string | null
           sport_type: Database["public"]["Enums"]["sport_type"]
           start_date: string | null
@@ -601,12 +650,15 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           current_round?: number | null
+          daily_end_time?: string | null
+          daily_start_time?: string | null
           end_date?: string | null
           has_playoff?: boolean
           id?: string
           is_archived?: boolean
           league_legs?: number
           logo_url?: string | null
+          match_duration_minutes?: number | null
           max_teams?: number | null
           name: string
           num_groups?: number | null
@@ -615,6 +667,7 @@ export type Database = {
           playoff_started?: boolean
           playoff_teams?: number
           referee_name?: string | null
+          rest_minutes?: number | null
           season?: string | null
           sport_type?: Database["public"]["Enums"]["sport_type"]
           start_date?: string | null
@@ -633,12 +686,15 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           current_round?: number | null
+          daily_end_time?: string | null
+          daily_start_time?: string | null
           end_date?: string | null
           has_playoff?: boolean
           id?: string
           is_archived?: boolean
           league_legs?: number
           logo_url?: string | null
+          match_duration_minutes?: number | null
           max_teams?: number | null
           name?: string
           num_groups?: number | null
@@ -647,6 +703,7 @@ export type Database = {
           playoff_started?: boolean
           playoff_teams?: number
           referee_name?: string | null
+          rest_minutes?: number | null
           season?: string | null
           sport_type?: Database["public"]["Enums"]["sport_type"]
           start_date?: string | null

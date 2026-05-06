@@ -1,17 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Users, User as UserIcon, Calendar, Award, Bell, Loader2, TrendingUp, UserPlus, CalendarCheck, BarChart3 } from 'lucide-react';
+import { Trophy, Users, User as UserIcon, Calendar, Award, Loader2, TrendingUp, UserPlus, CalendarCheck, BarChart3 } from 'lucide-react';
 import { PinLockScreen } from '@/components/organizer/PinLockScreen';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { ORGANIZER_BASE } from '@/lib/constants';
 import { useQuery } from '@tanstack/react-query';
-import { useNotifications } from '@/hooks/useNotifications';
+
+function timeAgo(date: string): string {
+  const ms = Date.now() - new Date(date).getTime();
+  const m = Math.floor(ms / 60000);
+  if (m < 1) return 'الآن';
+  if (m < 60) return `منذ ${m} دقيقة`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `منذ ${h} ساعة`;
+  const d = Math.floor(h / 24);
+  return `منذ ${d} يوم`;
+}
 
 export default function OrganizerDashboard() {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading } = useAuth();
-  const { unreadCount } = useNotifications(user?.id);
   const [pinVerified, setPinVerified] = useState(false);
   const [hasPin, setHasPin] = useState<boolean | null>(null);
 
@@ -28,11 +37,9 @@ export default function OrganizerDashboard() {
   const { data: stats } = useQuery({
     queryKey: ['org-stats', user?.id],
     queryFn: async () => {
-      if (!user) return { active: 0, teams: 0, players: 0, completed: 0, upcoming: 0 };
-      const [{ data: tournaments }, { count: followers }] = await Promise.all([
-        supabase.from('tournaments').select('id, status, num_teams').eq('owner_id', user.id),
-        supabase.from('user_follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
-      ]);
+      if (!user) return { active: 0, teams: 0, completed: 0, upcoming: 0 };
+      const { data: tournaments } = await supabase
+        .from('tournaments').select('id, status, num_teams').eq('owner_id', user.id);
       const list = tournaments || [];
       const ids = list.map(t => t.id);
       const teamsTotal = list.reduce((s, t) => s + (t.num_teams || 0), 0);
@@ -45,10 +52,62 @@ export default function OrganizerDashboard() {
       return {
         active: list.filter(t => ['active', 'live', 'upcoming'].includes(t.status as string)).length,
         teams: teamsTotal,
-        players: followers || 0,
         completed: list.filter(t => t.status === 'completed').length,
         upcoming: upcomingMatches,
       };
+    },
+    enabled: !!user?.id,
+  });
+
+  const { data: activity = [] } = useQuery({
+    queryKey: ['org-activity', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data: ts } = await supabase.from('tournaments')
+        .select('id, name, created_at, status, updated_at').eq('owner_id', user.id);
+      const list = ts || [];
+      const ids = list.map(t => t.id);
+      const tMap = Object.fromEntries(list.map(t => [t.id, t.name]));
+
+      const items: Array<{ kind: string; title: string; subtitle: string; date: string }> = [];
+
+      list.slice(0, 5).forEach(t => {
+        items.push({
+          kind: 'tournament',
+          title: 'تم إنشاء بطولة جديدة',
+          subtitle: t.name,
+          date: t.created_at,
+        });
+      });
+
+      if (ids.length) {
+        const { data: teams } = await supabase.from('teams')
+          .select('name, tournament_id, created_at').in('tournament_id', ids)
+          .order('created_at', { ascending: false }).limit(5);
+        (teams || []).forEach(tm => {
+          items.push({
+            kind: 'team',
+            title: 'تم تسجيل فريق جديد',
+            subtitle: `${tm.name} · ${tMap[tm.tournament_id] || ''}`,
+            date: tm.created_at,
+          });
+        });
+
+        const { data: completedMatches } = await supabase.from('matches')
+          .select('home_score, away_score, updated_at, tournament_id, home_team:teams!matches_home_team_id_fkey(name), away_team:teams!matches_away_team_id_fkey(name)')
+          .in('tournament_id', ids).eq('status', 'completed')
+          .order('updated_at', { ascending: false }).limit(5);
+        (completedMatches || []).forEach((m: any) => {
+          items.push({
+            kind: 'result',
+            title: 'تم تحديث نتائج مباراة',
+            subtitle: `${m.home_team?.name || '?'} ${m.home_score} - ${m.away_score} ${m.away_team?.name || '?'}`,
+            date: m.updated_at,
+          });
+        });
+      }
+
+      return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 8);
     },
     enabled: !!user?.id,
   });
@@ -63,23 +122,20 @@ export default function OrganizerDashboard() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      {/* Header */}
       <header className="h-16 px-4 flex items-center justify-between bg-card border-b border-border sticky top-0 z-30" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <img src="/icon-512.png" alt="Bottola" className="w-10 h-10 rounded-xl" />
-        <h1 className="text-xl font-bold text-foreground">Bottola Pro</h1>
-        <div className="flex items-center gap-2">
-          <button onClick={() => navigate(`${ORGANIZER_BASE}/notifications`)} className="relative w-10 h-10 flex items-center justify-center text-muted-foreground">
-            <Bell className="w-6 h-6" />
-            {unreadCount > 0 && <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-destructive" />}
-          </button>
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <UserIcon className="w-5 h-5 text-muted-foreground" />
-            )}
-          </div>
-        </div>
+        <h1 className="text-xl font-bold text-foreground">Bottola</h1>
+        <button
+          onClick={() => navigate(`${ORGANIZER_BASE}/settings`)}
+          className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden ring-2 ring-primary/20"
+          aria-label="الملف الشخصي والإعدادات"
+        >
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <UserIcon className="w-5 h-5 text-muted-foreground" />
+          )}
+        </button>
       </header>
 
       <div className="p-4 pb-24 space-y-5">
@@ -90,11 +146,7 @@ export default function OrganizerDashboard() {
           <div className="relative p-4 h-full flex flex-col justify-between">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-1">مرحباً بك!</h2>
-                <p className="text-white text-sm flex items-center gap-1">
-                  <span>أنت منظم محترف</span>
-                  <span className="inline-flex w-4 h-4 rounded-full bg-primary items-center justify-center text-[10px]">✓</span>
-                </p>
+                <h2 className="text-2xl font-bold text-white mb-1">مرحباً {profile?.display_name || 'بك'}!</h2>
                 <p className="text-white/90 text-sm mt-1">إدارة بطولاتك بسهولة واحترافية</p>
               </div>
               <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shrink-0">
@@ -104,7 +156,7 @@ export default function OrganizerDashboard() {
             <div className="grid grid-cols-3 gap-2 bg-black/30 rounded-lg p-3">
               <Stat label="البطولات النشطة" value={stats?.active || 0} icon={Trophy} />
               <Stat label="الفرق" value={stats?.teams || 0} icon={Users} />
-              <Stat label="المشاركون" value={stats?.players || 0} icon={UserIcon} />
+              <Stat label="مكتملة" value={stats?.completed || 0} icon={Award} />
             </div>
           </div>
         </div>
@@ -113,7 +165,7 @@ export default function OrganizerDashboard() {
         <div className="grid grid-cols-2 gap-3">
           <Kpi icon={Trophy} value={stats?.active || 0} label="البطولات النشطة" />
           <Kpi icon={Calendar} value={stats?.upcoming || 0} label="المباريات القادمة" />
-          <Kpi icon={Users} value={stats?.players || 0} label="إجمالي المشاركين" />
+          <Kpi icon={Users} value={stats?.teams || 0} label="إجمالي الفرق" />
           <Kpi icon={Award} value={stats?.completed || 0} label="الفعاليات المكتملة" />
         </div>
 
@@ -124,14 +176,14 @@ export default function OrganizerDashboard() {
             <TrendingUp className="w-5 h-5 text-primary" />
           </h3>
           <div className="bg-card rounded-xl border border-border overflow-hidden">
-            <ActivityRow icon={Trophy} title="تم إنشاء بطولة جديدة" subtitle="بطولة الشتاء لكرة القدم 2024" time="منذ 10 دقائق" />
-            <ActivityRow icon={UserPlus} title="تم تسجيل فريق جديد" subtitle="فريق النجوم" time="منذ 35 دقيقة" />
-            <ActivityRow icon={CalendarCheck} title="تم تأكيد مباراة جديدة" subtitle="فريق الأبطال ضد فريق القمة" time="منذ ساعة" />
-            <ActivityRow icon={BarChart3} title="تم تحديث نتائج مباراة" subtitle="فريق الوحدة 2 - 1 فريق السلام" time="منذ 3 ساعات" last />
+            {activity.length === 0 && (
+              <div className="text-center py-8 text-sm text-muted-foreground">لا يوجد نشاط بعد</div>
+            )}
+            {activity.map((a, i) => {
+              const Icon = a.kind === 'tournament' ? Trophy : a.kind === 'team' ? UserPlus : a.kind === 'result' ? BarChart3 : CalendarCheck;
+              return <ActivityRow key={i} icon={Icon} title={a.title} subtitle={a.subtitle} time={timeAgo(a.date)} last={i === activity.length - 1} />;
+            })}
           </div>
-          <button onClick={() => navigate(`${ORGANIZER_BASE}/notifications`)} className="w-full text-center text-sm text-primary font-semibold mt-3 py-2">
-            عرض كل النشاط
-          </button>
         </div>
       </div>
     </div>
@@ -167,7 +219,7 @@ function ActivityRow({ icon: Icon, title, subtitle, time, last }: any) {
       <span className="text-xs text-muted-foreground shrink-0 w-16">{time}</span>
       <div className="flex-1 text-right">
         <p className="text-sm text-foreground">{title}</p>
-        <p className="text-xs text-muted-foreground">{subtitle}</p>
+        <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
       </div>
       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
         <Icon className="w-5 h-5 text-primary" />

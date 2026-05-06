@@ -1,48 +1,30 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Home, Trophy, Newspaper, Bell, Settings, LayoutDashboard, Users, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Trophy, CalendarDays, Users, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useNotifications } from '@/hooks/useNotifications';
-import { useAuth } from '@/hooks/useAuth';
 import { ORGANIZER_BASE } from '@/lib/constants';
 
 interface TabItem {
   label: string;
-  icon: typeof Home;
+  icon: typeof LayoutDashboard;
   path: string;
   match: (pathname: string) => boolean;
-  badge?: number;
 }
 
 interface BottomTabBarProps {
-  variant: 'viewer' | 'organizer';
+  variant?: 'organizer';
 }
 
-export function BottomTabBar({ variant }: BottomTabBarProps) {
-  const { t } = useTranslation();
+export function BottomTabBar({}: BottomTabBarProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { user } = useAuth();
-  const { unreadCount } = useNotifications(user?.id);
 
-  const viewerTabs: TabItem[] = [
-    { label: t('nav.home'), icon: Home, path: '/', match: (p) => p === '/home' || p === '/' },
-    { label: t('nav.tournaments'), icon: Trophy, path: '/tournaments-feed', match: (p) => p.startsWith('/tournaments-feed') || p.startsWith('/viewer/tournament') || p.startsWith('/viewer/organizer') },
-    { label: t('nav.newsFeed'), icon: Newspaper, path: '/news-feed', match: (p) => p.startsWith('/news-feed') },
-    { label: t('nav.notifications'), icon: Bell, path: '/notifications', match: (p) => p.startsWith('/notifications'), badge: unreadCount },
-    { label: t('nav.settings'), icon: Settings, path: '/settings', match: (p) => p.startsWith('/settings') || p.startsWith('/following') },
+  const tabs: TabItem[] = [
+    { label: 'الرئيسية', icon: LayoutDashboard, path: `${ORGANIZER_BASE}/dashboard`, match: (p) => p === `${ORGANIZER_BASE}/dashboard` || p === ORGANIZER_BASE },
+    { label: 'البطولات', icon: Trophy, path: `${ORGANIZER_BASE}/tournaments`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/tournaments`) || p.includes(`${ORGANIZER_BASE}/tournament/`) },
+    { label: 'المباريات', icon: CalendarDays, path: `${ORGANIZER_BASE}/matches`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/matches`) },
+    { label: 'الفرق', icon: Users, path: `${ORGANIZER_BASE}/teams`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/teams`) },
+    { label: 'الإعدادات', icon: Settings, path: `${ORGANIZER_BASE}/settings`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/settings`) },
   ];
-
-  const organizerTabs: TabItem[] = [
-    { label: t('nav.home'), icon: LayoutDashboard, path: `${ORGANIZER_BASE}/dashboard`, match: (p) => p === `${ORGANIZER_BASE}/dashboard` || p === ORGANIZER_BASE },
-    { label: t('nav.tournaments'), icon: Trophy, path: `${ORGANIZER_BASE}/tournaments`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/tournaments`) || p.includes(`${ORGANIZER_BASE}/tournament/`) },
-    { label: t('nav.matches'), icon: CalendarDays, path: `${ORGANIZER_BASE}/matches`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/matches`) },
-    { label: 'الفرق', icon: Users, path: `${ORGANIZER_BASE}/teams`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/teams`) || p.startsWith(`${ORGANIZER_BASE}/followers`) },
-    { label: t('nav.news'), icon: Newspaper, path: `${ORGANIZER_BASE}/news`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/news`) },
-    { label: t('nav.settings'), icon: Settings, path: `${ORGANIZER_BASE}/settings`, match: (p) => p.startsWith(`${ORGANIZER_BASE}/settings`) },
-  ];
-
-  const tabs = variant === 'viewer' ? viewerTabs : organizerTabs;
 
   return (
     <nav
@@ -50,7 +32,7 @@ export function BottomTabBar({ variant }: BottomTabBarProps) {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       aria-label="bottom navigation"
     >
-      <div className={cn('grid max-w-md mx-auto', variant === 'organizer' ? 'grid-cols-6' : 'grid-cols-5')}>
+      <div className="grid grid-cols-5 max-w-md mx-auto">
         {tabs.map((tab) => {
           const active = tab.match(pathname);
           const Icon = tab.icon;
@@ -64,14 +46,7 @@ export function BottomTabBar({ variant }: BottomTabBarProps) {
               )}
             >
               {active && <span className="absolute top-0 left-2 right-2 h-[3px] rounded-full bg-primary" />}
-              <div className="relative">
-                <Icon className="w-6 h-6" strokeWidth={active ? 2.2 : 1.8} />
-                {tab.badge && tab.badge > 0 ? (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
-                    {tab.badge > 9 ? '9+' : tab.badge}
-                  </span>
-                ) : null}
-              </div>
+              <Icon className="w-6 h-6" strokeWidth={active ? 2.2 : 1.8} />
               <span className={cn('text-[10px] leading-none', active ? 'font-bold' : 'font-medium')}>
                 {tab.label}
               </span>
