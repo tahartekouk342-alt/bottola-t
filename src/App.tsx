@@ -2,32 +2,18 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ORGANIZER_BASE } from "@/lib/constants";
 
-// Viewer Pages
-import ViewerWelcome from "./pages/ViewerWelcome";
-import ViewerAuth from "./pages/ViewerAuth";
-import ViewerTournamentsFeed from "./pages/ViewerTournamentsFeed";
-import Following from "./pages/Following";
-import Notifications from "./pages/Notifications";
-import ViewerSettings from "./pages/ViewerSettings";
-import OrganizerTournaments from "./pages/viewer/OrganizerTournaments";
-import ViewerTournamentDetails from "./pages/viewer/ViewerTournamentDetails";
-import { ViewerLayout } from "./components/viewer/ViewerLayout";
-
-// Organizer Pages
 import OrganizerWelcome from "./pages/OrganizerWelcome";
 import OrganizerAuth from "./pages/OrganizerAuth";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import OrganizerTournamentsList from "./pages/OrganizerTournamentsList";
 import OrganizerMatches from "./pages/OrganizerMatches";
 import OrganizerTeams from "./pages/OrganizerTeams";
-import OrganizerFollowers from "./pages/OrganizerFollowers";
 import OrganizerSettings from "./pages/OrganizerSettings";
 import TournamentDetails from "./pages/TournamentDetails";
-import News from "./pages/News";
 import { OrganizerLayout } from "./components/organizer/OrganizerLayout";
 
 import NotFound from "./pages/NotFound";
@@ -42,32 +28,27 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Public */}
-            <Route path="/" element={<ViewerWelcome />} />
-            <Route path="/auth" element={<ViewerAuth />} />
+            {/* Root → organizer welcome */}
+            <Route path="/" element={<OrganizerWelcome />} />
+            <Route path="/auth" element={<OrganizerAuth />} />
 
-            {/* Viewer with sidebar layout - accessible to guests */}
-            <Route path="/home" element={<ViewerLayout><ViewerTournamentsFeed /></ViewerLayout>} />
-            <Route path="/tournaments-feed" element={<ViewerLayout><ViewerTournamentsFeed /></ViewerLayout>} />
-            <Route path="/following" element={<ViewerLayout><Following /></ViewerLayout>} />
-            <Route path="/notifications" element={<ViewerLayout><Notifications /></ViewerLayout>} />
-            <Route path="/news-feed" element={<ViewerLayout><News readOnlyComposer /></ViewerLayout>} />
-            <Route path="/settings" element={<ViewerLayout><ViewerSettings /></ViewerLayout>} />
-            <Route path="/viewer/organizer/:organizerId" element={<ViewerLayout><OrganizerTournaments /></ViewerLayout>} />
-            <Route path="/viewer/tournament/:tournamentId" element={<ViewerLayout><ViewerTournamentDetails /></ViewerLayout>} />
-
-            {/* Organizer Routes */}
-            <Route path={ORGANIZER_BASE} element={<OrganizerWelcome />} />
+            {/* Backward-compatible organizer base */}
+            <Route path={ORGANIZER_BASE} element={<Navigate to="/" replace />} />
             <Route path={`${ORGANIZER_BASE}/auth`} element={<OrganizerAuth />} />
             <Route path={`${ORGANIZER_BASE}/dashboard`} element={<OrganizerLayout><OrganizerDashboard /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/tournaments`} element={<OrganizerLayout><OrganizerTournamentsList /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/matches`} element={<OrganizerLayout><OrganizerMatches /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/teams`} element={<OrganizerLayout><OrganizerTeams /></OrganizerLayout>} />
-            <Route path={`${ORGANIZER_BASE}/followers`} element={<OrganizerLayout><OrganizerFollowers /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/settings`} element={<OrganizerLayout><OrganizerSettings /></OrganizerLayout>} />
             <Route path={`${ORGANIZER_BASE}/tournament/:id`} element={<OrganizerLayout><TournamentDetails /></OrganizerLayout>} />
-            <Route path={`${ORGANIZER_BASE}/news`} element={<OrganizerLayout><News /></OrganizerLayout>} />
-            <Route path={`${ORGANIZER_BASE}/notifications`} element={<OrganizerLayout><Notifications /></OrganizerLayout>} />
+
+            {/* Legacy viewer URLs → redirect */}
+            <Route path="/home" element={<Navigate to="/" replace />} />
+            <Route path="/tournaments-feed" element={<Navigate to="/" replace />} />
+            <Route path="/following" element={<Navigate to="/" replace />} />
+            <Route path="/notifications" element={<Navigate to="/" replace />} />
+            <Route path="/news-feed" element={<Navigate to="/" replace />} />
+            <Route path="/settings" element={<Navigate to={`${ORGANIZER_BASE}/settings`} replace />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
