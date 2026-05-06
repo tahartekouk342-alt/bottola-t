@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Plus, Search, Calendar, Users, Eye, Settings as SettingsIcon, Bell, MoreVertical, Filter } from 'lucide-react';
+import { Trophy, Plus, Search, Users, Settings as SettingsIcon, Edit, Eye, MoreVertical, Filter, Gavel, MapPin } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CreateTournamentDialog } from '@/components/tournament/CreateTournamentDialog';
+import { EditTournamentDialog } from '@/components/tournament/EditTournamentDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useTournaments } from '@/hooks/useTournaments';
 import { ORGANIZER_BASE } from '@/lib/constants';
@@ -10,8 +11,8 @@ import { ORGANIZER_BASE } from '@/lib/constants';
 const STATUS_LABEL: Record<string, { label: string; bg: string; text: string }> = {
   active: { label: 'نشطة', bg: 'bg-primary/10', text: 'text-primary' },
   live: { label: 'جارية', bg: 'bg-primary/10', text: 'text-primary' },
-  upcoming: { label: 'مخططة', bg: 'bg-info/10', text: 'text-info' },
-  draft: { label: 'مخططة', bg: 'bg-info/10', text: 'text-info' },
+  upcoming: { label: 'مخططة', bg: 'bg-blue-100', text: 'text-blue-700' },
+  draft: { label: 'مسودة', bg: 'bg-muted', text: 'text-muted-foreground' },
   completed: { label: 'مكتملة', bg: 'bg-purple-100', text: 'text-purple-700' },
 };
 
@@ -20,6 +21,7 @@ export default function OrganizerTournamentsList() {
   const { user } = useAuth();
   const { tournaments, loading } = useTournaments();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editTournament, setEditTournament] = useState<any>(null);
   const [search, setSearch] = useState('');
 
   const myTournaments = tournaments
@@ -31,14 +33,10 @@ export default function OrganizerTournamentsList() {
       <header className="h-16 px-4 flex items-center justify-between bg-card border-b border-border sticky top-0 z-30">
         <img src="/icon-512.png" alt="Bottola" className="w-10 h-10 rounded-xl" />
         <h1 className="text-xl font-bold text-foreground">إدارة البطولات</h1>
-        <button className="relative w-10 h-10 flex items-center justify-center text-muted-foreground">
-          <Bell className="w-6 h-6" />
-          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-destructive" />
-        </button>
+        <div className="w-10" />
       </header>
 
       <div className="p-4 pb-28 space-y-3">
-        {/* Search */}
         <div className="relative">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
@@ -48,9 +46,8 @@ export default function OrganizerTournamentsList() {
           />
         </div>
 
-        {/* Filters */}
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-          {['الموسم', 'الرياضة', 'الحالة', 'المزيد من الفلاتر'].map((f, i) => (
+          {['الكل', 'نشطة', 'مكتملة', 'مسودة'].map((f, i) => (
             <button key={i} className="shrink-0 h-10 px-3 rounded-lg bg-muted border border-border text-xs text-foreground flex items-center gap-1">
               <Filter className="w-3.5 h-3.5 text-muted-foreground" />
               {f}
@@ -72,15 +69,17 @@ export default function OrganizerTournamentsList() {
 
         {!loading && myTournaments.map(t => {
           const st = STATUS_LABEL[t.status] || STATUS_LABEL.draft;
-          const start = t.start_date ? new Date(t.start_date).toLocaleDateString('ar-EG') : '—';
-          const end = (t as any).end_date ? new Date((t as any).end_date).toLocaleDateString('ar-EG') : '—';
           return (
             <div key={t.id} className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
               <div className="relative h-40">
                 <img src={t.venue_photos?.[0] || '/images/sport-hero.jpg'} alt={t.name} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/20" />
-                <button className="absolute top-2 left-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
-                  <MoreVertical className="w-4 h-4 text-foreground" />
+                <button
+                  onClick={() => setEditTournament(t)}
+                  className="absolute top-2 left-2 w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow"
+                  aria-label="تعديل البطولة"
+                >
+                  <Edit className="w-4 h-4 text-foreground" />
                 </button>
               </div>
               <div className="p-4">
@@ -91,34 +90,22 @@ export default function OrganizerTournamentsList() {
                   ● {st.label}
                 </span>
                 <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-3">
-                  <div className="flex flex-col items-center">
-                    <Calendar className="w-4 h-4 mb-1" />
-                    <span>{start}</span>
-                    <span className="text-[10px]">تاريخ البداية</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <Calendar className="w-4 h-4 mb-1" />
-                    <span>{end}</span>
-                    <span className="text-[10px]">تاريخ النهاية</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <Users className="w-4 h-4 mb-1" />
-                    <span className="font-bold text-foreground">{t.num_teams}</span>
-                    <span className="text-[10px]">فريق</span>
-                  </div>
+                  <InfoCell icon={Gavel} label="الحكم" value={t.referee_name || '—'} />
+                  <InfoCell icon={MapPin} label="الملعب" value={t.venue_name || '—'} />
+                  <InfoCell icon={Users} label="الفرق" value={String(t.num_teams)} />
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => navigate(`${ORGANIZER_BASE}/tournament/${t.id}`)}
                     className="flex-1 h-9 rounded-md bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center gap-1"
                   >
-                    <SettingsIcon className="w-4 h-4" /> إدارة البطولة
+                    <SettingsIcon className="w-4 h-4" /> إدارة
                   </button>
                   <button
-                    onClick={() => navigate(`${ORGANIZER_BASE}/tournament/${t.id}`)}
+                    onClick={() => navigate(`${ORGANIZER_BASE}/tournament/${t.id}?view=info`)}
                     className="flex-1 h-9 rounded-md border border-primary text-primary text-xs font-semibold flex items-center justify-center gap-1"
                   >
-                    <Eye className="w-4 h-4" /> عرض التفاصيل
+                    <Eye className="w-4 h-4" /> تفاصيل
                   </button>
                 </div>
               </div>
@@ -127,7 +114,6 @@ export default function OrganizerTournamentsList() {
         })}
       </div>
 
-      {/* FAB */}
       <button
         onClick={() => setCreateDialogOpen(true)}
         className="fixed bottom-20 left-4 z-40 h-14 px-5 rounded-full bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/30 flex items-center gap-2"
@@ -137,6 +123,23 @@ export default function OrganizerTournamentsList() {
       </button>
 
       <CreateTournamentDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
+      {editTournament && (
+        <EditTournamentDialog
+          tournament={editTournament}
+          open={!!editTournament}
+          onOpenChange={(o) => !o && setEditTournament(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function InfoCell({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="flex flex-col items-center text-center">
+      <Icon className="w-4 h-4 mb-1" />
+      <span className="font-bold text-foreground truncate max-w-full" title={value}>{value}</span>
+      <span className="text-[10px]">{label}</span>
     </div>
   );
 }
