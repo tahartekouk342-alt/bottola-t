@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, User, Lock, Camera, Save, Loader2, ShieldOff, Languages, Moon, Sun } from 'lucide-react';
+import { ArrowRight, User, Lock, Camera, Save, Loader2, ShieldOff, Languages, Moon, Sun, Sparkles } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,6 +28,8 @@ export default function OrganizerSettings() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [autoDraw, setAutoDraw] = useState(true);
+  const [savingAutoDraw, setSavingAutoDraw] = useState(false);
 
   // PIN fields
   const [currentPin, setCurrentPin] = useState('');
@@ -48,14 +51,24 @@ export default function OrganizerSettings() {
     if (user) {
       supabase
         .from('profiles')
-        .select('pin_hash')
+        .select('pin_hash, auto_draw_default')
         .eq('user_id', user.id)
         .single()
         .then(({ data }) => {
           setHasExistingPin(!!data?.pin_hash);
+          setAutoDraw((data as any)?.auto_draw_default ?? true);
         });
     }
   }, [profile, user, authLoading, navigate]);
+
+  const toggleAutoDraw = async (val: boolean) => {
+    if (!user) return;
+    setSavingAutoDraw(true);
+    setAutoDraw(val);
+    await supabase.from('profiles').update({ auto_draw_default: val } as any).eq('user_id', user.id);
+    setSavingAutoDraw(false);
+    toast({ title: val ? 'تم تفعيل السحب التلقائي ✅' : 'تم إلغاء السحب التلقائي' });
+  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -280,7 +293,19 @@ export default function OrganizerSettings() {
           </CardContent>
         </Card>
 
-        {/* Language */}
+        {/* Auto-draw default */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5" />السحب والجدولة التلقائية</CardTitle>
+            <CardDescription>عند اكتمال التسجيل المفتوح للبطولة، يتم سحب القرعة وجدولة المباريات تلقائياً</CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between">
+            <Label>تفعيل افتراضياً للبطولات الجديدة</Label>
+            <Switch checked={autoDraw} onCheckedChange={toggleAutoDraw} disabled={savingAutoDraw} />
+          </CardContent>
+        </Card>
+
+
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Languages className="w-5 h-5" />{t('settings.language')}</CardTitle>

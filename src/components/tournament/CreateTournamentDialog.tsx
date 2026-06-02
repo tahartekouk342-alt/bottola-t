@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, Trophy, Camera, X, Plus, Image, MapPin, Swords, Users, Layers, Gavel, Clock } from 'lucide-react';
+import { Loader2, Sparkles, Trophy, Camera, X, Plus, Image, MapPin, Swords, Users, Layers, Gavel, Clock, Link2, Edit3 } from 'lucide-react';
 import { useTournaments } from '@/hooks/useTournaments';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
@@ -74,6 +74,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [teamsList, setTeamsList] = useState<string[]>([]);
   const [newTeamName, setNewTeamName] = useState('');
   const [drawResult, setDrawResult] = useState<any>(null);
+  const [registrationMode, setRegistrationMode] = useState<'manual' | 'open'>('manual');
+  const [maxTeams, setMaxTeams] = useState<number>(16);
+  const [registrationClosesAt, setRegistrationClosesAt] = useState('');
 
   const resetForm = () => {
     setStep(1); setName(''); setType('knockout'); setSportType('football');
@@ -118,6 +121,11 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       }
       setStep(2);
     } else if (step === 2) {
+      if (registrationMode === 'open') {
+        // Skip the draw step for open registration — teams will register later
+        await handleCreateOpenOrEmpty();
+        return;
+      }
       if (teamsList.length < 2) {
         toast({ title: 'خطأ', description: 'يرجى إدخال فريقين على الأقل', variant: 'destructive' });
         return;
@@ -132,6 +140,58 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       } finally {
         setAiLoading(false);
       }
+    }
+  };
+
+  const handleCreateOpenOrEmpty = async () => {
+    setLoading(true);
+    try {
+      let logoUrl: string | null = null;
+      if (logoFile) {
+        const ext = logoFile.name.split('.').pop();
+        const path = `logos/${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from('tournament-assets').upload(path, logoFile);
+        if (!error) logoUrl = supabase.storage.from('tournament-assets').getPublicUrl(path).data.publicUrl;
+      }
+      let venuePhotos: string[] = [];
+      if (stadiumImageFile) {
+        const ext = stadiumImageFile.name.split('.').pop();
+        const path = `stadiums/${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from('tournament-assets').upload(path, stadiumImageFile);
+        if (!error) venuePhotos = [supabase.storage.from('tournament-assets').getPublicUrl(path).data.publicUrl];
+      }
+
+      const token = registrationMode === 'open' ? crypto.randomUUID().replace(/-/g, '').slice(0, 16) : null;
+
+      const { data, error } = await supabase.from('tournaments').insert({
+        name, type, status: 'draft',
+        start_date: startDate || null,
+        num_teams: registrationMode === 'open' ? (maxTeams || 8) : 0,
+        owner_id: (await supabase.auth.getUser()).data.user?.id || null,
+        logo_url: logoUrl,
+        venue_name: venueName || null,
+        venue_address: venueAddress || null,
+        referee_name: refereeName || null,
+        venue_photos: venuePhotos,
+        sport_type: sportType as any,
+        age_category: ageCategory,
+        volleyball_format: sportType === 'volleyball' ? volleyFormat : null,
+        registration_mode: registrationMode,
+        registration_open: registrationMode === 'open',
+        registration_token: token,
+        registration_closes_at: registrationClosesAt || null,
+        max_teams: registrationMode === 'open' ? maxTeams : null,
+        is_empty: registrationMode !== 'open',
+      } as any).select().single();
+      if (error) throw error;
+      toast({ title: 'تم إنشاء البطولة 🎉', description: registrationMode === 'open' ? 'انسخ رابط التسجيل من صفحة البطولة' : 'بطولة فارغة — يمكنك إضافة الفرق لاحقاً' });
+      onOpenChange(false);
+      resetForm();
+      navigate(`${ORGANIZER_BASE}/tournament/${data.id}`);
+    } catch (e: any) {
+      toast({ title: 'خطأ', description: e.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -435,33 +495,80 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
         {/* Step 2 */}
         {step === 2 && (
           <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input placeholder={t('tournament.teamName')} value={newTeamName}
-                onChange={(e) => setNewTeamName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddTeam()}
-                className="flex-1" />
-              <Button onClick={handleAddTeam} variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+            {/* Registration Mode Toggle */}
+            <div className="grid grid-cols-2 gap-2">
+              <Card onClick={() => setRegistrationMode('manual')}
+                className={cn('cursor-pointer transition', registrationMode === 'manual' ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50')}>
+                <CardContent className="p-3 text-center">
+                  <Edit3 className="w-5 h-5 mx-auto mb-1 text-primary" />
+                  <p className="font-bold text-xs">إدخال يدوي</p>
+                  <p className="text-[10px] text-muted-foreground">أضف الفرق الآن</p>
+                </CardContent>
+              </Card>
+              <Card onClick={() => setRegistrationMode('open')}
+                className={cn('cursor-pointer transition', registrationMode === 'open' ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50')}>
+                <CardContent className="p-3 text-center">
+                  <Link2 className="w-5 h-5 mx-auto mb-1 text-primary" />
+                  <p className="font-bold text-xs">تسجيل مفتوح</p>
+                  <p className="text-[10px] text-muted-foreground">شارك رابط للفرق</p>
+                </CardContent>
+              </Card>
             </div>
-            {teamsList.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
-                {teamsList.map((team, index) => (
-                  <div key={index} className="flex items-center justify-between p-2.5 rounded-xl border bg-card group hover:border-primary/50 transition-colors animate-fade-in">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">{index + 1}</span>
-                      <span className="font-medium text-sm truncate">{team}</span>
-                    </div>
-                    <button onClick={() => setTeamsList(prev => prev.filter((_, i) => i !== index))} className="opacity-0 group-hover:opacity-100 text-destructive p-1 transition-opacity">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+
+            {registrationMode === 'open' ? (
+              <>
+                <div className="space-y-2">
+                  <Label>الحد الأقصى للفرق</Label>
+                  <Input type="number" min={2} max={64} value={maxTeams}
+                    onChange={(e) => setMaxTeams(parseInt(e.target.value) || 2)} />
+                  <p className="text-[11px] text-muted-foreground">سيُغلق التسجيل تلقائياً عند الوصول لهذا العدد</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>تاريخ إغلاق التسجيل (اختياري)</Label>
+                  <Input type="datetime-local" value={registrationClosesAt} onChange={(e) => setRegistrationClosesAt(e.target.value)} />
+                </div>
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardContent className="p-3 text-xs text-muted-foreground text-center">
+                    سيتم توليد رابط تسجيل فريد بعد الحفظ، يمكنك نسخه من صفحة البطولة.
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <>
+                <div className="flex gap-2">
+                  <Input placeholder={t('tournament.teamName')} value={newTeamName}
+                    onChange={(e) => setNewTeamName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddTeam()}
+                    className="flex-1" />
+                  <Button onClick={handleAddTeam} variant="outline" size="icon"><Plus className="w-4 h-4" /></Button>
+                </div>
+                {teamsList.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+                    {teamsList.map((team, index) => (
+                      <div key={index} className="flex items-center justify-between p-2.5 rounded-xl border bg-card group hover:border-primary/50 transition-colors animate-fade-in">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">{index + 1}</span>
+                          <span className="font-medium text-sm truncate">{team}</span>
+                        </div>
+                        <button onClick={() => setTeamsList(prev => prev.filter((_, i) => i !== index))} className="opacity-0 group-hover:opacity-100 text-destructive p-1 transition-opacity">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+                <p className="text-sm text-muted-foreground text-center">
+                  {t('tournament.teamsCount')}: <span className="font-bold text-foreground">{teamsList.length}</span>
+                </p>
+                <Button variant="outline" className="w-full" onClick={handleCreateOpenOrEmpty} disabled={loading}>
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'إنشاء بطولة فارغة (إضافة الفرق لاحقاً)'}
+                </Button>
+              </>
             )}
-            <p className="text-sm text-muted-foreground text-center">
-              {t('tournament.teamsCount')}: <span className="font-bold text-foreground">{teamsList.length}</span>
-            </p>
           </div>
         )}
+
+
 
         {/* Step 3 */}
         {step === 3 && drawResult && (

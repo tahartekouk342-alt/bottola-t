@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Plus, Search, Users, Settings as SettingsIcon, Edit, Eye, MoreVertical, Filter, Gavel, MapPin } from 'lucide-react';
+import { Trophy, Plus, Search, Users, Settings as SettingsIcon, Edit, Eye, MoreVertical, Filter, Gavel, MapPin, Link2, Copy, Download } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CreateTournamentDialog } from '@/components/tournament/CreateTournamentDialog';
 import { EditTournamentDialog } from '@/components/tournament/EditTournamentDialog';
@@ -20,9 +23,25 @@ export default function OrganizerTournamentsList() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { tournaments, loading } = useTournaments();
+  const { toast } = useToast();
+  const qc = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editTournament, setEditTournament] = useState<any>(null);
   const [search, setSearch] = useState('');
+
+  const copyRegistrationLink = (token: string) => {
+    const url = `${window.location.origin}/register/${token}`;
+    navigator.clipboard.writeText(url);
+    toast({ title: 'تم نسخ الرابط ✅', description: url });
+  };
+
+  const switchToManual = async (id: string) => {
+    if (!confirm('التحويل إلى إدخال يدوي وإغلاق التسجيل المفتوح؟')) return;
+    await supabase.from('tournaments').update({ registration_open: false, registration_mode: 'manual' } as any).eq('id', id);
+    toast({ title: 'تم التحويل إلى الإدخال اليدوي ✅' });
+    qc.invalidateQueries({ queryKey: ['tournaments'] });
+    window.location.reload();
+  };
 
   const myTournaments = tournaments
     .filter(t => t.owner_id === user?.id)
@@ -108,6 +127,35 @@ export default function OrganizerTournamentsList() {
                     <Eye className="w-4 h-4" /> تفاصيل
                   </button>
                 </div>
+
+                {(t as any).registration_mode === 'open' && (t as any).registration_token && (
+                  <div className="mt-3 p-2 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-primary">
+                      <Link2 className="w-3.5 h-3.5" />
+                      <span className="font-semibold">رابط التسجيل المفتوح</span>
+                      {(t as any).registration_open ? (
+                        <span className="ms-auto px-1.5 py-0.5 rounded bg-primary/10 text-[10px]">مفتوح</span>
+                      ) : (
+                        <span className="ms-auto px-1.5 py-0.5 rounded bg-muted text-[10px]">مغلق</span>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => copyRegistrationLink((t as any).registration_token)}
+                        className="flex-1 h-8 rounded-md bg-primary text-primary-foreground text-[11px] font-semibold flex items-center justify-center gap-1"
+                      >
+                        <Copy className="w-3 h-3" /> نسخ الرابط
+                      </button>
+                      <button
+                        onClick={() => switchToManual(t.id)}
+                        className="h-8 px-2 rounded-md border border-border text-[11px] font-semibold flex items-center gap-1"
+                        title="استيراد يدوي بدلاً من التسجيل المفتوح"
+                      >
+                        <Download className="w-3 h-3" /> يدوي
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           );
