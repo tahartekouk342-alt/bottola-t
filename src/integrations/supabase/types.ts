@@ -424,6 +424,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          auto_draw_default: boolean
           avatar_url: string | null
           bio: string | null
           created_at: string
@@ -435,6 +436,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_draw_default?: boolean
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -446,6 +448,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_draw_default?: boolean
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -611,6 +614,7 @@ export type Database = {
         Row: {
           accept_join_requests: boolean | null
           age_category: string | null
+          auto_draw_enabled: boolean
           completed_at: string | null
           created_at: string
           current_round: number | null
@@ -620,6 +624,7 @@ export type Database = {
           has_playoff: boolean
           id: string
           is_archived: boolean
+          is_empty: boolean
           league_legs: number
           logo_url: string | null
           match_duration_minutes: number | null
@@ -631,6 +636,10 @@ export type Database = {
           playoff_started: boolean
           playoff_teams: number
           referee_name: string | null
+          registration_closes_at: string | null
+          registration_mode: string
+          registration_open: boolean
+          registration_token: string | null
           rest_minutes: number | null
           season: string | null
           sport_type: Database["public"]["Enums"]["sport_type"]
@@ -647,6 +656,7 @@ export type Database = {
         Insert: {
           accept_join_requests?: boolean | null
           age_category?: string | null
+          auto_draw_enabled?: boolean
           completed_at?: string | null
           created_at?: string
           current_round?: number | null
@@ -656,6 +666,7 @@ export type Database = {
           has_playoff?: boolean
           id?: string
           is_archived?: boolean
+          is_empty?: boolean
           league_legs?: number
           logo_url?: string | null
           match_duration_minutes?: number | null
@@ -667,6 +678,10 @@ export type Database = {
           playoff_started?: boolean
           playoff_teams?: number
           referee_name?: string | null
+          registration_closes_at?: string | null
+          registration_mode?: string
+          registration_open?: boolean
+          registration_token?: string | null
           rest_minutes?: number | null
           season?: string | null
           sport_type?: Database["public"]["Enums"]["sport_type"]
@@ -683,6 +698,7 @@ export type Database = {
         Update: {
           accept_join_requests?: boolean | null
           age_category?: string | null
+          auto_draw_enabled?: boolean
           completed_at?: string | null
           created_at?: string
           current_round?: number | null
@@ -692,6 +708,7 @@ export type Database = {
           has_playoff?: boolean
           id?: string
           is_archived?: boolean
+          is_empty?: boolean
           league_legs?: number
           logo_url?: string | null
           match_duration_minutes?: number | null
@@ -703,6 +720,10 @@ export type Database = {
           playoff_started?: boolean
           playoff_teams?: number
           referee_name?: string | null
+          registration_closes_at?: string | null
+          registration_mode?: string
+          registration_open?: boolean
+          registration_token?: string | null
           rest_minutes?: number | null
           season?: string | null
           sport_type?: Database["public"]["Enums"]["sport_type"]
