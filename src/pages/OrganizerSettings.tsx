@@ -293,7 +293,19 @@ export default function OrganizerSettings() {
           </CardContent>
         </Card>
 
-        {/* Language */}
+        {/* Auto-draw default */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5" />السحب والجدولة التلقائية</CardTitle>
+            <CardDescription>عند اكتمال التسجيل المفتوح للبطولة، يتم سحب القرعة وجدولة المباريات تلقائياً</CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between">
+            <Label>تفعيل افتراضياً للبطولات الجديدة</Label>
+            <Switch checked={autoDraw} onCheckedChange={toggleAutoDraw} disabled={savingAutoDraw} />
+          </CardContent>
+        </Card>
+
+
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Languages className="w-5 h-5" />{t('settings.language')}</CardTitle>
