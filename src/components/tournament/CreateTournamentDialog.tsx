@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, Trophy, Camera, X, Plus, Image, MapPin, Swords, Users, Layers, Gavel, Clock } from 'lucide-react';
+import { Loader2, Sparkles, Trophy, Camera, X, Plus, Image, MapPin, Swords, Users, Layers, Gavel, Clock, Link2, Edit3 } from 'lucide-react';
 import { useTournaments } from '@/hooks/useTournaments';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
@@ -74,6 +74,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const [teamsList, setTeamsList] = useState<string[]>([]);
   const [newTeamName, setNewTeamName] = useState('');
   const [drawResult, setDrawResult] = useState<any>(null);
+  const [registrationMode, setRegistrationMode] = useState<'manual' | 'open'>('manual');
+  const [maxTeams, setMaxTeams] = useState<number>(16);
+  const [registrationClosesAt, setRegistrationClosesAt] = useState('');
 
   const resetForm = () => {
     setStep(1); setName(''); setType('knockout'); setSportType('football');
@@ -118,6 +121,11 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       }
       setStep(2);
     } else if (step === 2) {
+      if (registrationMode === 'open') {
+        // Skip the draw step for open registration — teams will register later
+        await handleCreateOpenOrEmpty();
+        return;
+      }
       if (teamsList.length < 2) {
         toast({ title: 'خطأ', description: 'يرجى إدخال فريقين على الأقل', variant: 'destructive' });
         return;
@@ -132,6 +140,58 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       } finally {
         setAiLoading(false);
       }
+    }
+  };
+
+  const handleCreateOpenOrEmpty = async () => {
+    setLoading(true);
+    try {
+      let logoUrl: string | null = null;
+      if (logoFile) {
+        const ext = logoFile.name.split('.').pop();
+        const path = `logos/${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from('tournament-assets').upload(path, logoFile);
+        if (!error) logoUrl = supabase.storage.from('tournament-assets').getPublicUrl(path).data.publicUrl;
+      }
+      let venuePhotos: string[] = [];
+      if (stadiumImageFile) {
+        const ext = stadiumImageFile.name.split('.').pop();
+        const path = `stadiums/${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from('tournament-assets').upload(path, stadiumImageFile);
+        if (!error) venuePhotos = [supabase.storage.from('tournament-assets').getPublicUrl(path).data.publicUrl];
+      }
+
+      const token = registrationMode === 'open' ? crypto.randomUUID().replace(/-/g, '').slice(0, 16) : null;
+
+      const { data, error } = await supabase.from('tournaments').insert({
+        name, type, status: 'draft',
+        start_date: startDate || null,
+        num_teams: registrationMode === 'open' ? (maxTeams || 8) : 0,
+        owner_id: (await supabase.auth.getUser()).data.user?.id || null,
+        logo_url: logoUrl,
+        venue_name: venueName || null,
+        venue_address: venueAddress || null,
+        referee_name: refereeName || null,
+        venue_photos: venuePhotos,
+        sport_type: sportType as any,
+        age_category: ageCategory,
+        volleyball_format: sportType === 'volleyball' ? volleyFormat : null,
+        registration_mode: registrationMode,
+        registration_open: registrationMode === 'open',
+        registration_token: token,
+        registration_closes_at: registrationClosesAt || null,
+        max_teams: registrationMode === 'open' ? maxTeams : null,
+        is_empty: registrationMode !== 'open',
+      } as any).select().single();
+      if (error) throw error;
+      toast({ title: 'تم إنشاء البطولة 🎉', description: registrationMode === 'open' ? 'انسخ رابط التسجيل من صفحة البطولة' : 'بطولة فارغة — يمكنك إضافة الفرق لاحقاً' });
+      onOpenChange(false);
+      resetForm();
+      navigate(`${ORGANIZER_BASE}/tournament/${data.id}`);
+    } catch (e: any) {
+      toast({ title: 'خطأ', description: e.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
     }
   };
 
