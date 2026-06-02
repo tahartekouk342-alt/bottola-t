@@ -17,6 +17,7 @@ import TournamentDetails from "./pages/TournamentDetails";
 import { OrganizerLayout } from "./components/organizer/OrganizerLayout";
 
 import NotFound from "./pages/NotFound";
+import PublicTeamRegistration from "./pages/PublicTeamRegistration";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             {/* Root → organizer welcome */}
             <Route path="/" element={<OrganizerWelcome />} />
             <Route path="/auth" element={<OrganizerAuth />} />
+            <Route path="/register/:token" element={<PublicTeamRegistration />} />
 
             {/* Backward-compatible organizer base */}
             <Route path={ORGANIZER_BASE} element={<Navigate to="/" replace />} />
